@@ -1,0 +1,90 @@
+[gd_resource type="Resource" script_class="PassengerProfile" format=3]
+
+[ext_resource type="Script" path="res://src/core/resources/passenger_profile.gd" id="1_profile"]
+[ext_resource type="Script" path="res://src/core/resources/examinable.gd" id="2_exam"]
+[ext_resource type="Script" path="res://src/core/resources/passenger_action.gd" id="3_action"]
+[ext_resource type="Script" path="res://src/events/ride_event.gd" id="4_event"]
+[ext_resource type="Script" path="res://src/events/spawn_pursuers_event.gd" id="5_spawn"]
+[ext_resource type="Script" path="res://src/events/heat_change_event.gd" id="6_heat"]
+
+[sub_resource type="Resource" id="Exam_summons"]
+script = ExtResource("2_exam")
+id = &"summons"
+label = "the folded court paper"
+reveal_text = "A summons: she testifies against the Consortium at nine. There is a number scribbled on the back, and a figure: $130 for whoever calls it."
+time_cost = 3.0
+reveals_traits = Array[StringName]([&"witness"])
+
+[sub_resource type="Resource" id="Exam_hands"]
+script = ExtResource("2_exam")
+id = &"hands"
+label = "her hands"
+reveal_text = "Shaking. She has not slept. She checks every car that passes."
+time_cost = 2.0
+reveals_traits = Array[StringName]([&"hunted"])
+
+[sub_resource type="Resource" id="Action_promise"]
+script = ExtResource("3_action")
+id = &"promise"
+label = "Promise to get her there alive (bonus)"
+outcome = 0
+requires_traits = Array[StringName]([&"hunted"])
+fare_mult = 1.6
+result_text = "\"Thank you. The prosecutor will pay whatever you ask.\""
+
+[sub_resource type="Resource" id="Action_sell"]
+script = ExtResource("3_action")
+id = &"sell_out"
+label = "Call the number on the back (sell her out)"
+outcome = 1
+requires_traits = Array[StringName]([&"witness"])
+cash_delta = 130
+heat_delta = 1
+result_text = "A black truck picks her up before she understands. $130, wired."
+
+[sub_resource type="Resource" id="Event_block"]
+script = ExtResource("5_spawn")
+trigger = 3
+trigger_value = 0.25
+trigger_random = 0.15
+count = 2
+extra_per_shift = 0.34
+pattern = 1
+enemy = "res://data/enemies/bruiser.tres"
+line = "That truck across the road - it's THEM!"
+
+[sub_resource type="Resource" id="Event_tail"]
+script = ExtResource("5_spawn")
+trigger = 3
+trigger_value = 0.55
+trigger_random = 0.15
+count = 2
+extra_per_shift = 0.5
+pattern = 0
+line = "They're behind us too!"
+
+[resource]
+script = ExtResource("1_profile")
+id = &"key_witness"
+display_name = "Key Witness"
+color = Color(0.75, 0.72, 0.6, 1)
+fare_base = 60
+fare_per_100m = 14
+tip_multiplier = 1.2
+min_distance = 240.0
+max_distance = 480.0
+destination_districts = Array[StringName]([&"downtown"])
+time_multiplier = 1.15
+occupation = "Bookkeeper"
+name_pool = PackedStringArray("Ines Caldwell", "Marta Quinn", "Ruth Ambrose", "Lena Whitlock")
+age_min = 28
+age_max = 55
+notes = "Grey coat, no luggage. Keeps [url=hands]her hands[/url] pressed between her knees. Holds [url=summons]a folded court paper[/url] and wants the courthouse, \"the fastest way, please, not the main streets\"."
+examinables = Array[ExtResource("2_exam")]([SubResource("Exam_summons"), SubResource("Exam_hands")])
+actions = Array[ExtResource("3_action")]([SubResource("Action_promise"), SubResource("Action_sell")])
+hidden_traits = Array[StringName]([&"witness", &"hunted"])
+kick_reaction = 0
+kick_line = "Please! They'll kill me out here!"
+ride_events = Array[ExtResource("4_event")]([SubResource("Event_block"), SubResource("Event_tail")])
+spawn_weight = 0.8
+districts = Array[StringName]([&"suburbs", &"docks"])

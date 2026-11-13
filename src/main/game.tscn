@@ -1,0 +1,32 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/world/city.gd" id="1_city"]
+[ext_resource type="PackedScene" path="res://src/vehicle/taxi.tscn" id="2_taxi"]
+[ext_resource type="Script" path="res://src/passengers/passenger_spawner.gd" id="3_spawner"]
+[ext_resource type="Script" path="res://src/ride/ride_manager.gd" id="4_rides"]
+[ext_resource type="Script" path="res://src/ride/shift_manager.gd" id="5_shift"]
+[ext_resource type="Script" path="res://src/enemies/enemy_director.gd" id="6_enemies"]
+[ext_resource type="Script" path="res://src/enemies/street_encounters.gd" id="7_encounters"]
+
+[node name="Game" type="Node3D"]
+
+[node name="City" type="Node3D" parent="."]
+script = ExtResource("1_city")
+
+[node name="Taxi" parent="." instance=ExtResource("2_taxi")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)
+
+[node name="PassengerSpawner" type="Node3D" parent="."]
+script = ExtResource("3_spawner")
+
+[node name="RideManager" type="Node" parent="."]
+script = ExtResource("4_rides")
+
+[node name="ShiftManager" type="Node" parent="."]
+script = ExtResource("5_shift")
+
+[node name="EnemyDirector" type="Node3D" parent="."]
+script = ExtResource("6_enemies")
+
+[node name="StreetEncounters" type="Node" parent="."]
+script = ExtResource("7_encounters")

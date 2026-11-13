@@ -1,0 +1,100 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/main/main.gd" id="1_main"]
+[ext_resource type="PackedScene" path="res://src/main/game.tscn" id="2_start"]
+[ext_resource type="Shader" path="res://src/core/shaders/ps1_post.gdshader" id="3_post"]
+[ext_resource type="Script" path="res://src/ui/debug/debug_overlay.gd" id="4_debug"]
+[ext_resource type="Script" path="res://src/ui/hud/hud.gd" id="5_hud"]
+[ext_resource type="Script" path="res://src/dossier/dossier.gd" id="6_dossier"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_post"]
+shader = ExtResource("3_post")
+
+[node name="Main" type="Node"]
+process_mode = 3
+script = ExtResource("1_main")
+start_scene = ExtResource("2_start")
+
+[node name="WorldContainer" type="SubViewportContainer" parent="."]
+unique_name_in_owner = true
+process_mode = 1
+texture_filter = 1
+material = SubResource("ShaderMaterial_post")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+stretch = true
+stretch_shrink = 3
+
+[node name="WorldViewport" type="SubViewport" parent="WorldContainer"]
+unique_name_in_owner = true
+handle_input_locally = false
+audio_listener_enable_3d = true
+size = Vector2i(426, 240)
+render_target_update_mode = 4
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="HUD" type="Control" parent="UI"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("5_hud")
+
+[node name="Dossier" type="Control" parent="UI"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("6_dossier")
+
+[node name="DebugOverlay" type="Label" parent="UI"]
+unique_name_in_owner = true
+visible = false
+offset_left = 12.0
+offset_top = 10.0
+offset_right = 712.0
+offset_bottom = 260.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 13
+text = "debug"
+script = ExtResource("4_debug")
+
+[node name="PauseOverlay" type="ColorRect" parent="UI"]
+unique_name_in_owner = true
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.55)
+
+[node name="PauseLabel" type="Label" parent="UI/PauseOverlay"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -40.0
+offset_right = 200.0
+offset_bottom = 40.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 28
+text = "PAUSED
+Esc / Start to resume"
+horizontal_alignment = 1
+vertical_alignment = 1

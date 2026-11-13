@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="PassengerProfile" format=3]
+
+[ext_resource type="Script" path="res://src/core/resources/passenger_profile.gd" id="1_profile"]
+[ext_resource type="Script" path="res://src/core/resources/examinable.gd" id="2_exam"]
+
+[sub_resource type="Resource" id="Exam_briefcase"]
+script = ExtResource("2_exam")
+id = &"briefcase"
+label = "the briefcase"
+reveal_text = "Tax forms, a cold sandwich and a self-help book titled \"Say Yes To Yourself\". Harmless."
+time_cost = 2.0
+
+[resource]
+script = ExtResource("1_profile")
+id = &"commuter"
+display_name = "Commuter"
+color = Color(0.25, 0.4, 0.75, 1)
+fare_base = 20
+fare_per_100m = 8
+tip_multiplier = 1.0
+min_distance = 160.0
+max_distance = 380.0
+time_multiplier = 1.0
+occupation = "Accountant"
+name_pool = PackedStringArray("Gary Moss", "Linda Platt", "Ron Bickel", "Sue Ferreira", "Dale Kim", "Martha Oyelaran")
+age_min = 28
+age_max = 55
+notes = "Grey suit, tired eyes, clutching a [url=briefcase]battered briefcase[/url]. Keeps checking the time."
+examinables = Array[ExtResource("2_exam")]([SubResource("Exam_briefcase")])
+kick_reaction = 0
+kick_line = "Unbelievable. I'll take the bus."
+spawn_weight = 3.0

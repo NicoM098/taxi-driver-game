@@ -1,0 +1,10 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/vehicle/test_drive.gd" id="1_course"]
+[ext_resource type="PackedScene" path="res://src/vehicle/taxi.tscn" id="2_taxi"]
+
+[node name="TestDrive" type="Node3D"]
+script = ExtResource("1_course")
+
+[node name="Taxi" parent="." instance=ExtResource("2_taxi")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)

@@ -1,0 +1,68 @@
+[gd_resource type="Resource" script_class="PassengerProfile" format=3]
+
+[ext_resource type="Script" path="res://src/core/resources/passenger_profile.gd" id="1_profile"]
+[ext_resource type="Script" path="res://src/core/resources/examinable.gd" id="2_exam"]
+[ext_resource type="Script" path="res://src/core/resources/passenger_action.gd" id="3_action"]
+[ext_resource type="Script" path="res://src/events/ride_event.gd" id="4_event"]
+[ext_resource type="Script" path="res://src/events/steal_cash_event.gd" id="5_steal"]
+
+[sub_resource type="Resource" id="Exam_pockets"]
+script = ExtResource("2_exam")
+id = &"pockets"
+label = "his bulging pockets"
+reveal_text = "Three wallets, a car stereo and somebody's dentures. None of it is his."
+time_cost = 3.0
+reveals_traits = Array[StringName]([&"thief"])
+
+[sub_resource type="Resource" id="Exam_id"]
+script = ExtResource("2_exam")
+id = &"id"
+label = "his ID card"
+reveal_text = "\"Jhon Smiht\". Laminated with sticky tape. The photo is a different man."
+time_cost = 2.0
+reveals_traits = Array[StringName]([&"fake_id"])
+
+[sub_resource type="Resource" id="Action_shakedown"]
+script = ExtResource("3_action")
+id = &"shakedown"
+label = "Shake him down, then kick him out"
+outcome = 1
+requires_traits = Array[StringName]([&"thief"])
+cash_delta = 35
+
+[sub_resource type="Resource" id="Event_steal"]
+script = ExtResource("5_steal")
+trigger = 3
+trigger_value = 0.4
+trigger_random = 0.2
+percent = 0.3
+min_amount = 20
+max_amount = 300
+counter_window = 3.5
+warning_line = "(A gloved hand slides between the seats...)"
+caught_loot = 25
+robbed_line = "Thanks for the ride, pal!"
+
+[resource]
+script = ExtResource("1_profile")
+id = &"burglar"
+display_name = "Burglar"
+color = Color(0.18, 0.28, 0.2, 1)
+fare_base = 25
+fare_per_100m = 9
+tip_multiplier = 0.8
+min_distance = 180.0
+max_distance = 400.0
+time_multiplier = 1.0
+occupation = "\"Locksmith\""
+name_pool = PackedStringArray("Jhon Smiht", "Mick Rudge", "Terry Gallow", "Lenny Pope", "Dez Marlin")
+age_min = 22
+age_max = 48
+notes = "Black beanie, gloves in July. [url=pockets]Pockets bulging[/url] and clinking. The name on [url=id]his ID[/url] is spelled two different ways. Very interested in where you keep your cash."
+examinables = Array[ExtResource("2_exam")]([SubResource("Exam_pockets"), SubResource("Exam_id")])
+actions = Array[ExtResource("3_action")]([SubResource("Action_shakedown")])
+hidden_traits = Array[StringName]([&"thief", &"fake_id"])
+kick_reaction = 0
+kick_line = "Okay, okay! Easy!"
+ride_events = Array[ExtResource("4_event")]([SubResource("Event_steal")])
+spawn_weight = 1.5

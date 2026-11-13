@@ -1,0 +1,88 @@
+[gd_resource type="Resource" script_class="PassengerProfile" format=3]
+
+[ext_resource type="Script" path="res://src/core/resources/passenger_profile.gd" id="1_profile"]
+[ext_resource type="Script" path="res://src/core/resources/examinable.gd" id="2_exam"]
+[ext_resource type="Script" path="res://src/core/resources/passenger_action.gd" id="3_action"]
+[ext_resource type="Script" path="res://src/events/ride_event.gd" id="4_event"]
+[ext_resource type="Script" path="res://src/events/spawn_pursuers_event.gd" id="5_spawn"]
+
+[sub_resource type="Resource" id="Exam_briefcase"]
+script = ExtResource("2_exam")
+id = &"briefcase"
+label = "the handcuffed briefcase"
+reveal_text = "Bearer bonds. A LOT of bearer bonds. None of them in his name."
+time_cost = 3.0
+reveals_traits = Array[StringName]([&"rich"])
+
+[sub_resource type="Resource" id="Exam_letter"]
+script = ExtResource("2_exam")
+id = &"letter"
+label = "the crumpled letter"
+reveal_text = "\"You have until midnight. After that we send the cars. - The Consortium.\" There is a price on his head: $150."
+time_cost = 3.0
+reveals_traits = Array[StringName]([&"targeted"])
+
+[sub_resource type="Resource" id="Action_hazard"]
+script = ExtResource("3_action")
+id = &"hazard"
+label = "Demand hazard pay and drive"
+outcome = 0
+requires_traits = Array[StringName]([&"targeted"])
+fare_mult = 1.6
+result_text = "\"Fine! Anything! Just DRIVE!\""
+
+[sub_resource type="Resource" id="Action_kill"]
+script = ExtResource("3_action")
+id = &"kill"
+label = "Collect the contract yourself (kill him)"
+outcome = 2
+requires_traits = Array[StringName]([&"targeted"])
+cash_delta = 150
+heat_delta = 2
+result_text = "BANG. The Consortium wires you $150."
+
+[sub_resource type="Resource" id="Event_pincer"]
+script = ExtResource("5_spawn")
+trigger = 3
+trigger_value = 0.2
+trigger_random = 0.15
+count = 2
+extra_per_shift = 0.5
+pattern = 2
+line = "That car! They've found me - DRIVE!"
+
+[sub_resource type="Resource" id="Event_ambush"]
+script = ExtResource("5_spawn")
+trigger = 3
+trigger_value = 0.75
+trigger_random = 0.1
+chance = 0.5
+count = 1
+pattern = 1
+line = "There's more of them up ahead!"
+
+[resource]
+script = ExtResource("1_profile")
+id = &"businessman"
+display_name = "Businessman"
+color = Color(0.1, 0.14, 0.32, 1)
+fare_base = 90
+fare_per_100m = 22
+tip_multiplier = 1.0
+min_distance = 260.0
+max_distance = 520.0
+destination_districts = Array[StringName]([&"downtown", &"docks"])
+time_multiplier = 1.1
+occupation = "Investment banker"
+name_pool = PackedStringArray("Arthur Bellweather", "Conrad Pike", "Julian Marsh", "Edmund Voss", "Sterling Hale")
+age_min = 35
+age_max = 60
+notes = "Tailored suit, [url=briefcase]a briefcase handcuffed to his wrist[/url]. Keeps looking over his shoulder. A [url=letter]crumpled letter[/url] sticks out of his pocket. Offers triple the fare, up front."
+examinables = Array[ExtResource("2_exam")]([SubResource("Exam_briefcase"), SubResource("Exam_letter")])
+actions = Array[ExtResource("3_action")]([SubResource("Action_hazard"), SubResource("Action_kill")])
+hidden_traits = Array[StringName]([&"rich", &"targeted"])
+kick_reaction = 0
+kick_line = "You're making a mistake. A big one."
+ride_events = Array[ExtResource("4_event")]([SubResource("Event_pincer"), SubResource("Event_ambush")])
+spawn_weight = 1.2
+districts = Array[StringName]([&"downtown"])

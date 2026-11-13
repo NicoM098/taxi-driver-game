@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" format=3]
+
+[ext_resource type="Script" path="res://src/core/resources/weapon_data.gd" id="1_w"]
+
+[resource]
+script = ExtResource("1_w")
+id = &"revolver"
+display_name = "Revolver"
+damage = 40.0
+pellets = 1
+weapon_range = 160.0
+impact_force = 6.0
+fire_rate = 2.5
+automatic = false
+mag_size = 6
+reserve_max = 42
+reload_time = 1.6
+spread_aimed = 0.3
+spread_hip = 2.5
+spread_per_speed = 0.05
+spread_per_turn = 2.0
+recoil_pitch = 3.5
+recoil_yaw = 0.8
+gun_size = Vector3(0.05, 0.1, 0.26)
+gun_color = Color(0.22, 0.22, 0.25, 1)

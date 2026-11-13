@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://tests/editor_switch_autotest.gd" id="1_test"]
+
+[node name="EditorSwitchAutotest" type="Node"]
+script = ExtResource("1_test")

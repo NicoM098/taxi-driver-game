@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="StreetEncounter" format=3]
+
+[ext_resource type="Script" path="res://src/core/resources/street_encounter.gd" id="1_enc"]
+
+[resource]
+script = ExtResource("1_enc")
+id = &"turf_war"
+title = "WRONG TURF! GANG CARS AHEAD AND BEHIND"
+weight = 0.9
+when = 2
+min_level = 2
+enemy = "res://data/enemies/gang_coupe.tres"
+count = 3
+extra_per_level = 0.5
+pattern = 2

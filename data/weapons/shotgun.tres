@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" format=3]
+
+[ext_resource type="Script" path="res://src/core/resources/weapon_data.gd" id="1_w"]
+
+[resource]
+script = ExtResource("1_w")
+id = &"shotgun"
+display_name = "Sawed-off"
+damage = 11.0
+pellets = 8
+weapon_range = 45.0
+impact_force = 3.0
+fire_rate = 1.4
+automatic = false
+mag_size = 2
+reserve_max = 30
+reload_time = 1.5
+spread_aimed = 4.0
+spread_hip = 2.0
+spread_per_speed = 0.04
+spread_per_turn = 1.0
+recoil_pitch = 6.0
+recoil_yaw = 1.5
+gun_size = Vector3(0.08, 0.1, 0.36)
+gun_color = Color(0.35, 0.22, 0.12, 1)

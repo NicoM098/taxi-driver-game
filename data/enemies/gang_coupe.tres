@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="EnemyCarData" format=3]
+
+[ext_resource type="Script" path="res://src/core/resources/enemy_car_data.gd" id="1_e"]
+
+[resource]
+script = ExtResource("1_e")
+id = &"gang_coupe"
+display_name = "Street Gang"
+body_material = "res://assets/materials/enemy_gang.tres"
+hp = 70.0
+max_speed = 35.0
+engine_force = 9500.0
+mass = 700.0
+bounty = 25
+heat_on_kill = 0
+aggression = 0.25
+shoots = true
+damage = 2.0
+fire_rate = 8.0
+burst = 6
+burst_pause = 1.0
+spread_deg = 6.0
+gun_range = 38.0

@@ -1,0 +1,49 @@
+class_name TaxiStop
+extends Node3D
+## A named place in the city where passengers wait and get dropped off.
+## The node position is the arrival point in the street (next to the curb);
+## `sidewalk_point` is where a pedestrian stands. Shows a beacon + ring when it is the
+## active destination.
+
+const RING_RADIUS := 8.0
+
+var stop_name: String = ""
+var district: StringName = &""
+var sidewalk_point: Vector3 = Vector3.ZERO  # global
+var occupied: bool = false                  # a passenger waits here or it is a destination
+
+var _beacon: Node3D
+
+
+func setup(p_name: String, p_district: StringName, street_point: Vector3,
+		p_sidewalk_point: Vector3, beacon_mat: Material) -> void:
+	stop_name = p_name
+	district = p_district
+	global_position = street_point
+	sidewalk_point = p_sidewalk_point
+	_build_beacon(beacon_mat)
+
+
+func set_destination_highlight(on: bool) -> void:
+	if _beacon != null:
+		_beacon.visible = on
+
+
+func _build_beacon(mat: Material) -> void:
+	_beacon = Node3D.new()
+	_beacon.visible = false
+	add_child(_beacon)
+	var pillar := CylinderMesh.new()
+	pillar.top_radius = 0.6
+	pillar.bottom_radius = 0.6
+	pillar.height = 40.0
+	pillar.radial_segments = 6
+	pillar.rings = 1
+	Blockout.add_mesh(_beacon, pillar, Vector3(0.0, 20.0, 0.0), mat)
+	var ring := CylinderMesh.new()
+	ring.top_radius = RING_RADIUS
+	ring.bottom_radius = RING_RADIUS
+	ring.height = 0.05
+	ring.radial_segments = 16
+	ring.rings = 1
+	Blockout.add_mesh(_beacon, ring, Vector3(0.0, 0.04, 0.0), mat)

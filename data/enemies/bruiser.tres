@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="EnemyCarData" format=3]
+
+[ext_resource type="Script" path="res://src/core/resources/enemy_car_data.gd" id="1_e"]
+
+[resource]
+script = ExtResource("1_e")
+id = &"bruiser"
+display_name = "Bruiser"
+body_material = "res://assets/materials/enemy_bruiser.tres"
+hp = 260.0
+max_speed = 30.0
+engine_force = 15000.0
+mass = 1500.0
+bounty = 70
+heat_on_kill = 1
+aggression = 1.0
+shoots = false

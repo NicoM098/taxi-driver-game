@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="EnemyCarData" format=3]
+
+[ext_resource type="Script" path="res://src/core/resources/enemy_car_data.gd" id="1_e"]
+
+[resource]
+script = ExtResource("1_e")
+id = &"police_cruiser"
+display_name = "Police"
+body_material = "res://assets/materials/police_blue.tres"
+siren = true
+hp = 160.0
+max_speed = 34.0
+engine_force = 9500.0
+bounty = 0
+heat_on_kill = 2
+aggression = 0.8
+shoots = true
+damage = 3.0
+fire_rate = 5.0
+burst = 3
+burst_pause = 1.6
+spread_deg = 5.0
+gun_range = 35.0

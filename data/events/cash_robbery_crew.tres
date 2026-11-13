@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="StreetEncounter" format=3]
+
+[ext_resource type="Script" path="res://src/core/resources/street_encounter.gd" id="1_enc"]
+
+[resource]
+script = ExtResource("1_enc")
+id = &"cash_robbery_crew"
+title = "WORD IS OUT: YOU'RE CARRYING CASH"
+weight = 1.2
+min_cash = 250
+count = 2
+extra_per_level = 0.34
+pattern = 2

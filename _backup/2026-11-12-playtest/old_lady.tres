@@ -1,0 +1,70 @@
+[gd_resource type="Resource" script_class="PassengerProfile" format=3]
+
+[ext_resource type="Script" path="res://src/core/resources/passenger_profile.gd" id="1_profile"]
+[ext_resource type="Script" path="res://src/core/resources/examinable.gd" id="2_exam"]
+[ext_resource type="Script" path="res://src/core/resources/passenger_action.gd" id="3_action"]
+[ext_resource type="Script" path="res://src/events/ride_event.gd" id="4_event"]
+[ext_resource type="Script" path="res://src/events/reward_event.gd" id="5_reward"]
+
+[sub_resource type="Resource" id="Exam_bag"]
+script = ExtResource("2_exam")
+id = &"bag"
+label = "the knitting bag"
+reveal_text = "Under the wool: rolls of banknotes, a first-aid kit, boxes of ammunition and something round and green with a pin in it. She winks."
+time_cost = 3.0
+reveals_traits = Array[StringName]([&"loaded"])
+
+[sub_resource type="Resource" id="Action_help"]
+script = ExtResource("3_action")
+id = &"help"
+label = "Carry her bags to the trunk, then drive"
+outcome = 0
+requires_traits = Array[StringName]([&"loaded"])
+shift_time_delta = -6.0
+result_text = "\"Such a nice young driver!\""
+
+[sub_resource type="Resource" id="Event_gift"]
+script = ExtResource("5_reward")
+trigger = 4
+unless_action = &"help"
+kinds = Array[StringName]([&"heal", &"ammo", &"cash"])
+heal_amount = 35.0
+cash_amount = 40
+ammo_mags = 1
+line = "Here, dearie. A little something."
+
+[sub_resource type="Resource" id="Event_big_gift"]
+script = ExtResource("5_reward")
+trigger = 4
+requires_action = &"help"
+kinds = Array[StringName]([&"heal", &"cash", &"time"])
+heal_amount = 70.0
+cash_amount = 120
+time_amount = 18.0
+line = "For carrying my bags, dearie."
+
+[resource]
+script = ExtResource("1_profile")
+id = &"old_lady"
+display_name = "Old Lady"
+color = Color(0.7, 0.6, 0.85, 1)
+fare_base = 4
+fare_per_100m = 1
+tip_multiplier = 0.5
+min_distance = 160.0
+max_distance = 320.0
+time_multiplier = 1.5
+occupation = "Retired"
+name_pool = PackedStringArray("Ethel Marsh", "Doris Quimby", "Agnes Pruitt", "Mabel Thorn", "Winifred Oake")
+age_min = 74
+age_max = 93
+notes = "Tiny, smells of lavender. Counts out the fare in coins and is short by most of it. A huge [url=bag]knitting bag[/url] clanks when she moves it. Calls you \"dearie\"."
+examinables = Array[ExtResource("2_exam")]([SubResource("Exam_bag")])
+actions = Array[ExtResource("3_action")]([SubResource("Action_help")])
+hidden_traits = Array[StringName]([&"loaded"])
+kick_reaction = 1
+kick_line = "In MY day drivers had manners!"
+kick_damage = 5.0
+ride_events = Array[ExtResource("4_event")]([SubResource("Event_gift"), SubResource("Event_big_gift")])
+spawn_weight = 1.5
+districts = Array[StringName]([&"suburbs", &"downtown"])

@@ -1,0 +1,91 @@
+[gd_resource type="Resource" script_class="PassengerProfile" format=3]
+
+[ext_resource type="Script" path="res://src/core/resources/passenger_profile.gd" id="1_profile"]
+[ext_resource type="Script" path="res://src/core/resources/examinable.gd" id="2_exam"]
+[ext_resource type="Script" path="res://src/core/resources/passenger_action.gd" id="3_action"]
+[ext_resource type="Script" path="res://src/events/ride_event.gd" id="4_event"]
+[ext_resource type="Script" path="res://src/events/spawn_pursuers_event.gd" id="5_spawn"]
+[ext_resource type="Script" path="res://src/events/heat_change_event.gd" id="6_heat"]
+
+[sub_resource type="Resource" id="Exam_package"]
+script = ExtResource("2_exam")
+id = &"package"
+label = "the taped package"
+reveal_text = "Brick-shaped, wrapped three times. Worth a lot more than a cab fare to the right people. About $90 to the wrong ones."
+time_cost = 3.0
+reveals_traits = Array[StringName]([&"contraband"])
+
+[sub_resource type="Resource" id="Exam_tattoo"]
+script = ExtResource("2_exam")
+id = &"tattoo"
+label = "the tattoo on his neck"
+reveal_text = "A green viper. Dockside crew. The crew from the other side of the canal shoots Vipers on sight."
+time_cost = 2.0
+reveals_traits = Array[StringName]([&"gang"])
+
+[sub_resource type="Resource" id="Action_keep"]
+script = ExtResource("3_action")
+id = &"keep_package"
+label = "Keep the package, dump him"
+outcome = 1
+requires_traits = Array[StringName]([&"contraband"])
+cash_delta = 90
+heat_delta = 1
+result_text = "You fence the package on the next corner. $90."
+
+[sub_resource type="Resource" id="Action_danger"]
+script = ExtResource("3_action")
+id = &"danger_money"
+label = "Danger money, or he walks"
+outcome = 0
+requires_traits = Array[StringName]([&"gang"])
+fare_mult = 1.5
+result_text = "\"Whatever, man. Just don't stop at any lights.\""
+
+[sub_resource type="Resource" id="Event_rivals"]
+script = ExtResource("5_spawn")
+trigger = 1
+trigger_value = 5.0
+trigger_random = 5.0
+count = 3
+extra_per_shift = 0.5
+pattern = 0
+enemy = "res://data/enemies/gang_coupe.tres"
+line = "Canal boys! Step on it, STEP ON IT!"
+
+[sub_resource type="Resource" id="Event_rivals_ahead"]
+script = ExtResource("5_spawn")
+trigger = 3
+trigger_value = 0.6
+trigger_random = 0.15
+chance = 0.7
+count = 2
+pattern = 2
+enemy = "res://data/enemies/gang_coupe.tres"
+line = "More of them! They knew where I was going!"
+
+[resource]
+script = ExtResource("1_profile")
+id = &"gang_courier"
+display_name = "Gang Courier"
+color = Color(0.15, 0.5, 0.2, 1)
+fare_base = 70
+fare_per_100m = 16
+tip_multiplier = 1.0
+min_distance = 220.0
+max_distance = 460.0
+time_multiplier = 0.95
+occupation = "\"Deliveries\""
+name_pool = PackedStringArray("Tico Reyes", "Danny Malone", "Spider Okafor", "Remy Santos")
+age_min = 18
+age_max = 30
+notes = "Hood up, one earbud in. [url=tattoo]A tattoo[/url] climbs out of his collar. He keeps [url=package]a taped package[/url] under his jacket and watches the mirrors more than you do."
+examinables = Array[ExtResource("2_exam")]([SubResource("Exam_package"), SubResource("Exam_tattoo")])
+actions = Array[ExtResource("3_action")]([SubResource("Action_keep"), SubResource("Action_danger")])
+hidden_traits = Array[StringName]([&"contraband", &"gang"])
+kick_reaction = 1
+kick_line = "The Vipers will remember your plate!"
+kick_damage = 12.0
+ride_events = Array[ExtResource("4_event")]([SubResource("Event_rivals"), SubResource("Event_rivals_ahead")])
+spawn_weight = 0.8
+districts = Array[StringName]([&"docks"])

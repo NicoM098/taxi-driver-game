@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="StreetEncounter" format=3]
+
+[ext_resource type="Script" path="res://src/core/resources/street_encounter.gd" id="1_enc"]
+
+[resource]
+script = ExtResource("1_enc")
+id = &"gang_drive_by"
+title = "A STREET GANG WANTS YOUR CAB!"
+weight = 1.4
+enemy = "res://data/enemies/gang_coupe.tres"
+count = 2
+extra_per_level = 0.5
+pattern = 0

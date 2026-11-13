@@ -1,0 +1,96 @@
+[gd_resource type="Resource" script_class="PassengerProfile" format=3]
+
+[ext_resource type="Script" path="res://src/core/resources/passenger_profile.gd" id="1_profile"]
+[ext_resource type="Script" path="res://src/core/resources/examinable.gd" id="2_exam"]
+[ext_resource type="Script" path="res://src/core/resources/passenger_action.gd" id="3_action"]
+[ext_resource type="Script" path="res://src/events/ride_event.gd" id="4_event"]
+[ext_resource type="Script" path="res://src/events/force_detour_event.gd" id="5_detour"]
+[ext_resource type="Script" path="res://src/events/passenger_attack_event.gd" id="6_attack"]
+[ext_resource type="Script" path="res://src/events/steal_cash_event.gd" id="7_steal"]
+
+[sub_resource type="Resource" id="Exam_pocket"]
+script = ExtResource("2_exam")
+id = &"pocket"
+label = "his coat pocket"
+reveal_text = "The outline of a snub-nosed revolver, pointed straight at your seat."
+time_cost = 3.0
+reveals_traits = Array[StringName]([&"armed", &"hijacker"])
+
+[sub_resource type="Resource" id="Exam_story"]
+script = ExtResource("2_exam")
+id = &"story"
+label = "where he wants to go"
+reveal_text = "\"Just drive, I'll tell you when.\" He isn't going anywhere in particular. He wants the cab."
+time_cost = 2.0
+reveals_traits = Array[StringName]([&"suspicious"])
+
+[sub_resource type="Resource" id="Action_kill"]
+script = ExtResource("3_action")
+id = &"kill"
+label = "Shoot first (kill him)"
+outcome = 2
+requires_traits = Array[StringName]([&"armed"])
+cash_delta = 45
+heat_delta = 1
+result_text = "BANG. $45 in his wallet. Self-defence. Probably."
+
+[sub_resource type="Resource" id="Event_detour"]
+script = ExtResource("5_detour")
+trigger = 1
+trigger_value = 4.0
+trigger_random = 4.0
+sets_flag = &"hijacked"
+district = &"docks"
+fare_mult = 0.0
+time_mult = 1.15
+line = "Change of plans. The docks. And no heroics."
+completion_text = "He bolts without paying."
+
+[sub_resource type="Resource" id="Event_gunpoint"]
+script = ExtResource("6_attack")
+trigger = 1
+trigger_value = 0.0
+requires_flag = &"hijacked"
+min_speed = 7.0
+grace = 3.0
+interval = 2.5
+damage = 10.0
+warning_line = "Keep it moving, or I shoot!"
+shot_line = "I warned you!"
+
+[sub_resource type="Resource" id="Event_rob"]
+script = ExtResource("7_steal")
+trigger = 4
+requires_flag = &"hijacked"
+percent = 0.2
+min_amount = 15
+max_amount = 200
+counter_window = 0.0
+bails_out = false
+robbed_line = "Pleasure doing business."
+
+[resource]
+script = ExtResource("1_profile")
+id = &"hijacker"
+display_name = "Hijacker"
+color = Color(0.36, 0.22, 0.12, 1)
+fare_base = 30
+fare_per_100m = 10
+tip_multiplier = 1.0
+min_distance = 200.0
+max_distance = 420.0
+time_multiplier = 1.0
+occupation = "\"Between jobs\""
+name_pool = PackedStringArray("Ray Cutter", "Vince Drago", "Earl Hobbs", "Nico Brandt")
+age_min = 25
+age_max = 50
+notes = "Leather jacket zipped to the chin. One hand never leaves [url=pocket]his coat pocket[/url]. Asked for \"that street, you know the one\" and [url=story]can't name it[/url]. Sits right behind you."
+examinables = Array[ExtResource("2_exam")]([SubResource("Exam_pocket"), SubResource("Exam_story")])
+actions = Array[ExtResource("3_action")]([SubResource("Action_kill")])
+hidden_traits = Array[StringName]([&"armed", &"hijacker", &"suspicious"])
+kick_reaction = 1
+kick_line = "Wrong move, cabbie!"
+kick_damage = 25.0
+ride_events = Array[ExtResource("4_event")]([SubResource("Event_detour"), SubResource("Event_gunpoint"), SubResource("Event_rob")])
+spawn_weight = 1.0
+min_shift = 2

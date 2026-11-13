@@ -1,0 +1,67 @@
+[gd_resource type="Resource" script_class="PassengerProfile" format=3]
+
+[ext_resource type="Script" path="res://src/core/resources/passenger_profile.gd" id="1_profile"]
+[ext_resource type="Script" path="res://src/core/resources/examinable.gd" id="2_exam"]
+[ext_resource type="Script" path="res://src/core/resources/passenger_action.gd" id="3_action"]
+
+[sub_resource type="Resource" id="Exam_jacket"]
+script = ExtResource("2_exam")
+id = &"jacket"
+label = "the bulge under his jacket"
+reveal_text = "A pistol in a shoulder holster. His face matches the WANTED poster at the depot: \"Embezzler, armed. $120 bounty.\""
+time_cost = 4.0
+reveals_traits = Array[StringName]([&"armed", &"wanted"])
+
+[sub_resource type="Resource" id="Exam_phone"]
+script = ExtResource("2_exam")
+id = &"phone"
+label = "the phone call"
+reveal_text = "\"...the money's already offshore. If the driver asks, I'm a dentist.\""
+time_cost = 2.5
+reveals_traits = Array[StringName]([&"liar"])
+
+[sub_resource type="Resource" id="Action_kill"]
+script = ExtResource("3_action")
+id = &"kill"
+label = "Collect the bounty (kill him)"
+outcome = 2
+requires_traits = Array[StringName]([&"wanted"])
+cash_delta = 120
+heat_delta = 1
+result_text = "BANG. Bounty collected: +$120"
+
+[sub_resource type="Resource" id="Action_bribe"]
+script = ExtResource("3_action")
+id = &"bribe"
+label = "Take his hush money ($60) and drive"
+outcome = 0
+requires_traits = Array[StringName]([&"liar"])
+cash_delta = 60
+heat_delta = 1
+fare_mult = 0.8
+result_text = "\"Smart driver.\" +$60"
+
+[resource]
+script = ExtResource("1_profile")
+id = &"rushed_executive"
+display_name = "Rushed Executive"
+color = Color(0.15, 0.15, 0.18, 1)
+fare_base = 45
+fare_per_100m = 14
+tip_multiplier = 0.6
+min_distance = 180.0
+max_distance = 380.0
+destination_districts = Array[StringName]([&"downtown"])
+time_multiplier = 0.75
+occupation = "\"Dentist\""
+name_pool = PackedStringArray("Victor Crane", "Malcolm Steele", "Preston Vail", "Douglas Fenn")
+age_min = 40
+age_max = 62
+notes = "Expensive suit, sweating. Shouting into [url=phone]his phone[/url]. Something heavy pulls at [url=jacket]his jacket[/url]. Says he's a dentist."
+examinables = Array[ExtResource("2_exam")]([SubResource("Exam_jacket"), SubResource("Exam_phone")])
+actions = Array[ExtResource("3_action")]([SubResource("Action_kill"), SubResource("Action_bribe")])
+hidden_traits = Array[StringName]([&"armed", &"wanted", &"liar"])
+kick_reaction = 1
+kick_line = "You'll regret that!"
+spawn_weight = 1.0
+districts = Array[StringName]([&"downtown", &"suburbs"])

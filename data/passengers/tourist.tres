@@ -1,0 +1,46 @@
+[gd_resource type="Resource" script_class="PassengerProfile" format=3]
+
+[ext_resource type="Script" path="res://src/core/resources/passenger_profile.gd" id="1_profile"]
+[ext_resource type="Script" path="res://src/core/resources/examinable.gd" id="2_exam"]
+[ext_resource type="Script" path="res://src/core/resources/passenger_action.gd" id="3_action"]
+
+[sub_resource type="Resource" id="Exam_map"]
+script = ExtResource("2_exam")
+id = &"map"
+label = "the map"
+reveal_text = "Every landmark is circled twice. Under the fold: \"BIG TIPPER - TELL THE DRIVER TO TAKE THE LONG WAY\" in their own handwriting."
+time_cost = 3.0
+reveals_traits = Array[StringName]([&"big_tipper"])
+
+[sub_resource type="Resource" id="Action_scenic"]
+script = ExtResource("3_action")
+id = &"scenic"
+label = "Take the scenic route (+50% fare, more time)"
+outcome = 0
+requires_traits = Array[StringName]([&"big_tipper"])
+fare_mult = 1.5
+time_mult = 1.4
+result_text = "\"Ooh, the scenic route!\""
+
+[resource]
+script = ExtResource("1_profile")
+id = &"tourist"
+display_name = "Tourist"
+color = Color(0.9, 0.45, 0.7, 1)
+fare_base = 15
+fare_per_100m = 10
+tip_multiplier = 1.5
+min_distance = 260.0
+max_distance = 520.0
+destination_districts = Array[StringName]([&"downtown", &"docks"])
+time_multiplier = 1.3
+occupation = "Tourist (says \"influencer\")"
+name_pool = PackedStringArray("Brad Vanterpool", "Kiki Lanz", "Henrik Dahl", "Yumi Sato", "Chet Warbler")
+age_min = 19
+age_max = 70
+notes = "Hawaiian shirt, three cameras, a [url=map]folded city map[/url] covered in circles. Asks if you've \"been on TV\"."
+examinables = Array[ExtResource("2_exam")]([SubResource("Exam_map")])
+actions = Array[ExtResource("3_action")]([SubResource("Action_scenic")])
+kick_reaction = 2
+kick_line = "Rude! I'm leaving a review!"
+spawn_weight = 1.5

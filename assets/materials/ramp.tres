@@ -1,0 +1,9 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+[ext_resource type="Shader" path="res://src/core/shaders/ps1_world.gdshader" id="1_ps1"]
+
+[resource]
+shader = ExtResource("1_ps1")
+shader_parameter/albedo = Color(0.85, 0.45, 0.12, 1)
+shader_parameter/checker_size = 2.0
+shader_parameter/checker_color = Color(0.2, 0.2, 0.2, 1)

@@ -1,0 +1,98 @@
+[gd_resource type="Resource" script_class="PassengerProfile" format=3]
+
+[ext_resource type="Script" path="res://src/core/resources/passenger_profile.gd" id="1_profile"]
+[ext_resource type="Script" path="res://src/core/resources/examinable.gd" id="2_exam"]
+[ext_resource type="Script" path="res://src/core/resources/passenger_action.gd" id="3_action"]
+[ext_resource type="Script" path="res://src/events/ride_event.gd" id="4_event"]
+[ext_resource type="Script" path="res://src/events/spawn_pursuers_event.gd" id="5_spawn"]
+[ext_resource type="Script" path="res://src/events/heat_change_event.gd" id="6_heat"]
+
+[sub_resource type="Resource" id="Exam_bag"]
+script = ExtResource("2_exam")
+id = &"bag"
+label = "the duffel bag"
+reveal_text = "Banded bills, still in the bank's paper straps. Something inside is ticking: a dye pack."
+time_cost = 3.0
+reveals_traits = Array[StringName]([&"loot"])
+
+[sub_resource type="Resource" id="Exam_mask"]
+script = ExtResource("2_exam")
+id = &"mask"
+label = "what's in his back pocket"
+reveal_text = "A rubber clown mask, still warm. The radio is already talking about the First Union job."
+time_cost = 2.0
+reveals_traits = Array[StringName]([&"robber"])
+
+[sub_resource type="Resource" id="Action_cut"]
+script = ExtResource("3_action")
+id = &"cut"
+label = "Demand half the bag and drive"
+outcome = 0
+requires_traits = Array[StringName]([&"loot"])
+fare_mult = 2.0
+result_text = "\"HALF?! ...Fine. Just DRIVE!\""
+
+[sub_resource type="Resource" id="Action_turn_in"]
+script = ExtResource("3_action")
+id = &"turn_in"
+label = "Throw him to the cops (reward)"
+outcome = 1
+requires_traits = Array[StringName]([&"robber"])
+cash_delta = 60
+heat_delta = -1
+result_text = "The patrol car round the corner takes him. $60 reward."
+
+[sub_resource type="Resource" id="Event_heat"]
+script = ExtResource("6_heat")
+trigger = 0
+amount = 2
+line = "GO GO GO! Don't stop for anything!"
+
+[sub_resource type="Resource" id="Event_police"]
+script = ExtResource("5_spawn")
+trigger = 3
+trigger_value = 0.12
+trigger_random = 0.1
+count = 2
+extra_per_shift = 0.5
+pattern = 2
+enemy = "res://data/enemies/police_cruiser.tres"
+line = "Sirens! Lose them, LOSE THEM!"
+
+[sub_resource type="Resource" id="Event_police_late"]
+script = ExtResource("5_spawn")
+trigger = 3
+trigger_value = 0.6
+trigger_random = 0.15
+chance = 0.6
+count = 1
+pattern = 1
+enemy = "res://data/enemies/police_cruiser.tres"
+line = "They've cut us off up ahead!"
+
+[resource]
+script = ExtResource("1_profile")
+id = &"bank_robber"
+display_name = "Bank Robber"
+color = Color(0.45, 0.1, 0.4, 1)
+fare_base = 140
+fare_per_100m = 20
+tip_multiplier = 1.0
+min_distance = 260.0
+max_distance = 520.0
+destination_districts = Array[StringName]([&"docks", &"suburbs"])
+time_multiplier = 0.9
+occupation = "\"Withdrawals\""
+name_pool = PackedStringArray("Mick Dunne", "Leo Castellan", "Frankie Voss", "Dutch Molloy")
+age_min = 24
+age_max = 48
+notes = "Out of breath, sweating through a cheap suit. Hugs [url=bag]a heavy duffel bag[/url] like a newborn. Something rubber sticks out of [url=mask]his back pocket[/url]. \"Anywhere but here. I pay cash. A LOT of cash.\""
+examinables = Array[ExtResource("2_exam")]([SubResource("Exam_bag"), SubResource("Exam_mask")])
+actions = Array[ExtResource("3_action")]([SubResource("Action_cut"), SubResource("Action_turn_in")])
+hidden_traits = Array[StringName]([&"loot", &"robber"])
+kick_reaction = 1
+kick_line = "You're dead, cabbie!"
+kick_damage = 15.0
+ride_events = Array[ExtResource("4_event")]([SubResource("Event_heat"), SubResource("Event_police"), SubResource("Event_police_late")])
+spawn_weight = 0.8
+districts = Array[StringName]([&"downtown"])

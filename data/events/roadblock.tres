@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="StreetEncounter" format=3]
+
+[ext_resource type="Script" path="res://src/core/resources/street_encounter.gd" id="1_enc"]
+
+[resource]
+script = ExtResource("1_enc")
+id = &"roadblock"
+title = "ROADBLOCK ON YOUR ROUTE!"
+weight = 1.0
+when = 1
+enemy = "res://data/enemies/bruiser.tres"
+count = 2
+extra_per_level = 0.25
+pattern = 1

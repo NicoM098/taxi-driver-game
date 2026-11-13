@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="StreetEncounter" format=3]
+
+[ext_resource type="Script" path="res://src/core/resources/street_encounter.gd" id="1_enc"]
+
+[resource]
+script = ExtResource("1_enc")
+id = &"payback"
+title = "PAYBACK: THE CONSORTIUM SENT THE HEAVIES"
+weight = 1.6
+min_kills = 3
+enemy = "res://data/enemies/bruiser.tres"
+count = 1
+extra_per_level = 0.5
+pattern = 2

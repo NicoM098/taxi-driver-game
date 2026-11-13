@@ -1,0 +1,366 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/vehicle/taxi.gd" id="1_taxi"]
+[ext_resource type="Script" path="res://src/vehicle/taxi_wheel.gd" id="2_wheel"]
+[ext_resource type="Script" path="res://src/vehicle/player_vehicle_input.gd" id="3_input"]
+[ext_resource type="Script" path="res://src/camera/cab_camera.gd" id="4_cam"]
+[ext_resource type="Material" path="res://assets/materials/taxi_yellow.tres" id="5_yellow"]
+[ext_resource type="Material" path="res://assets/materials/taxi_black.tres" id="6_black"]
+[ext_resource type="Material" path="res://assets/materials/taxi_sign.tres" id="7_sign"]
+[ext_resource type="Material" path="res://assets/materials/interior.tres" id="8_interior"]
+[ext_resource type="Material" path="res://assets/materials/interior_trim.tres" id="9_trim"]
+[ext_resource type="Material" path="res://assets/materials/interior_seat.tres" id="10_seat"]
+[ext_resource type="Script" path="res://src/vehicle/drift_chain.gd" id="11_drift"]
+[ext_resource type="Script" path="res://src/vehicle/guide_arrow.gd" id="12_arrow"]
+[ext_resource type="Material" path="res://assets/materials/guide_green.tres" id="13_green"]
+[ext_resource type="Material" path="res://assets/materials/guide_yellow.tres" id="14_yellow"]
+[ext_resource type="Script" path="res://src/combat/weapon_controller.gd" id="15_weapons"]
+[ext_resource type="Material" path="res://assets/materials/guide_green_dark.tres" id="16_green_dark"]
+[ext_resource type="Material" path="res://assets/materials/guide_yellow_dark.tres" id="17_yellow_dark"]
+[ext_resource type="Script" path="res://src/vehicle/taxi_damage.gd" id="18_damage"]
+[ext_resource type="Script" path="res://src/vehicle/rear_mirror.gd" id="19_mirror"]
+[ext_resource type="Script" path="res://src/items/drink_viewmodel.gd" id="20_drink"]
+
+[sub_resource type="BoxShape3D" id="Shape_body"]
+size = Vector3(1.7, 0.8, 4.3)
+
+[sub_resource type="BoxShape3D" id="Shape_cabin"]
+size = Vector3(1.5, 0.8, 2)
+
+[sub_resource type="BoxMesh" id="Mesh_lower"]
+size = Vector3(1.8, 0.85, 4.4)
+
+[sub_resource type="BoxMesh" id="Mesh_stripe"]
+size = Vector3(1.82, 0.12, 2.6)
+
+[sub_resource type="BoxMesh" id="Mesh_bumper"]
+size = Vector3(1.84, 0.18, 0.15)
+
+[sub_resource type="BoxMesh" id="Mesh_roof"]
+size = Vector3(1.6, 0.07, 1.6)
+
+[sub_resource type="BoxMesh" id="Mesh_headliner"]
+size = Vector3(1.54, 0.02, 1.54)
+
+[sub_resource type="BoxMesh" id="Mesh_pillar"]
+size = Vector3(0.07, 1.0, 0.07)
+
+[sub_resource type="BoxMesh" id="Mesh_cpillar"]
+size = Vector3(0.07, 0.88, 0.07)
+
+[sub_resource type="BoxMesh" id="Mesh_bpillar"]
+size = Vector3(0.06, 0.8, 0.12)
+
+[sub_resource type="BoxMesh" id="Mesh_sign"]
+size = Vector3(0.6, 0.2, 0.25)
+
+[sub_resource type="BoxMesh" id="Mesh_floor"]
+size = Vector3(1.7, 0.02, 2.2)
+
+[sub_resource type="BoxMesh" id="Mesh_dash"]
+size = Vector3(1.7, 0.2, 0.45)
+
+[sub_resource type="BoxMesh" id="Mesh_seat"]
+size = Vector3(0.5, 0.12, 0.5)
+
+[sub_resource type="BoxMesh" id="Mesh_seatback"]
+size = Vector3(0.5, 0.65, 0.12)
+
+[sub_resource type="BoxMesh" id="Mesh_bench"]
+size = Vector3(1.5, 0.12, 0.5)
+
+[sub_resource type="BoxMesh" id="Mesh_benchback"]
+size = Vector3(1.5, 0.6, 0.12)
+
+[sub_resource type="TorusMesh" id="Mesh_steering"]
+inner_radius = 0.14
+outer_radius = 0.175
+rings = 12
+ring_segments = 6
+
+[sub_resource type="BoxMesh" id="Mesh_spoke"]
+size = Vector3(0.3, 0.035, 0.035)
+
+[sub_resource type="BoxMesh" id="Mesh_arrow_shaft"]
+size = Vector3(0.09, 0.05, 0.36)
+
+[sub_resource type="PrismMesh" id="Mesh_arrow_head"]
+size = Vector3(0.32, 0.24, 0.05)
+
+[sub_resource type="CylinderMesh" id="Mesh_tyre"]
+top_radius = 0.35
+bottom_radius = 0.35
+height = 0.25
+radial_segments = 10
+rings = 1
+
+[sub_resource type="BoxMesh" id="Mesh_hub"]
+size = Vector3(0.27, 0.5, 0.08)
+
+[node name="Taxi" type="RigidBody3D" node_paths=PackedStringArray("input_provider", "steering_wheel")]
+collision_layer = 2
+collision_mask = 285
+mass = 1000.0
+gravity_scale = 1.3
+center_of_mass_mode = 1
+center_of_mass = Vector3(0, -0.2, 0)
+continuous_cd = true
+angular_damp = 0.3
+script = ExtResource("1_taxi")
+input_provider = NodePath("PlayerInput")
+steering_wheel = NodePath("Interior/SteeringPivot/SteeringWheel")
+
+[node name="PlayerInput" type="Node" parent="."]
+script = ExtResource("3_input")
+
+[node name="CollisionBody" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)
+shape = SubResource("Shape_body")
+
+[node name="CollisionCabin" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0.35)
+shape = SubResource("Shape_cabin")
+
+[node name="Wheels" type="Node3D" parent="."]
+
+[node name="FL" type="RayCast3D" parent="Wheels" node_paths=PackedStringArray("visual")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.82, 0, -1.38)
+script = ExtResource("2_wheel")
+is_front = true
+visual = NodePath("Visual")
+
+[node name="Visual" type="Node3D" parent="Wheels/FL"]
+
+[node name="Tyre" type="MeshInstance3D" parent="Wheels/FL/Visual"]
+transform = Transform3D(-4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("Mesh_tyre")
+surface_material_override/0 = ExtResource("6_black")
+
+[node name="Hub" type="MeshInstance3D" parent="Wheels/FL/Visual"]
+mesh = SubResource("Mesh_hub")
+surface_material_override/0 = ExtResource("9_trim")
+
+[node name="FR" type="RayCast3D" parent="Wheels" node_paths=PackedStringArray("visual")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.82, 0, -1.38)
+script = ExtResource("2_wheel")
+is_front = true
+visual = NodePath("Visual")
+
+[node name="Visual" type="Node3D" parent="Wheels/FR"]
+
+[node name="Tyre" type="MeshInstance3D" parent="Wheels/FR/Visual"]
+transform = Transform3D(-4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("Mesh_tyre")
+surface_material_override/0 = ExtResource("6_black")
+
+[node name="Hub" type="MeshInstance3D" parent="Wheels/FR/Visual"]
+mesh = SubResource("Mesh_hub")
+surface_material_override/0 = ExtResource("9_trim")
+
+[node name="RL" type="RayCast3D" parent="Wheels" node_paths=PackedStringArray("visual")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.82, 0, 1.38)
+script = ExtResource("2_wheel")
+visual = NodePath("Visual")
+
+[node name="Visual" type="Node3D" parent="Wheels/RL"]
+
+[node name="Tyre" type="MeshInstance3D" parent="Wheels/RL/Visual"]
+transform = Transform3D(-4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("Mesh_tyre")
+surface_material_override/0 = ExtResource("6_black")
+
+[node name="Hub" type="MeshInstance3D" parent="Wheels/RL/Visual"]
+mesh = SubResource("Mesh_hub")
+surface_material_override/0 = ExtResource("9_trim")
+
+[node name="RR" type="RayCast3D" parent="Wheels" node_paths=PackedStringArray("visual")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.82, 0, 1.38)
+script = ExtResource("2_wheel")
+visual = NodePath("Visual")
+
+[node name="Visual" type="Node3D" parent="Wheels/RR"]
+
+[node name="Tyre" type="MeshInstance3D" parent="Wheels/RR/Visual"]
+transform = Transform3D(-4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("Mesh_tyre")
+surface_material_override/0 = ExtResource("6_black")
+
+[node name="Hub" type="MeshInstance3D" parent="Wheels/RR/Visual"]
+mesh = SubResource("Mesh_hub")
+surface_material_override/0 = ExtResource("9_trim")
+
+[node name="Body" type="Node3D" parent="."]
+
+[node name="Lower" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.075, 0)
+mesh = SubResource("Mesh_lower")
+surface_material_override/0 = ExtResource("5_yellow")
+
+[node name="Stripe" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0.3)
+mesh = SubResource("Mesh_stripe")
+surface_material_override/0 = ExtResource("6_black")
+
+[node name="BumperFront" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.15, -2.25)
+mesh = SubResource("Mesh_bumper")
+surface_material_override/0 = ExtResource("6_black")
+
+[node name="BumperRear" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.15, 2.25)
+mesh = SubResource("Mesh_bumper")
+surface_material_override/0 = ExtResource("6_black")
+
+[node name="Roof" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.335, 0.45)
+mesh = SubResource("Mesh_roof")
+surface_material_override/0 = ExtResource("5_yellow")
+
+[node name="RoofSign" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.47, 0.45)
+mesh = SubResource("Mesh_sign")
+surface_material_override/0 = ExtResource("7_sign")
+
+[node name="PillarA_L" type="MeshInstance3D" parent="Body"]
+position = Vector3(-0.78, 0.9, -0.65)
+rotation = Vector3(0.6435, 0, 0)
+mesh = SubResource("Mesh_pillar")
+surface_material_override/0 = ExtResource("5_yellow")
+
+[node name="PillarA_R" type="MeshInstance3D" parent="Body"]
+position = Vector3(0.78, 0.9, -0.65)
+rotation = Vector3(0.6435, 0, 0)
+mesh = SubResource("Mesh_pillar")
+surface_material_override/0 = ExtResource("5_yellow")
+
+[node name="PillarB_L" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.79, 0.9, 0.65)
+mesh = SubResource("Mesh_bpillar")
+surface_material_override/0 = ExtResource("5_yellow")
+
+[node name="PillarB_R" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.79, 0.9, 0.65)
+mesh = SubResource("Mesh_bpillar")
+surface_material_override/0 = ExtResource("5_yellow")
+
+[node name="PillarC_L" type="MeshInstance3D" parent="Body"]
+position = Vector3(-0.78, 0.9, 1.425)
+rotation = Vector3(-0.4123, 0, 0)
+mesh = SubResource("Mesh_cpillar")
+surface_material_override/0 = ExtResource("5_yellow")
+
+[node name="PillarC_R" type="MeshInstance3D" parent="Body"]
+position = Vector3(0.78, 0.9, 1.425)
+rotation = Vector3(-0.4123, 0, 0)
+mesh = SubResource("Mesh_cpillar")
+surface_material_override/0 = ExtResource("5_yellow")
+
+[node name="Interior" type="Node3D" parent="."]
+
+[node name="Floor" type="MeshInstance3D" parent="Interior"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.52, 0.35)
+mesh = SubResource("Mesh_floor")
+surface_material_override/0 = ExtResource("8_interior")
+
+[node name="Headliner" type="MeshInstance3D" parent="Interior"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.29, 0.45)
+mesh = SubResource("Mesh_headliner")
+surface_material_override/0 = ExtResource("9_trim")
+
+[node name="Dashboard" type="MeshInstance3D" parent="Interior"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.57, -0.75)
+mesh = SubResource("Mesh_dash")
+surface_material_override/0 = ExtResource("8_interior")
+
+[node name="RearMirror" type="Node3D" parent="Interior"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.02, 1.18, -0.42)
+script = ExtResource("19_mirror")
+mirror_size = Vector2(0.36, 0.12)
+
+[node name="SteeringPivot" type="Node3D" parent="Interior"]
+position = Vector3(-0.38, 0.8, -0.45)
+rotation = Vector3(1.15, 0, 0)
+
+[node name="SteeringWheel" type="MeshInstance3D" parent="Interior/SteeringPivot"]
+mesh = SubResource("Mesh_steering")
+surface_material_override/0 = ExtResource("6_black")
+
+[node name="Spoke" type="MeshInstance3D" parent="Interior/SteeringPivot/SteeringWheel"]
+mesh = SubResource("Mesh_spoke")
+surface_material_override/0 = ExtResource("9_trim")
+
+[node name="DriverSeat" type="MeshInstance3D" parent="Interior"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.38, 0.58, 0.35)
+mesh = SubResource("Mesh_seat")
+surface_material_override/0 = ExtResource("10_seat")
+
+[node name="DriverSeatBack" type="MeshInstance3D" parent="Interior"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.38, 0.85, 0.62)
+mesh = SubResource("Mesh_seatback")
+surface_material_override/0 = ExtResource("10_seat")
+
+[node name="FrontSeat" type="MeshInstance3D" parent="Interior"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.38, 0.58, 0.35)
+mesh = SubResource("Mesh_seat")
+surface_material_override/0 = ExtResource("10_seat")
+
+[node name="FrontSeatBack" type="MeshInstance3D" parent="Interior"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.38, 0.85, 0.62)
+mesh = SubResource("Mesh_seatback")
+surface_material_override/0 = ExtResource("10_seat")
+
+[node name="RearBench" type="MeshInstance3D" parent="Interior"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.58, 1.1)
+mesh = SubResource("Mesh_bench")
+surface_material_override/0 = ExtResource("10_seat")
+
+[node name="RearBenchBack" type="MeshInstance3D" parent="Interior"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 1.38)
+mesh = SubResource("Mesh_benchback")
+surface_material_override/0 = ExtResource("10_seat")
+
+[node name="PassengerSeat" type="Marker3D" parent="Interior"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, 0.62, 1.1)
+
+[node name="DriftChain" type="Node" parent="."]
+script = ExtResource("11_drift")
+
+[node name="HeadPivot" type="Node3D" parent="." node_paths=PackedStringArray("vehicle")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.38, 1, 0.38)
+script = ExtResource("4_cam")
+vehicle = NodePath("..")
+
+[node name="Camera3D" type="Camera3D" parent="HeadPivot"]
+current = true
+fov = 75.0
+near = 0.05
+far = 250.0
+
+[node name="GuideArrow" type="Node3D" parent="HeadPivot/Camera3D"]
+position = Vector3(0, 0.4, -1.3)
+scale = Vector3(1.35, 1.35, 1.35)
+script = ExtResource("12_arrow")
+green_material = ExtResource("13_green")
+yellow_material = ExtResource("14_yellow")
+green_dark_material = ExtResource("16_green_dark")
+yellow_dark_material = ExtResource("17_yellow_dark")
+
+[node name="Shaft" type="MeshInstance3D" parent="HeadPivot/Camera3D/GuideArrow"]
+position = Vector3(0, 0, 0.12)
+mesh = SubResource("Mesh_arrow_shaft")
+surface_material_override/0 = ExtResource("14_yellow")
+
+[node name="Head" type="MeshInstance3D" parent="HeadPivot/Camera3D/GuideArrow"]
+position = Vector3(0, 0, -0.14)
+rotation = Vector3(-1.5708, 0, 0)
+mesh = SubResource("Mesh_arrow_head")
+surface_material_override/0 = ExtResource("14_yellow")
+
+[node name="WeaponHolder" type="Node3D" parent="HeadPivot/Camera3D"]
+script = ExtResource("15_weapons")
+
+[node name="TaxiDamage" type="Node3D" parent="."]
+script = ExtResource("18_damage")
+
+[node name="DrinkViewmodel" type="Node3D" parent="HeadPivot/Camera3D"]
+script = ExtResource("20_drink")
