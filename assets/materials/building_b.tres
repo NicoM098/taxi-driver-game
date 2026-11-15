@@ -1,7 +1,17 @@
 [gd_resource type="ShaderMaterial" format=3]
 
 [ext_resource type="Shader" path="res://src/core/shaders/ps1_world.gdshader" id="1_ps1"]
+[ext_resource type="Texture2D" path="res://assets/textures/A_classic/plaster-paper/Plaster003.png" id="2_tex"]
 
 [resource]
 shader = ExtResource("1_ps1")
-shader_parameter/albedo = Color(0.42, 0.45, 0.52, 1)
+shader_parameter/albedo = Color(0.905, 0.998, 1.188, 1)
+shader_parameter/uv_mode = 1
+shader_parameter/world_uv_metres = 2.5
+shader_parameter/windows_enabled = true
+shader_parameter/window_cell = Vector2(2.2, 2.6)
+shader_parameter/window_fill = Vector2(0.46, 0.5)
+shader_parameter/window_ground_floor = 2.4
+shader_parameter/window_lit_chance = 0.22
+shader_parameter/window_lit = Color(0.95, 0.9, 0.7, 1)
+shader_parameter/albedo_texture = ExtResource("2_tex")

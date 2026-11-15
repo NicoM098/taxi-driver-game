@@ -44,7 +44,7 @@ Rule: **scene + its script live together** in the feature folder (`src/vehicle/t
 | `SaveManager` | `src/autoload/save_manager.gd` | Save/load `GameState` to `user://save.json`. |
 | `SceneLoader` | `src/autoload/scene_loader.gd` | Requests world-scene swaps inside Main's viewport (`goto_world(path)`); fades later. |
 | `InputDevice` | `src/autoload/input_device.gd` | Last-used device (KB+M/pad) + mouse-look accumulator (`consume_mouse_delta()`), see D-013. |
-| `Audio` | `src/autoload/audio.gd` | (Phase 11) SFX/music helpers & buses. |
+| `Audio` | `src/autoload/audio.gd` | Bus layout, pooled one-shot players (`play` / `play_at`), looping sources (`make_loop`), volume API. **Listens on the EventBus itself**, so no gameplay script knows about audio. Silent in headless runs. (D-066) |
 
 Add autoloads only when a phase needs them.
 

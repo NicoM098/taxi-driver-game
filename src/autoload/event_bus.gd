@@ -53,6 +53,12 @@ signal heat_changed(level: int)
 signal taxi_damaged(amount: float, hp_left: float)
 @warning_ignore("unused_signal")
 signal weapon_fired(weapon: Resource)
+## A reload started (Phase 11: its sound runs over `reload_time`).
+@warning_ignore("unused_signal")
+signal weapon_reloading(weapon: Resource)
+## Trigger pulled with an empty magazine and nothing left to load: the click.
+@warning_ignore("unused_signal")
+signal weapon_empty(weapon: Resource)
 
 # Items (Phase 08)
 @warning_ignore("unused_signal")
@@ -85,3 +91,9 @@ signal explosion(position: Vector3, strength: float)
 ## The player drove through a Monstrous Energy can (first-person drink animation, heal flash).
 @warning_ignore("unused_signal")
 signal energy_drink_consumed
+
+# World / time of day (Phase 11, D-064)
+## The city switched time of day. `mood` is a Lighting.Mood. Anything that owns its own lights
+## (the taxi's headlights, later the enemy cars) listens here instead of polling the city.
+@warning_ignore("unused_signal")
+signal mood_changed(mood: int)

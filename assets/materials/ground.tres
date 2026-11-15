@@ -1,10 +1,15 @@
 [gd_resource type="ShaderMaterial" format=3]
 
 [ext_resource type="Shader" path="res://src/core/shaders/ps1_world.gdshader" id="1_ps1"]
+[ext_resource type="Texture2D" path="res://assets/textures/A_classic/concrete-stone/Concrete031.png" id="2_tex"]
 
 [resource]
 shader = ExtResource("1_ps1")
-shader_parameter/albedo = Color(0.36, 0.38, 0.4, 1)
+shader_parameter/albedo = Color(1.254, 1.379, 1.559, 1)
 shader_parameter/checker_size = 4.0
 shader_parameter/checker_color = Color(0.31, 0.33, 0.35, 1)
 shader_parameter/snap_multiplier = 0.0
+shader_parameter/uv_mode = 1
+shader_parameter/world_uv_metres = 8.0
+shader_parameter/albedo_texture = ExtResource("2_tex")
+shader_parameter/affine_multiplier = 0.25

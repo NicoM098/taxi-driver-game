@@ -11,6 +11,10 @@ status: not-started
 ## Tasks
 - [ ] `SceneLoader` transitions with fade.
 - [ ] Main menu: Continue / New Game / Settings / Quit.
+- [ ] **Time of day picked when a game starts** (user, 2026-11-14): day / dusk / night chosen on
+  New Game, not only with the F6 debug key. The moods already exist as data (`Lighting`, D-064) and
+  `City.set_mood()` applies one live, so this is a menu option writing one value — put it wherever
+  the New Game flow lands, and keep F6 for development.
 - [ ] Pause menu (Esc): resume, settings, quit to menu; pauses tree, frees mouse.
 - [ ] Shift summary screen: rides, decisions made, cash in/out (fares, tips, theft, bounties), heat, items found.
 - [ ] Game over (taxi destroyed / driver killed) rules: lose shift earnings? Define with user → [[Decisions Log]].

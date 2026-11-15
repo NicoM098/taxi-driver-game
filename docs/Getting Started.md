@@ -42,14 +42,14 @@ Full details: [[Game Design Document]].
 | Language | GDScript (static typing) |
 | Renderer | Forward+ (D3D12 on Windows) |
 | Physics | Jolt Physics (3D) |
-| Godot project | `TaxiDriver/new-game-project/` |
-| Docs vault | `TaxiDriver/Crazytaxi/` (this Obsidian vault) |
-| Godot exe | `C:\Users\DLain\Downloads\Godot_v4.6.1-stable_win64.exe\` |
+| Godot project | `C:\Users\nikom\OneDrive\Escritorio\DriverProject\new-game-project` |
+| Docs vault | `docs/` (this Obsidian vault, inside the Godot project) |
+| Godot exe | `C:\Users\nikom\OneDrive\Escritorio\DriverProject\Godot_v4.6.1-stable_win64.exe` |
 
 ## 4. Folder layout
 ```
 TaxiDriver/
-├── CLAUDE.md                ← pointer to Crazytaxi/CLAUDE.md
+├── CLAUDE.md                ← pointer to docs/CLAUDE.md
 ├── new-game-project/        ← Godot project (res://)
 │   ├── assets/materials/    ← PS1 ShaderMaterial presets (flat colours)
 │   ├── data/                ← content as .tres: passengers/, weapons/, enemies/
@@ -58,7 +58,7 @@ TaxiDriver/
 │   ├── tests/               ← headless autotests + screenshot tools (see CLAUDE.md §5)
 │   ├── tools/               ← setup_project.gd (project settings), check_profiles.gd
 │   └── _backup/             ← manual backups (no git; ignored by Godot)
-└── Crazytaxi/               ← Obsidian vault (all docs)
+└── docs/                    ← Obsidian vault (all docs)
     ├── 00 - Home.md
     ├── CLAUDE.md            ← Claude's working rules
     ├── Getting Started.md   ← you are here
@@ -106,7 +106,7 @@ Claude runs headless autotests and screenshot tools after every change — list 
 
 ## 7. Project decisions (answered 2026-11-10)
 - [x] **Title:** TaxiDriver (final). Godot `config/name` to be renamed in Phase 00.
-- [x] **Version control:** no git — this is a quick proof-of-concept. (Claude must be careful with destructive edits; see [[CLAUDE]] §6.)
+- [x] **Version control:** git, since 2026-11-13 (branch `main`). Backups in `_backup/` stay for risky restructures; see [[CLAUDE]] §6.
 - [x] **Controller:** supported from the start (KB+M and gamepad).
 - [x] **Run structure:** ~~endless shifts~~ → open world, no shift clock (2026-11-12, D-051).
 - [x] **Art direction:** primitive blockout + PS1-style render pipeline; flat colours first, no textures from day 1. See [[Art Direction]].

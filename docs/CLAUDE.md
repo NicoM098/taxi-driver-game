@@ -9,10 +9,10 @@ tags: [meta, claude]
 ## 1. Project at a glance
 - **Game:** **TaxiDriver** (final title) — proof-of-concept demo, **open world with no shift clock** (D-051; direction: neighbourhoods with storylines + shops, see [[Development Plan]]), KB+M **and controller**, PS1-style look ([[Art Direction]]). First-person arcade taxi game. *Crazy Taxi* driving × *Papers, Please* passenger screening × *Half Grip*-style first-person shooting from the cab.
 - **Engine:** Godot **4.6.1** (stable), **GDScript**, Forward+ renderer, **Jolt Physics** (3D), D3D12 on Windows.
-- **Godot project folder:** `TaxiDriver/new-game-project/` (contains `project.godot`).
-- **Docs vault (Obsidian):** `TaxiDriver/Crazytaxi/` — everything design/plan/progress lives here.
-- **Godot executable:** `C:\Users\DLain\Downloads\Godot_v4.6.1-stable_win64.exe\Godot_v4.6.1-stable_win64.exe`
-  (console build for headless checks: `...\Godot_v4.6.1-stable_win64_console.exe`)
+- **Godot project folder:** `C:\Users\nikom\OneDrive\Escritorio\DriverProject\new-game-project` (contains `project.godot`). This folder is also the git repo root.
+- **Docs vault (Obsidian):** `docs/` (inside the Godot project folder) — everything design/plan/progress lives here.
+- **Godot executable:** `C:\Users\nikom\OneDrive\Escritorio\DriverProject\Godot_v4.6.1-stable_win64.exe`
+  (there is **no** separate `_console.exe` build installed; this exe does print to stdout when launched from a shell, so `<godot exe>` below means this one)
 
 ## 2. Session protocol (ALWAYS follow)
 ### At the start of every session
@@ -52,32 +52,32 @@ tags: [meta, claude]
 ## 5. Verifying work
 - Headless parse/import check (catches script errors):
   ```
-  "C:\Users\DLain\Downloads\Godot_v4.6.1-stable_win64.exe\Godot_v4.6.1-stable_win64_console.exe" --headless --path "C:\Users\DLain\Documents\Godot proyects\TaxiDriver\new-game-project" --import
+  "C:\Users\nikom\OneDrive\Escritorio\DriverProject\Godot_v4.6.1-stable_win64.exe" --headless --path "C:\Users\nikom\OneDrive\Escritorio\DriverProject\new-game-project" --import
   ```
 - Run a specific scene: add `res://path/scene.tscn` after `--path ...` (without `--headless` to see it).
 - **Vehicle autotest** (physics regression, must PASS after any vehicle change):
-  `<console exe> --headless --path <project> --fixed-fps 60 res://tests/vehicle_autotest.tscn` and again with `-- --jump`, `-- --handbrake-low`, `-- --flip`, `-- --drift-chain`, `-- --handbrake-high`, `-- --handbrake-straight`, `-- --weave`, `-- --reverse-throttle`.
-- **View screenshots** (render artifacts): `<console exe> --path <project> --fixed-fps 60 res://tests/view_shots.tscn -- --shot-dir=<dir> --tag=<name>` (3 fixed city views).
+  `<godot exe> --headless --path <project> --fixed-fps 60 res://tests/vehicle_autotest.tscn` and again with `-- --jump`, `-- --handbrake-low`, `-- --flip`, `-- --drift-chain`, `-- --handbrake-high`, `-- --handbrake-straight`, `-- --weave`, `-- --reverse-throttle`.
+- **View screenshots** (render artifacts): `<godot exe> --path <project> --fixed-fps 60 res://tests/view_shots.tscn -- --shot-dir=<dir> --tag=<name>` (3 fixed city views).
 - **Dossier test** (must PASS after any passenger/file/ride change): `res://tests/dossier_autotest.tscn` (headless; `-- --shot-dir=<dir>` windowed for file screenshots). Profile data check (every file in `data/passengers/`): `--headless --path <project> res://tools/check_profiles.tscn` (a scene — `--script` cannot compile scripts that use autoloads).
 - **Pickup test**: `res://tests/pickup_autotest.tscn` (headless; `-- --shot-dir=<dir>` windowed for drink screenshots).
-- **Ride-loop test** (must PASS after any ride/shift/city change): `<console exe> --headless --path <project> --fixed-fps 60 res://tests/ride_autotest.tscn`; windowed with `-- --shot-dir=<scratchpad>` for mid-ride screenshots.
+- **Ride-loop test** (must PASS after any ride/shift/city change): `<godot exe> --headless --path <project> --fixed-fps 60 res://tests/ride_autotest.tscn`; windowed with `-- --shot-dir=<scratchpad>` for mid-ride screenshots.
 - **Events test** (must PASS after any ride-event / archetype / spawn change): `res://tests/events_autotest.tscn` (headless, `--fixed-fps 60`; `-- --shot-dir=<dir>` windowed for HUD screenshots). Debug in game: **F8** puts the next archetype at the nearest stop, F7 spawns hitmen.
 - **Enemy tests** (must PASS after any enemy/damage/AI change): `res://tests/enemy_autotest.tscn` and `res://tests/enemy_city_autotest.tscn` (headless, `--fixed-fps 60`); the city one with `-- --shot-dir=<dir>` (windowed) saves a screenshot of an attack.
 - **Map test** (must PASS after any map / city / editor / repair-shop change): `res://tests/map_autotest.tscn` (headless, `--fixed-fps 60`; windowed with `-- --shot-dir=<dir>` saves editor screenshots). Tests always play the built-in city (`MapData.use_builtin()`); `-- --map=<name>` makes the GAME load `data/maps/<name>.json` (`builtin` = generated city).
 - **Hostiles test** (must PASS after any enemy-spawn / encounter / new hostile passenger change): `res://tests/hostiles_autotest.tscn` (headless, `--fixed-fps 60`; its own map with walled-in courtyards). Debug in game: **H** fires the next street encounter.
 - **Jump test** (must PASS after any ramp / container / vehicle-air change): `res://tests/jump_autotest.tscn` (headless, `--fixed-fps 60`; `-- --explore` prints ramp heights x run-ups).
 - **Curb test** (must PASS after any vehicle collision-shape / suspension / sidewalk change): `res://tests/curb_autotest.tscn` (headless, `--fixed-fps 60`; `-- --explore` prints the table without failing). Tests that place the taxi themselves must `teleport()` it after the city has moved it to the player start.
-- **Game ↔ editor switch test** (after any change to `main.gd` input or the editor's input): `<console exe> --path <project> res://tests/editor_switch_autotest.tscn` — WINDOWED, sends real key / mouse events (M, pan, wheel, tool button, place, select, Del, P); `-- --direct` opens the editor without going through the game. Keep the real mouse out of the window while it runs (it overrides the simulated position → false FAIL).
+- **Game ↔ editor switch test** (after any change to `main.gd` input or the editor's input): `<godot exe> --path <project> res://tests/editor_switch_autotest.tscn` — WINDOWED, sends real key / mouse events (M, pan, wheel, tool button, place, select, Del, P); `-- --direct` opens the editor without going through the game. Keep the real mouse out of the window while it runs (it overrides the simulated position → false FAIL).
 - **Map editor**: `res://src/editor/map_editor.tscn` (**M** in the game; P or the PLAY button goes back. Never bind F9 / F10: Godot's embedded game view uses them for suspend / next frame). Maps are JSON in `new-game-project/data/maps/`; the user's maps are **their work — never overwrite or delete them** (the test only uses `_autotest_map.json`).
-- **Arrow visual check**: `<console exe> --path <project> res://tests/arrow_shots.tscn -- --shot-dir=<scratchpad>` (5 screenshots at fixed angles).
-- **Weapon test** (must PASS after any combat change): `<console exe> --headless --path <project> --fixed-fps 60 res://tests/weapon_autotest.tscn`.
-- **Screenshot check** (visuals; opens a window briefly; add `--world=res://src/combat/shooting_range.tscn` / `--hold=aim,fire` for combat states): `<console exe> --path <project> -- --screenshot=<scratchpad>/shot.png --screenshot-frame=90 [--no-ps1]`, then view the PNG.
+- **Arrow visual check**: `<godot exe> --path <project> res://tests/arrow_shots.tscn -- --shot-dir=<scratchpad>` (5 screenshots at fixed angles).
+- **Weapon test** (must PASS after any combat change): `<godot exe> --headless --path <project> --fixed-fps 60 res://tests/weapon_autotest.tscn`.
+- **Screenshot check** (visuals; opens a window briefly; add `--world=res://src/combat/shooting_range.tscn` / `--hold=aim,fire` for combat states): `<godot exe> --path <project> -- --screenshot=<scratchpad>/shot.png --screenshot-frame=90 [--no-ps1]`, then view the PNG.
 - **Project settings** (input map, autoloads, layers, shader globals) live in `res://tools/setup_project.gd` — edit it and re-run with `--headless --script res://tools/setup_project.gd`, then `--import`.
 - Gameplay feel cannot be verified headless — tell the user exactly what to test in-editor and what to look for, and record their feedback in the iteration note.
 - Be honest in [[Status]]: "written but untested" ≠ "done".
 
-## 6. No version control — be careful
-The project does **not** use git (quick proof of concept). There is no undo:
+## 6. Version control (git) — still edit carefully
+The project **is** a git repository (branch `main`) since 2026-11-13. Git is the safety net now; the manual `_backup/` routine stays as a second belt for risky restructures:
 - Read a file before overwriting it; prefer targeted edits over full rewrites.
 - Before a risky restructure (moving/renaming many files, rewriting a big scene), copy the affected files to `new-game-project/_backup/<date>/` first (add a `.gdignore` file in `_backup/` so Godot ignores it), and mention it in the Session Log.
 - Never delete files without the user's OK.

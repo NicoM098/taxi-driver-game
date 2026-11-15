@@ -12,6 +12,10 @@ const WHEELS := [[-0.82, -1.35, true], [0.82, -1.35, true], [-0.82, 1.35, false]
 var target: Taxi
 var health: HealthComponent
 var is_destroyed: bool = false
+
+## Quieter than the player's own car: there can be several of them at once.
+const ENEMY_ENGINE_DB: float = -14.0
+var _engine: AudioStreamPlayer3D = null
 var ai: EnemyDriverAI
 var gunner: EnemyGunner
 ## Times the EnemyDirector may still put this car back on the player's tail after it was
@@ -40,6 +44,7 @@ func _ready() -> void:
 	engine_force = data.engine_force
 	_build_body()
 	_build_wheels()
+	_add_engine_audio()
 
 	health = HealthComponent.new()
 	health.max_hp = data.hp
@@ -67,6 +72,26 @@ func _ready() -> void:
 	add_child(gunner)
 	super._ready()
 	crashed.connect(_on_crash)
+
+
+## Positional engine note (D-067): one layer, pitched by speed, so you hear them coming and can
+## tell roughly where they are. Silent once destroyed; absent entirely in headless runs.
+func _add_engine_audio() -> void:
+	if not Audio.enabled:
+		return
+	_engine = Audio.make_loop_3d(&"engine_mid", self, Audio.BUS_ENGINE, 80.0)
+	_engine.play()
+
+
+func _process(_delta: float) -> void:
+	if _engine == null:
+		return
+	if is_destroyed:
+		_engine.volume_db = -80.0
+		return
+	var t := clampf(linear_velocity.length() / maxf(max_speed, 1.0), 0.0, 1.0)
+	_engine.pitch_scale = lerpf(0.78, 1.45, t)
+	_engine.volume_db = ENEMY_ENGINE_DB + linear_to_db(clampf(0.4 + 0.6 * t, 0.0001, 1.0))
 
 
 func _build_body() -> void:

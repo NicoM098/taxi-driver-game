@@ -33,4 +33,7 @@ First-person arcade taxi game: drive fast, screen your passengers, shoot your wa
 - ✅ [[Iteration 06 - Passenger File & Decisions]]
 - ✅ [[Iteration 07 - Archetypes & Ride Events]]
 - 🟨 [[Iteration 08 - Open-World Base & Map Editor]] — awaiting playtest
+- ✅ [[Iteration 09 - Texture Pass]]
+- ✅ [[Iteration 10 - Lights & Night]]
+- 🟨 [[Iteration 11 - Audio]] — active
 - Template: [[Iteration Template]]
