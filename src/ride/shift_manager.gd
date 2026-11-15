@@ -21,6 +21,7 @@ var passengers_killed: int = 0
 var enemies_destroyed: int = 0
 var cash_stolen: int = 0
 var wrecks: int = 0
+var pedestrians_hit: int = 0
 ## Delivered passengers since the game started (not reset by a wreck).
 var total_rides: int = 0
 
@@ -36,6 +37,7 @@ func _ready() -> void:
 	EventBus.passenger_executed.connect(func(_p: RefCounted) -> void: passengers_killed += 1)
 	EventBus.enemy_destroyed.connect(func(_e: Node, _b: int) -> void: enemies_destroyed += 1)
 	EventBus.taxi_wrecked.connect(func(_reason: StringName) -> void: wrecks += 1)
+	EventBus.pedestrian_hit.connect(func(_p: Vector3) -> void: pedestrians_hit += 1)
 
 
 func _physics_process(delta: float) -> void:

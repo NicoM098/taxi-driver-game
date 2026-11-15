@@ -7,15 +7,20 @@ var cash: int = 0
 ## few delivered passengers (ShiftManager.rides_per_level).
 var shift_number: int = 0
 var heat: int = 0
-## Weapon ids (res://data/weapons/<id>.tres). Until the shop (Phase 09) the player owns all
-## test weapons.
-var owned_weapons: Array[StringName] = [&"revolver", &"smg", &"shotgun"]
+## Weapon ids (res://data/weapons/<id>.tres). A run starts with the revolver; the rest are
+## bought at gun shops (WeaponController.add_weapon).
+const STARTING_WEAPONS: Array[StringName] = [&"revolver"]
+var owned_weapons: Array[StringName] = STARTING_WEAPONS.duplicate()
+## Set by the main menu: the next game runs the short tutorial (src/ui/tutorial/tutorial.gd),
+## which clears it when it finishes. While it is on: only calm passengers, no street encounters.
+var tutorial_active: bool = false
 
 
 func reset_run() -> void:
 	cash = 0
 	shift_number = 0
 	heat = 0
+	owned_weapons = STARTING_WEAPONS.duplicate()
 
 
 func add_cash(amount: int) -> void:
@@ -29,7 +34,7 @@ func set_heat(level: int) -> void:
 
 
 func to_dict() -> Dictionary:
-	return {"cash": cash, "shift_number": shift_number, "heat": heat}
+	return {"cash": cash, "shift_number": shift_number, "heat": heat, "owned_weapons": owned_weapons}
 
 
 func from_dict(data: Dictionary) -> void:

@@ -5,7 +5,7 @@ tags: [architecture]
 
 > Target structure. Created in [[Phase 00 - Project Setup]]; grows phase by phase. Keep this note in sync with reality.
 
-## 1. Godot project layout (`new-game-project/` = `res://`)
+## 1. Godot project layout (repo root `taxi-driver-game/` = `res://`)
 ```
 res://
 ├── assets/                 # imported art/audio (no scripts)
@@ -147,7 +147,7 @@ res://src/vehicle/taxi.tscn     Taxi (RigidBody3D, taxi.gd, layer 2, mass 1000)
 ```
 - Vehicle input: `VehicleInput` (RefCounted) filled each tick by `input_provider.poll(input)` (D-015).
 - Tools: `res://tools/setup_project.gd` (project settings, D-012). Tests: `res://tests/vehicle_autotest.tscn` (D-017).
-- `res://_backup/` holds manual backups (ignored by Godot via `.gdignore`).
+- `res://_backup/` holds manual backups from before git (ignored by Godot via `.gdignore`).
 
 ## 11. As built (Iteration 02)
 ```
@@ -209,3 +209,29 @@ RideManager: IDLE → ENTERING → DOSSIER → RIDING → EXITING
 - `src/enemies/street_encounters.gd` (`StreetEncounters`, group `street_encounters`, node in `game.tscn`) + `src/core/resources/street_encounter.gd` — random hostile situations from `data/events/*.tres` (D-059). `City.region_at / can_reach / road_points_reachable` keep every spawn on streets with a way out (D-057).
 - `src/editor/map_editor.tscn` + `map_editor.gd` — the in-game map editor (its own main scene; M from `Main`, PLAY goes back to `main.tscn`).
 - New piece type = an entry in `MapData.TYPES` + a branch in `MapBuilder.build_piece` (+ `City._build_piece` if it needs a game node).
+
+## Menu, tutorial, build (Iteration 09, D-061…D-063)
+```
+res://src/ui/menu/main_menu.tscn   MainMenu (Control, main_menu.gd)  ← application/run/main_scene
+   PLAY / TUTORIAL → GameState.reset_run(), GameState.tutorial_active → change_scene main.tscn
+   MAP EDITOR → src/editor/map_editor.tscn ("Main menu" button comes back)
+Main/UI/Tutorial (tutorial.gd, class Tutorial, group "tutorial", process ALWAYS)
+Main/UI/PauseOverlay  → pause menu built in main.gd (resume / skip tutorial / main menu / quit + run stats)
+```
+- `GameState.tutorial_active`: `PassengerSpawner` sends only `tutorial_profiles`, `StreetEncounters` stays off; cleared by the tutorial at DONE.
+- `InputDevice` also owns F11 fullscreen.
+- `MapData.save_dir()`: `res://data/maps/` in the Godot editor, `user://maps/` in an exported build; `find_path` / `list_maps` look in both.
+- `export_presets.cfg` → `build/windows/TaxiDriver.exe` (+ `.console.exe`), embedded PCK, includes `data/maps/*.json`, excludes `tests/ tools/ _backup/ docs/`.
+
+## Street life, gun shop, weapon bar (Iteration 10, D-064…D-067)
+```
+Game/StreetLife (street_life.gd, Node3D, group "street_life")
+├── Pedestrian ×≤28   (pedestrian.gd: no physics; laps on building / sidewalk curbs)
+└── TrafficCar ×≤8    (traffic_car.gd extends Taxi, layer 4) → AI (traffic_ai.gd = input_provider)
+City: gun_shops[] ← GunShop (gun_shop.gd, group "gun_shops", map piece "gunshop")
+Main/UI/GunShopUI (src/ui/shop/gun_shop_ui.gd, group "gun_shop_ui", pauses like the Dossier)
+Main/UI/HUD → WeaponBar (src/ui/hud/weapon_bar.gd; static draw_gun() shared with the shop)
+```
+- `WeaponData.slot` = number key / hotbar position; `WeaponController.catalogue()` lists every weapon file; `add_weapon()`, `refill_ammo()`, `index_of_slot()`, `select()`.
+- `EnemyCar.build_body()` / `build_wheels()` are static (shared with `TrafficCar`). `City.is_plain_street()`; `TrafficAI.lane_point()` = right-hand lane at a street point.
+- EventBus: `pedestrian_hit(position)`.

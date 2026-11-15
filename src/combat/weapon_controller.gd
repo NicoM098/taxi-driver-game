@@ -4,7 +4,8 @@ extends Node3D
 ## Child of the cab Camera3D. Hold AIM (RMB / LB) to raise the gun (zoom, tight spread);
 ## FIRE (LMB / RB) also raises it (hip fire, wider spread). Hitscan rays from the screen
 ## centre; spread grows with taxi speed, turning and sustained fire. Driving is never blocked.
-## Weapons = WeaponData resources for every id in GameState.owned_weapons.
+## Weapons = WeaponData resources for every id in GameState.owned_weapons, kept in slot order
+## (WeaponData.slot = the number key). Gun shops add weapons / refill ammo at runtime.
 
 signal weapon_changed(weapon: WeaponData)
 
@@ -58,13 +59,81 @@ func _ready() -> void:
 	if taxi == null and _cab != null:
 		taxi = _cab.vehicle
 	for id: StringName in GameState.owned_weapons:
-		var data := load(WEAPON_DIR + String(id) + ".tres") as WeaponData
-		if data != null:
-			weapons.append(data)
-			ammo[data.id] = {"mag": data.mag_size, "reserve": data.reserve_max}
+		_add(id)
 	_build_viewmodel()
 	if not weapons.is_empty():
 		_equip(0)
+
+
+## Every weapon that exists (res://data/weapons/), in slot order — owned or not.
+static func catalogue() -> Array[WeaponData]:
+	var out: Array[WeaponData] = []
+	for file in ResourceLoader.list_directory(WEAPON_DIR):
+		var data := load(WEAPON_DIR + file) as WeaponData
+		if data != null:
+			out.append(data)
+	out.sort_custom(func(a: WeaponData, b: WeaponData) -> bool: return a.slot < b.slot)
+	return out
+
+
+func owns(id: StringName) -> bool:
+	return ammo.has(id)
+
+
+## Gives the player a weapon (full mag + reserve) and records it in GameState. Returns false
+## if it was already owned / does not exist.
+func add_weapon(id: StringName) -> bool:
+	if owns(id) or not _add(id):
+		return false
+	if not GameState.owned_weapons.has(id):
+		GameState.owned_weapons.append(id)
+	var keep := current_weapon()
+	if keep != null:
+		current_index = weapons.find(keep)
+	return true
+
+
+## Fills the reserve (and the magazine) of an owned weapon. Returns false if already full.
+func refill_ammo(id: StringName) -> bool:
+	if not owns(id):
+		return false
+	var w := _find(id)
+	var a: Dictionary = ammo[id]
+	if int(a["reserve"]) >= w.reserve_max and int(a["mag"]) >= w.mag_size:
+		return false
+	a["mag"] = w.mag_size
+	a["reserve"] = w.reserve_max
+	return true
+
+
+## Index of the weapon in `slot` (1-4), or -1.
+func index_of_slot(slot: int) -> int:
+	for i in weapons.size():
+		if weapons[i].slot == slot:
+			return i
+	return -1
+
+
+func select(index: int) -> void:
+	if index >= 0 and index < weapons.size() and index != current_index:
+		_equip(index)
+
+
+func _add(id: StringName) -> bool:
+	var data := load(WEAPON_DIR + String(id) + ".tres") as WeaponData
+	if data == null:
+		return false
+	weapons.append(data)
+	weapons.sort_custom(func(a: WeaponData, b: WeaponData) -> bool: return a.slot < b.slot)
+	ammo[data.id] = {"mag": data.mag_size, "reserve": data.reserve_max}
+	return true
+
+
+func _find(id: StringName) -> WeaponData:
+	for w in weapons:
+		if w.id == id:
+			return w
+	return null
 
 
 func current_weapon() -> WeaponData:
@@ -249,8 +318,10 @@ func _handle_switch_input() -> void:
 	elif Input.is_action_just_pressed(&"weapon_prev"):
 		target = (current_index - 1 + weapons.size()) % weapons.size()
 	for n in 4:
-		if Input.is_action_just_pressed(StringName("weapon_%d" % (n + 1))) and n < weapons.size():
-			target = n
+		if Input.is_action_just_pressed(StringName("weapon_%d" % (n + 1))):
+			var i := index_of_slot(n + 1)
+			if i >= 0:
+				target = i
 	if target != current_index:
 		_equip(target)
 

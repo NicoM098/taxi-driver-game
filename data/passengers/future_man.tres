@@ -1,0 +1,80 @@
+[gd_resource type="Resource" script_class="PassengerProfile" format=3]
+
+[ext_resource type="Script" path="res://src/core/resources/passenger_profile.gd" id="1_profile"]
+[ext_resource type="Script" path="res://src/core/resources/examinable.gd" id="2_exam"]
+[ext_resource type="Script" path="res://src/core/resources/passenger_action.gd" id="3_action"]
+[ext_resource type="Script" path="res://src/events/ride_event.gd" id="4_event"]
+[ext_resource type="Script" path="res://src/events/dialogue_event.gd" id="5_dialogue"]
+[ext_resource type="Script" path="res://src/events/spawn_pursuers_event.gd" id="6_spawn"]
+
+[sub_resource type="Resource" id="Exam_watch"]
+script = ExtResource("2_exam")
+id = &"watch"
+label = "the watch"
+reveal_text = "It counts DOWN. 00:00:47... 00:00:46... He taps it: \"That's when they find us.\""
+time_cost = 2.0
+reveals_traits = Array[StringName]([&"prophet"])
+
+[sub_resource type="Resource" id="Exam_foil"]
+script = ExtResource("2_exam")
+id = &"foil"
+label = "the foil hat"
+reveal_text = "Expertly folded. \"Blocks the signal. You should get one. You won't, but you should.\""
+time_cost = 1.5
+
+[sub_resource type="Resource" id="Action_believe"]
+script = ExtResource("3_action")
+id = &"believe"
+label = "Believe him (he pays for the trouble)"
+outcome = 0
+requires_traits = Array[StringName]([&"prophet"])
+fare_mult = 1.6
+time_mult = 1.25
+result_text = "\"Good. Guns ready. Left at the second light — no, the THIRD.\""
+
+[sub_resource type="Resource" id="Event_warn"]
+script = ExtResource("5_dialogue")
+trigger = 3
+trigger_value = 0.15
+lines = PackedStringArray("In a minute a black sedan blocks the road ahead. Don't say I didn't warn you.", "This is the part where they try to kill us. I've seen it. Twice.")
+
+[sub_resource type="Resource" id="Event_ambush"]
+script = ExtResource("6_spawn")
+trigger = 3
+trigger_value = 0.35
+trigger_random = 0.1
+count = 2
+extra_per_shift = 0.25
+pattern = 1
+line = "Told you."
+
+[sub_resource type="Resource" id="Event_after"]
+script = ExtResource("5_dialogue")
+trigger = 3
+trigger_value = 0.8
+lines = PackedStringArray("Next week you buy a rifle. Trust me.", "Huh. In my timeline you were taller.")
+
+[resource]
+script = ExtResource("1_profile")
+id = &"future_man"
+display_name = "Man From the Future"
+color = Color(0.7, 0.72, 0.78, 1)
+fare_base = 55
+fare_per_100m = 12
+tip_multiplier = 1.3
+min_distance = 220.0
+max_distance = 450.0
+time_multiplier = 1.0
+occupation = "\"Temporal consultant\""
+name_pool = PackedStringArray("Dex Ortolan", "J. Vantablack", "Kevin (from 2087)", "Professor Ray")
+age_min = 35
+age_max = 70
+notes = "Silver jumpsuit, [url=foil]a foil hat[/url], [url=watch]a watch on each wrist[/url]. Got in already knowing your name. Keeps looking at the cars around us."
+examinables = Array[ExtResource("2_exam")]([SubResource("Exam_watch"), SubResource("Exam_foil")])
+actions = Array[ExtResource("3_action")]([SubResource("Action_believe")])
+hidden_traits = Array[StringName]([&"prophet"])
+kick_reaction = 2
+kick_line = "Smart. In the other timeline that's what saved you."
+ride_events = Array[ExtResource("4_event")]([SubResource("Event_warn"), SubResource("Event_ambush"), SubResource("Event_after")])
+spawn_weight = 0.6
+min_shift = 2

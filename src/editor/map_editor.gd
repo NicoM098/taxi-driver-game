@@ -5,7 +5,7 @@ extends Node3D
 ##
 ##   Left panel   tools: Select / Erase / one button per piece type
 ##   Right panel  properties of the brush (placing) or of the selected piece
-##   Top bar      map name, load, save, new / resize, starter city, PLAY
+##   Top bar      map name, load, save, new / resize, starter city, main menu, PLAY
 ##
 ##   Mouse  LMB place (drag a rectangle for area pieces) / select / drag the selection to move
 ##          RMB back to Select / deselect      wheel zoom      MMB or RMB drag: pan
@@ -14,10 +14,11 @@ extends Node3D
 
 const TOOL_SELECT := "select"
 const TOOL_ERASE := "erase"
-const ROTATABLE: Array[String] = ["building", "stairs", "ramp", "containers", "repair", "stop", "spawn"]
+const ROTATABLE: Array[String] = ["building", "stairs", "ramp", "containers", "repair", "gunshop", "stop", "spawn"]
 const ZONE_PRESETS: Array[String] = ["downtown", "suburbs", "docks"]
 const MAX_UNDO := 100
 const MAIN_SCENE := "res://src/main/main.tscn"
+const MENU_SCENE := "res://src/ui/menu/main_menu.tscn"
 
 var map: MapData
 var tool: String = TOOL_SELECT
@@ -221,6 +222,7 @@ func _build_ui() -> void:
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	bar.add_child(spacer)
+	bar.add_child(_button("Main menu", _to_menu, "Back to the title screen (unsaved changes are lost)"))
 	var play := _button("PLAY THIS MAP  (P)", _play, "Save, make it the game's map and drive it. M in the game comes back here.")
 	play.add_theme_color_override("font_color", Color(0.5, 1.0, 0.5))
 	bar.add_child(play)
@@ -459,7 +461,15 @@ func _play() -> void:
 		return
 	MapData.set_active(map.name)
 	MapData.override = null
+	# The world is rebuilt from scratch: that is a new run (cash, guns, heat back to the
+	# start), the same as PLAY in the main menu.
+	GameState.reset_run()
+	GameState.tutorial_active = false
 	get_tree().change_scene_to_file(MAIN_SCENE)
+
+
+func _to_menu() -> void:
+	get_tree().change_scene_to_file(MENU_SCENE)
 
 
 # --- Undo -------------------------------------------------------------------------------
@@ -963,6 +973,8 @@ func _help_for(type: String, p: Dictionary) -> String:
 			return "A single post in the middle of the cell."
 		"repair":
 			return "Garage with a yellow pad on the 'Facing' side. A wrecked taxi limps until it stops on a pad. Put a few around the map and keep the pad reachable from the street."
+		"gunshop":
+			return "Gun store with a green pad on the 'Facing' side. Stop on the pad to buy guns (SMG, sawed-off, rifle) and ammo. One or two per map; keep the pad reachable from the street."
 		"stop":
 			return "Where passengers wait and get dropped off. Place it on a STREET cell next to a sidewalk; 'Facing' is the side the passenger stands on. Name it, or leave it empty for an automatic name. More stops = more variety (12+)."
 		"drink":

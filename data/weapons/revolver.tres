@@ -5,6 +5,10 @@
 [resource]
 script = ExtResource("1_w")
 id = &"revolver"
+slot = 1
+blurb = "Six heavy rounds. Slow, accurate, reliable."
+price = 0
+ammo_price = 15
 display_name = "Revolver"
 damage = 40.0
 pellets = 1

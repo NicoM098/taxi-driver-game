@@ -4,6 +4,10 @@ extends Resource
 
 @export var id: StringName = &""
 @export var display_name: String = "Weapon"
+## Fixed hotbar slot (1-4) = the number key that selects it. Weapons are listed in slot order.
+@export var slot: int = 1
+## One line for the gun shop.
+@export var blurb: String = ""
 
 @export_group("Damage")
 @export var damage: float = 25.0          # per pellet
@@ -33,6 +37,8 @@ extends Resource
 @export var gun_size: Vector3 = Vector3(0.05, 0.09, 0.26)
 @export var gun_color: Color = Color(0.2, 0.2, 0.22)
 
-@export_group("Economy (Phase 09)")
+@export_group("Economy")
+## Gun shop price (0 = you start with it).
 @export var price: int = 0
+## Price of refilling the reserve to the max at the gun shop.
 @export var ammo_price: int = 0

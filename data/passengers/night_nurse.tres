@@ -1,0 +1,64 @@
+[gd_resource type="Resource" script_class="PassengerProfile" format=3]
+
+[ext_resource type="Script" path="res://src/core/resources/passenger_profile.gd" id="1_profile"]
+[ext_resource type="Script" path="res://src/core/resources/examinable.gd" id="2_exam"]
+[ext_resource type="Script" path="res://src/core/resources/passenger_action.gd" id="3_action"]
+[ext_resource type="Script" path="res://src/events/ride_event.gd" id="4_event"]
+[ext_resource type="Script" path="res://src/events/dialogue_event.gd" id="5_dialogue"]
+[ext_resource type="Script" path="res://src/events/reward_event.gd" id="6_reward"]
+
+[sub_resource type="Resource" id="Exam_bag"]
+script = ExtResource("2_exam")
+id = &"bag"
+label = "her bag"
+reveal_text = "A full trauma kit: gauze, staples, a bottle of something strong. She sees you looking at your own cuts."
+time_cost = 2.0
+reveals_traits = Array[StringName]([&"medic"])
+
+[sub_resource type="Resource" id="Action_patch"]
+script = ExtResource("3_action")
+id = &"patch_up"
+label = "Drive her for half price, if she patches you up"
+outcome = 0
+requires_traits = Array[StringName]([&"medic"])
+fare_mult = 0.5
+result_text = "\"Deal. Keep it steady and I'll fix you when we stop.\""
+
+[sub_resource type="Resource" id="Event_tired"]
+script = ExtResource("5_dialogue")
+trigger = 1
+trigger_value = 5.0
+trigger_random = 5.0
+lines = PackedStringArray("Twelve hours. Twelve. Wake me when we're there.", "If you crash, at least I'm qualified.", "Third gunshot wound tonight. This city, honestly.")
+
+[sub_resource type="Resource" id="Event_heal"]
+script = ExtResource("6_reward")
+trigger = 4
+requires_action = &"patch_up"
+kinds = Array[StringName]([&"heal"])
+heal_amount = 80.0
+line = "Hold still. There. You'll live."
+
+[resource]
+script = ExtResource("1_profile")
+id = &"night_nurse"
+display_name = "Night-Shift Nurse"
+color = Color(0.45, 0.75, 0.7, 1)
+fare_base = 25
+fare_per_100m = 9
+tip_multiplier = 1.0
+min_distance = 150.0
+max_distance = 360.0
+time_multiplier = 1.3
+occupation = "Trauma nurse, County General"
+name_pool = PackedStringArray("Dolores Reyes", "Kim Achterberg", "Nadia Osei", "Pat Kowalski")
+age_min = 26
+age_max = 58
+notes = "Scrubs under a parka, sneakers soaked. Eyes half closed. Holds [url=bag]a heavy bag[/url] on her lap like it might run off."
+examinables = Array[ExtResource("2_exam")]([SubResource("Exam_bag")])
+actions = Array[ExtResource("3_action")]([SubResource("Action_patch")])
+hidden_traits = Array[StringName]([&"medic"])
+kick_reaction = 0
+kick_line = "Fine. I'll walk. I always walk."
+ride_events = Array[ExtResource("4_event")]([SubResource("Event_tired"), SubResource("Event_heal")])
+spawn_weight = 1.2

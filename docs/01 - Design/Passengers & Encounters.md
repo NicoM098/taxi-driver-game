@@ -67,5 +67,11 @@ New passengers should be built from these blocks; a new *block* = new code.
 
 **Enemy types:** Hitman (shoots, flanks), Police (heat), **Bruiser** (heavy, unarmed, rams), **Street Gang** coupe (fast, fragile, sprays bullets).
 
+## 5c. Added 2026-11-15 (D-066, data only)
+Dog in a Suit (lost: take him home for x2.5) · Night-Shift Nurse (heals you on arrival for half fare) · Man From the Future (level 2+, predicts the ambush ahead) · Street Musician (cash in the guitar case: gang tail, or keep it).
+
+## 5d. Street life (D-065)
+Pedestrians on the curbs (dodge, flee gunfire, can be run over — no consequence yet) and civilian traffic in the right-hand lane, spawned around the player.
+
 ## 6. Balancing knobs
 Spawn weights per district & shift number, fare ranges, pursuer counts, theft %, examine time cost.

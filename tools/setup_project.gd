@@ -20,7 +20,9 @@ func _init() -> void:
 
 func _application() -> void:
 	ProjectSettings.set_setting("application/config/name", "TaxiDriver")
-	ProjectSettings.set_setting("application/run/main_scene", "res://src/main/main.tscn")
+	# Title screen first (Iteration 09); main.tscn is the game, started from the menu.
+	ProjectSettings.set_setting("application/run/main_scene", "res://src/ui/menu/main_menu.tscn")
+	ProjectSettings.set_setting("application/config/version", "0.10.0")
 
 
 func _display() -> void:

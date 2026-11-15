@@ -19,6 +19,9 @@ extends RefCounted
 
 const CELL := 8.0
 const MAPS_DIR := "res://data/maps/"
+## An exported build cannot write into res:// (it is packed): its editor saves here, and
+## maps are looked up here first.
+const USER_MAPS_DIR := "user://maps/"
 const DEFAULT_NAME := "city"
 const FORMAT := 2
 const MIN_SIZE := 16
@@ -50,6 +53,8 @@ const TYPES := {
 		"shapes": ["post"], "size": [1, 1]},
 	"repair": {"label": "Repair shop", "area": true, "solid": true, "h": 6.0, "min_h": 4.0, "max_h": 12.0,
 		"shapes": ["garage"], "size": [3, 3]},
+	"gunshop": {"label": "Gun shop", "area": true, "solid": true, "h": 6.0, "min_h": 4.0, "max_h": 12.0,
+		"shapes": ["store"], "size": [3, 3]},
 	"stop": {"label": "Taxi stop", "area": false, "solid": false, "h": 0.0, "min_h": 0.0, "max_h": 0.0,
 		"shapes": ["stop"], "size": [1, 1]},
 	"drink": {"label": "Energy drink", "area": false, "solid": false, "h": 0.0, "min_h": 0.0, "max_h": 0.0,
@@ -239,6 +244,8 @@ func validate() -> PackedStringArray:
 		out.append("Warning: more than one player start — the first one is used")
 	if count("repair") == 0:
 		out.append("Warning: no repair shop — a wrecked taxi repairs itself after a few seconds")
+	if count("gunshop") == 0:
+		out.append("Warning: no gun shop — you will only ever have the revolver")
 	var grid := flags()
 	for p in pieces:
 		var type := String(p["type"])
@@ -292,12 +299,31 @@ func duplicate_map() -> MapData:
 	return MapData.from_dict(to_dict().duplicate(true))
 
 
+## Where maps are saved: res://data/maps/ when running from the Godot editor, user://maps/
+## in an exported build.
+static func save_dir() -> String:
+	return MAPS_DIR if OS.has_feature("editor") else USER_MAPS_DIR
+
+
 static func path_for(map_name: String) -> String:
-	return MAPS_DIR + map_name.validate_filename().to_lower().replace(" ", "_") + ".json"
+	return save_dir() + _file_name(map_name)
+
+
+static func _file_name(map_name: String) -> String:
+	return map_name.validate_filename().to_lower().replace(" ", "_") + ".json"
+
+
+## The saved file of a map: the writable folder first, then the maps shipped in res://.
+static func find_path(map_name: String) -> String:
+	for dir in [save_dir(), USER_MAPS_DIR, MAPS_DIR]:
+		var path: String = dir + _file_name(map_name)
+		if FileAccess.file_exists(path):
+			return path
+	return ""
 
 
 func save() -> Error:
-	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(MAPS_DIR))
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(save_dir()))
 	var file := FileAccess.open(path_for(name), FileAccess.WRITE)
 	if file == null:
 		return FileAccess.get_open_error()
@@ -307,8 +333,8 @@ func save() -> Error:
 
 
 static func load_map(map_name: String) -> MapData:
-	var path := path_for(map_name)
-	if not FileAccess.file_exists(path):
+	var path := find_path(map_name)
+	if path == "":
 		return null
 	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
 	if not parsed is Dictionary:
@@ -319,10 +345,12 @@ static func load_map(map_name: String) -> MapData:
 
 static func list_maps() -> PackedStringArray:
 	var out: PackedStringArray = []
-	var dir := DirAccess.open(MAPS_DIR)
-	if dir != null:
+	for path in [MAPS_DIR, USER_MAPS_DIR]:
+		var dir := DirAccess.open(path)
+		if dir == null:
+			continue
 		for file in dir.get_files():
-			if file.ends_with(".json"):
+			if file.ends_with(".json") and not out.has(file.get_basename()):
 				out.append(file.get_basename())
 	out.sort()
 	return out
@@ -382,7 +410,7 @@ static func gen_block_cell(i: int, j: int) -> Vector2i:
 
 
 ## The generated starter city (also what the game plays when there is no map file): 8 x 8
-## blocks, suburbs / downtown / docks, a plaza, street ramps, three repair shops. A good
+## blocks, suburbs / downtown / docks, a plaza, street ramps, three repair shops, two gun shops. A good
 ## starting point to edit: "Starter city" in the map editor.
 static func make_default(rng_seed: int = 4242) -> MapData:
 	var rng := RandomNumberGenerator.new()
@@ -397,6 +425,7 @@ static func make_default(rng_seed: int = 4242) -> MapData:
 		map.pieces.append(zone)
 	var plaza_block := Vector2i(4, 3)
 	var repair_blocks := [Vector2i(1, 5), Vector2i(4, 6), Vector2i(7, 1)]
+	var gun_blocks := [Vector2i(2, 1), Vector2i(6, 4)]
 	for i in GEN_BLOCKS:
 		for j in GEN_BLOCKS:
 			var c := gen_block_cell(i, j)
@@ -414,6 +443,10 @@ static func make_default(rng_seed: int = 4242) -> MapData:
 				var shop := make_piece("repair", c.x, c.y, 4, 4)
 				shop["rot"] = 0
 				map.pieces.append(shop)
+			elif gun_blocks.has(block):
+				var guns := make_piece("gunshop", c.x, c.y, 4, 4)
+				guns["rot"] = 0
+				map.pieces.append(guns)
 			elif i <= 2:
 				map.pieces.append(make_piece("sidewalk", c.x, c.y, 4, 4))
 				for ox: int in [0, 2]:

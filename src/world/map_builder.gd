@@ -61,6 +61,8 @@ static func build_piece(map: MapData, p: Dictionary, editor: bool = false) -> No
 			Blockout.add_box(root, Vector3(0, h * 0.5, 0), Vector3(1.2, h, 1.2), mat("prop"))
 		"repair":
 			_repair(root, size, h)
+		"gunshop":
+			_gunshop(root, size, h)
 		"stop":
 			if editor:
 				_stop_marker(root)
@@ -265,6 +267,45 @@ static func _repair(root: Node3D, size: Vector2, h: float) -> void:
 	var board := BoxMesh.new()
 	board.size = Vector3(3.2, 1.8, 0.5)
 	Blockout.add_mesh(root, board, post_pos + Vector3(1.2, 10.4, 0), mat("siren_red"))
+
+
+## Gun store on the back half, a green-framed pad on the front half (local -Z): stop on the
+## pad to shop. Same footprint rules as the repair shop (MapBuilder.repair_pad gives the pad).
+static func _gunshop(root: Node3D, size: Vector2, h: float) -> void:
+	Blockout.add_box(root, Vector3(0, CURB * 0.5, size.y * 0.25), Vector3(size.x, CURB, size.y * 0.5), mat("sidewalk"))
+	var gw := size.x - 2.0
+	var gl := size.y * 0.5 - 2.0
+	Blockout.add_box(root, Vector3(0, CURB + h * 0.5, size.y * 0.25), Vector3(gw, h, gl), mat("wall"))
+	var front_z := size.y * 0.25 - gl * 0.5 - 0.05
+	# Barred shop window + door, green awning.
+	var window := BoxMesh.new()
+	window.size = Vector3(minf(gw * 0.6, 8.0), 2.2, 0.2)
+	Blockout.add_mesh(root, window, Vector3(0, CURB + 1.8, front_z), mat("taxi_black"))
+	for i in 5:
+		var bar := BoxMesh.new()
+		bar.size = Vector3(0.12, 2.2, 0.3)
+		Blockout.add_mesh(root, bar, Vector3(-window.size.x * 0.4 + i * window.size.x * 0.2, CURB + 1.8, front_z - 0.05), mat("prop"))
+	var awning := BoxMesh.new()
+	awning.size = Vector3(gw, 0.35, 1.6)
+	Blockout.add_mesh(root, awning, Vector3(0, CURB + 3.4, front_z - 0.8), mat("container_green"))
+	var cap := BoxMesh.new()
+	cap.size = Vector3(gw + 0.4, 1.0, gl + 0.4)
+	Blockout.add_mesh(root, cap, Vector3(0, CURB + h - 0.45, size.y * 0.25), mat("container_green"))
+	# Roof sign: a big pistol on a white board.
+	var sign_pos := Vector3(0, CURB + h + 2.4, size.y * 0.25)
+	var board := BoxMesh.new()
+	board.size = Vector3(6.0, 3.2, 0.4)
+	Blockout.add_mesh(root, board, sign_pos, mat("target_white"))
+	Blockout.add_box(root, sign_pos + Vector3(0.4, 0.5, -0.3), Vector3(3.6, 0.8, 0.3), mat("taxi_black"))
+	Blockout.add_box(root, sign_pos + Vector3(-1.0, -0.5, -0.3), Vector3(0.9, 1.5, 0.3), mat("taxi_black"))
+	Blockout.add_box(root, sign_pos + Vector3(0, -1.85, 0), Vector3(0.4, 0.5, 0.4), mat("prop"))
+	# The pad (visual only): green frame, asphalt centre.
+	var pad := BoxMesh.new()
+	pad.size = Vector3(minf(gw, size.x - 3.0), 0.06, size.y * 0.5 - 2.0)
+	Blockout.add_mesh(root, pad, Vector3(0, 0.05, -size.y * 0.25), mat("container_green"))
+	var inner := BoxMesh.new()
+	inner.size = Vector3(pad.size.x - 1.2, 0.07, pad.size.z - 1.2)
+	Blockout.add_mesh(root, inner, Vector3(0, 0.06, -size.y * 0.25), mat("road"))
 
 
 # --- Editor markers -------------------------------------------------------------------

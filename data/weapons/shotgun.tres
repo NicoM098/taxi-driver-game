@@ -5,6 +5,10 @@
 [resource]
 script = ExtResource("1_w")
 id = &"shotgun"
+slot = 3
+blurb = "Two barrels of buckshot. Brutal up close, useless far."
+price = 260
+ammo_price = 30
 display_name = "Sawed-off"
 damage = 11.0
 pellets = 8

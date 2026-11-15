@@ -27,7 +27,7 @@ What we do **not** take: its complex/simulation controls. Driving stays arcade-s
 | Revolver | Hitscan | Starter. 6 shots, strong, slow | Free |
 | SMG | Hitscan | High rate, high spread | $ |
 | Sawed-off shotgun | Hitscan pellets | Close range, great vs. tyres | $$ |
-| Rifle | Hitscan | Accurate, slow, penetrates glass | $$$ |
+| Rifle | Hitscan | Accurate, slow, long range — **built 2026-11-15** (slot 4, $380) | $$$ |
 | Flare gun | Projectile | Sets cars on fire, blinds pursuers | $$ |
 | Grenades | Thrown | Drop out the window behind you | $$$ |
 | Mini-rockets | Projectile | Late game | $$$$ |
@@ -47,3 +47,6 @@ Common `HealthComponent` (node) used by: player taxi, driver, enemy cars, enemy 
 
 ## 6. Melee / special kills
 "Kill on the spot" from the dossier plays a short, stylised sequence (turn around, shoot) — no complex animation needed at first (camera turn + flash + sound + passenger ragdoll/fade).
+
+## 7. As built (2026-11-15, D-064 / D-067)
+Revolver (free, slot 1) · SMG ($180, slot 2) · Sawed-off ($260, slot 3) · Rifle ($380, slot 4). Bought at **gun shops** in the world (stop on the green pad); ammo refills $15-40. A run starts with the revolver. HUD: weapon hotbar with silhouettes, lock + price on guns you do not own.

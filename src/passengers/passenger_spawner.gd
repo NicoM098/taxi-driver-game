@@ -8,6 +8,8 @@ extends Node3D
 @export var min_spawn_distance: float = 35.0
 @export var max_spawn_distance: float = 230.0
 @export var respawn_interval: float = 1.0
+## Profiles used while the tutorial runs (GameState.tutorial_active): calm fares only.
+@export var tutorial_profiles: Array[StringName] = [&"commuter"]
 
 var profiles: Array[PassengerProfile] = []
 var waiting: Array[WaitingPassenger] = []
@@ -119,8 +121,21 @@ func debug_spawn_next() -> WaitingPassenger:
 	return spawn_at(profile, best)
 
 
+## A calm profile for the tutorial (the first of `tutorial_profiles` that exists), or null.
+func tutorial_profile() -> PassengerProfile:
+	for id in tutorial_profiles:
+		for p in profiles:
+			if p.id == id:
+				return p
+	return null
+
+
 ## Weighted random among the profiles allowed in the current shift.
 func _pick_profile() -> PassengerProfile:
+	if GameState.tutorial_active:
+		var calm := tutorial_profile()
+		if calm != null:
+			return calm
 	var shift := maxi(GameState.shift_number, 1)
 	var total := 0.0
 	for p in profiles:

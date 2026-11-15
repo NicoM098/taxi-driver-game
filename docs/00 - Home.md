@@ -32,5 +32,7 @@ First-person arcade taxi game: drive fast, screen your passengers, shoot your wa
 - ✅ [[Iteration 05 - Energy Drink & Fixes]]
 - ✅ [[Iteration 06 - Passenger File & Decisions]]
 - ✅ [[Iteration 07 - Archetypes & Ride Events]]
-- 🟨 [[Iteration 08 - Open-World Base & Map Editor]] — awaiting playtest
+- 🟨 [[Iteration 08 - Open-World Base & Map Editor]] — awaiting re-test
+- 🟨 [[Iteration 09 - Menu, Tutorial & Build]] — built, awaiting playtest of the build
+- 🟨 [[Iteration 10 - Street Life, Gun Shop & Weapon Bar]] — built, awaiting playtest (build 0.10.0)
 - Template: [[Iteration Template]]

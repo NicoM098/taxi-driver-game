@@ -22,8 +22,6 @@ var _message_label: Label
 var _summary: ColorRect
 var _summary_label: Label
 var _message_tween: Tween
-var _ammo_label: Label
-var _weapons_label: Label
 var _bark_label: Label
 var _bark_tween: Tween
 var _alert_label: Label
@@ -57,7 +55,10 @@ func _ready() -> void:
 	_speed_label = _label(34, HORIZONTAL_ALIGNMENT_RIGHT)
 	_place(_speed_label, 1, 1, 1, 1, -320, -62, -18, -14)
 	_hint_label = _label(18, HORIZONTAL_ALIGNMENT_CENTER)
-	_place(_hint_label, 0, 1, 1, 1, 0, -40, 0, -12)
+	# Between the weapon hotbar (left, ~510 px) and the speedometer (right).
+	_place(_hint_label, 0, 1, 1, 1, 530, -70, -330, -12)
+	_hint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_hint_label.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
 	_drift_label = _label(30, HORIZONTAL_ALIGNMENT_CENTER)
 	_place(_drift_label, 0, 0.7, 1, 0.7, 0, 0, 0, 36)
 	_drift_bar = ColorRect.new()
@@ -75,10 +76,10 @@ func _ready() -> void:
 	crosshair.set_script(preload("res://src/ui/hud/crosshair.gd"))
 	add_child(crosshair)
 	_place(crosshair, 0, 0, 1, 1, 0, 0, 0, 0)
-	_ammo_label = _label(30, HORIZONTAL_ALIGNMENT_LEFT)
-	_place(_ammo_label, 0, 1, 0, 1, 18, -62, 520, -14)
-	_weapons_label = _label(16, HORIZONTAL_ALIGNMENT_LEFT)
-	_place(_weapons_label, 0, 1, 0, 1, 18, -88, 620, -62)
+	# Weapon hotbar (slot cards, silhouettes, ammo) bottom-left.
+	var bar := WeaponBar.new()
+	add_child(bar)
+	_place(bar, 0, 0, 1, 1, 0, 0, 0, 0)
 	_message_label = _label(30, HORIZONTAL_ALIGNMENT_CENTER)
 	# Popups sit on the dark roof lining above the arrow (they used to cover the arrow).
 	_place(_message_label, 0, 0.115, 1, 0.115, 0, 0, 0, 40)
@@ -154,8 +155,6 @@ func _process(delta: float) -> void:
 				else:
 					_hint_label.text = "Find a passenger (yellow beam) and stop next to them"
 
-	_update_weapon_hud()
-
 	var chain := taxi.get_node_or_null("DriftChain") as DriftChain if taxi != null else null
 	if chain != null and chain.is_active:
 		_drift_label.text = "DRIFT  x%.2f   %d" % [chain.multiplier, roundi(chain.points)]
@@ -165,27 +164,6 @@ func _process(delta: float) -> void:
 	else:
 		_drift_label.text = ""
 		_drift_bar.visible = false
-
-
-func _update_weapon_hud() -> void:
-	var wc := get_tree().get_first_node_in_group(&"weapon_controller") as WeaponController
-	var w := wc.current_weapon() if wc != null else null
-	if w == null:
-		_ammo_label.text = ""
-		_weapons_label.text = ""
-		return
-	var a := wc.get_ammo()
-	if wc.is_reloading:
-		_ammo_label.text = "%s   RELOADING %d%%" % [w.display_name.to_upper(), roundi(wc.get_reload_progress() * 100.0)]
-		_ammo_label.modulate = COLORS[&"drift"]
-	else:
-		_ammo_label.text = "%s   %d | %d" % [w.display_name.to_upper(), a["mag"], a["reserve"]]
-		_ammo_label.modulate = COLORS[&"bad"] if a["mag"] == 0 else Color.WHITE
-	var names := PackedStringArray()
-	for i in wc.weapons.size():
-		var n := "%d %s" % [i + 1, wc.weapons[i].display_name]
-		names.append("[%s]" % n if i == wc.current_index else n)
-	_weapons_label.text = "   ".join(names)
 
 
 func show_message(text: String, kind: StringName = &"info") -> void:

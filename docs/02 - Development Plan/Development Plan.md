@@ -18,8 +18,8 @@ Legend: ⬜ not started · 🟨 in progress · ✅ done
 | 06 | [[Phase 06 - Damage & Enemy Pursuers]] | Hitmen cars chase, ram and shoot; you can destroy them | 05 | ✅ |
 | 07 | [[Phase 07 - Passenger Archetypes & Ride Events]] | Old lady, businessman, burglar + others with real consequences | 04, 06 | ✅ closed 2026-11-12 (playtest fixes D-051…D-054 auto-verified only; screen effects, courier, item drops deferred) |
 | 08 | [[Phase 08 - Items & Inventory]] | Passengers drop items; use/passive effects | 07 | 🟨 started early (energy drink pickup) |
-| 09 | [[Phase 09 - Economy, Shop & Upgrades]] | Garage between shifts: buy guns, perks, upgrades | 05, 08 | ⬜ |
-| 10 | [[Phase 10 - Game Flow, UI & Save]] | Menus, shift summary, pause, settings, save/load | 09 | ⬜ |
+| 09 | [[Phase 09 - Economy, Shop & Upgrades]] | Garage between shifts: buy guns, perks, upgrades | 05, 08 | 🟨 gun shops in the world (Iteration 10); body parts / dashboard / perks to do |
+| 10 | [[Phase 10 - Game Flow, UI & Save]] | Menus, shift summary, pause, settings, save/load | 09 | 🟨 main menu, pause menu + run stats, short tutorial, local Windows build (Iteration 09); settings / save still to do |
 | 11 | [[Phase 11 - Audio, VFX & Juice]] | It sounds and feels great | 10 | ⬜ |
 | 12 | [[Phase 12 - Content, Balancing & Release]] | More passengers, tuning, export build | 11 | ⬜ |
 

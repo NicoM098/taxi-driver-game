@@ -20,8 +20,12 @@ class Driver:
 	extends Node
 
 	var _failed: bool = false
+	## The user's map choice before the test (restored at the end).
+	var _active_before: String = ""
 
 	func _ready() -> void:
+		if FileAccess.file_exists("user://active_map.txt"):
+			_active_before = FileAccess.get_file_as_string("user://active_map.txt").strip_edges()
 		_run.call_deferred()
 
 	func _frames(n: int) -> void:
@@ -82,6 +86,9 @@ class Driver:
 		# The player clicks into the game first (captures the mouse), then presses M.
 		await _click(Vector2(640, 360))
 		print("[EditorSwitchTest] after a click in the game: mouse_mode %d" % Input.mouse_mode)
+		# Money / guns from this run must not survive PLAY in the editor (a new run).
+		GameState.cash = 500
+		GameState.owned_weapons.append(&"smg")
 		await _tap(KEY_M)
 		await _frames(30)
 		var editor := get_tree().current_scene
@@ -149,12 +156,21 @@ class Driver:
 		await _frames(60)
 		var game := get_tree().current_scene
 		print("[EditorSwitchTest] after P: scene %s" % (game.name if game != null else "null"))
+		print("[EditorSwitchTest] after P: cash $%d, guns %s" % [GameState.cash, GameState.owned_weapons])
+		_check(GameState.cash == 0 and GameState.owned_weapons == GameState.STARTING_WEAPONS,
+			"cash / guns carried over into the new run")
 		_check(game != null and game.name != "MapEditor", "P did not start the game")
 
 	func _finish() -> void:
-		# Do not leave the throw-away map as the game's map.
+		# Do not leave the throw-away map as the game's map: put the user's choice back.
 		if FileAccess.file_exists("user://active_map.txt"):
 			if FileAccess.get_file_as_string("user://active_map.txt").strip_edges() == "_autotest_map":
-				DirAccess.remove_absolute(ProjectSettings.globalize_path("user://active_map.txt"))
+				if _active_before != "" and _active_before != "_autotest_map":
+					MapData.set_active(_active_before)
+				else:
+					DirAccess.remove_absolute(ProjectSettings.globalize_path("user://active_map.txt"))
+		var throwaway := MapData.path_for("_autotest_map")
+		if FileAccess.file_exists(throwaway):
+			DirAccess.remove_absolute(ProjectSettings.globalize_path(throwaway))
 		print("[EditorSwitchTest] %s" % ("FAIL" if _failed else "PASS"))
 		get_tree().quit(1 if _failed else 0)

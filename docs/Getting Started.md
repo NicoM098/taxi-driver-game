@@ -42,23 +42,25 @@ Full details: [[Game Design Document]].
 | Language | GDScript (static typing) |
 | Renderer | Forward+ (D3D12 on Windows) |
 | Physics | Jolt Physics (3D) |
-| Godot project | `TaxiDriver/new-game-project/` |
-| Docs vault | `TaxiDriver/Crazytaxi/` (this Obsidian vault) |
+| Repo = Godot project | `taxi-driver-game/` (git, `project.godot` at the root) |
+| Docs vault | `taxi-driver-game/docs/` (this Obsidian vault) |
 | Godot exe | `C:\Users\DLain\Downloads\Godot_v4.6.1-stable_win64.exe\` |
+| Build | `build/windows/TaxiDriver.exe` (git-ignored; export preset "Windows Desktop") |
 
 ## 4. Folder layout
 ```
-TaxiDriver/
-├── CLAUDE.md                ← pointer to Crazytaxi/CLAUDE.md
-├── new-game-project/        ← Godot project (res://)
-│   ├── assets/materials/    ← PS1 ShaderMaterial presets (flat colours)
-│   ├── data/                ← content as .tres: passengers/, weapons/, enemies/
-│   ├── src/                 ← code by feature: autoload, camera, combat, core, dossier,
-│   │                           enemies, items, main, passengers, ride, ui, vehicle, world
-│   ├── tests/               ← headless autotests + screenshot tools (see CLAUDE.md §5)
-│   ├── tools/               ← setup_project.gd (project settings), check_profiles.gd
-│   └── _backup/             ← manual backups (no git; ignored by Godot)
-└── Crazytaxi/               ← Obsidian vault (all docs)
+taxi-driver-game/            ← git repo AND Godot project (res://)
+├── CLAUDE.md                ← pointer to docs/CLAUDE.md
+├── project.godot, export_presets.cfg
+├── assets/materials/        ← PS1 ShaderMaterial presets (flat colours)
+├── data/                    ← content: passengers/, weapons/, enemies/, events/ (.tres), maps/ (.json)
+├── src/                     ← code by feature: autoload, camera, combat, core, dossier, editor,
+│                               enemies, items, main, passengers, ride, ui, vehicle, world
+├── tests/                   ← headless autotests + screenshot tools (see CLAUDE.md §5)
+├── tools/                   ← setup_project.gd (project settings), check_profiles.gd
+├── _backup/                 ← old manual backups from before git (ignored by Godot)
+├── build/                   ← exported builds (git-ignored)
+└── docs/                    ← Obsidian vault (all docs)
     ├── 00 - Home.md
     ├── CLAUDE.md            ← Claude's working rules
     ├── Getting Started.md   ← you are here
@@ -79,8 +81,9 @@ TaxiDriver/
 Build order of systems: [[Development Plan]].
 
 ## 6. Running the project
-- Open Godot 4.6.1 → Import → `new-game-project/project.godot` → **F5**.
-- You start in the city; you go on duty after 1 s (there is no shift clock). Current state of the game: [[Status]].
+- **In Godot:** Open Godot 4.6.1 → Import → `taxi-driver-game/project.godot` → **F5**.
+- **Build:** run `build/windows/TaxiDriver.exe` (re-export: see [[CLAUDE]] §5).
+- You land on the **main menu**: PLAY, TUTORIAL (2 minutes, first time), MAP EDITOR, CONTROLS, QUIT. In the city you go on duty after 1 s (there is no shift clock). Current state of the game: [[Status]].
 
 ### Controls
 | Action | Keyboard / mouse | Gamepad |
@@ -91,10 +94,10 @@ Build order of systems: [[Development Plan]].
 | Boost | Shift | A |
 | Look around / look behind | mouse / C | right stick / R3 |
 | Aim (raise gun) / fire | RMB / LMB | LB / RB |
-| Reload / switch weapon | R / 1-3, wheel | X / Y, d-pad |
+| Reload / switch weapon | R / 1-4 (slot = key), wheel | X / Y, d-pad |
 | Reset car | T | L3 |
-| (unused: there is no summary screen at the moment) | E / Enter | d-pad ↑ |
-| Pause | Esc | Start |
+| Pause menu (resume / main menu / quit, run stats) | Esc | Start |
+| Fullscreen on/off | F11 | — |
 | Passenger file | mouse clicks | d-pad + A |
 | Kick the passenger out (mid-ride) | Q | d-pad ↓ |
 
@@ -106,7 +109,7 @@ Claude runs headless autotests and screenshot tools after every change — list 
 
 ## 7. Project decisions (answered 2026-11-10)
 - [x] **Title:** TaxiDriver (final). Godot `config/name` to be renamed in Phase 00.
-- [x] **Version control:** no git — this is a quick proof-of-concept. (Claude must be careful with destructive edits; see [[CLAUDE]] §6.)
+- [x] **Version control:** ~~no git~~ → git repo since 2026-11-15 (`taxi-driver-game`, branch `main`); see [[CLAUDE]] §6.
 - [x] **Controller:** supported from the start (KB+M and gamepad).
 - [x] **Run structure:** ~~endless shifts~~ → open world, no shift clock (2026-11-12, D-051).
 - [x] **Art direction:** primitive blockout + PS1-style render pipeline; flat colours first, no textures from day 1. See [[Art Direction]].
@@ -115,5 +118,6 @@ Claude runs headless autotests and screenshot tools after every change — list 
 - [ ] Target platform: PC (Windows) only? (assumed yes)
 
 ## Map editor (since 2026-11-12)
-Press **M** in the game (or run `src/editor/map_editor.tscn`). Build with the piece buttons on the left, edit the selected piece on the right, **Save**, then **PLAY THIS MAP (P)**. Maps are JSON files in `new-game-project/data/maps/`. Details and keys: [[Iteration 08 - Open-World Base & Map Editor]].
+Main menu → **MAP EDITOR**, or press **M** in the game (or run `src/editor/map_editor.tscn`). Build with the piece buttons on the left, edit the selected piece on the right, **Save**, then **PLAY THIS MAP (P)**. Maps are JSON files in `data/maps/` (in an exported build: `user://maps/`, i.e. `%APPDATA%\Godot\app_userdata\TaxiDriver\maps\`). Details and keys: [[Iteration 08 - Open-World Base & Map Editor]].
 Wrecked taxi: it limps until you stop on the yellow pad of a repair shop (follow the arrow / red beacon).
+Gun shops: green awning + pistol sign, green pad in front — stop on the pad to buy guns and ammo (map piece *Gun shop* in the editor). A run starts with the revolver only.

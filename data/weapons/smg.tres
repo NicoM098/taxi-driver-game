@@ -5,6 +5,10 @@
 [resource]
 script = ExtResource("1_w")
 id = &"smg"
+slot = 2
+blurb = "Sprays 11 rounds a second. Hold the trigger."
+price = 180
+ammo_price = 35
 display_name = "SMG"
 damage = 12.0
 pellets = 1

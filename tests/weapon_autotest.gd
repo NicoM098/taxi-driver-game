@@ -28,6 +28,8 @@ var _shotgun_fired: bool = false
 
 func _ready() -> void:
 	MapData.use_builtin()   # never the user's edited map
+	# A run starts with the revolver only; this test switches through bought weapons.
+	GameState.owned_weapons = [&"revolver", &"smg", &"shotgun", &"rifle"]
 	var course := COURSE.instantiate()
 	add_child(course)
 	_taxi = course.get_node("Taxi") as Taxi

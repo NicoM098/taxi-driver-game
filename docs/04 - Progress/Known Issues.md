@@ -26,15 +26,17 @@ Bugs and tech debt not fixed yet. Remove (or move to "Resolved") when fixed.
 | KI-021 | ⚪ | tech-debt | Names left over from the timed shifts: `ShiftManager`, `GameState.shift_number` (now a difficulty level), `PassengerProfile.min_shift`, `EventBus.shift_started / shift_ended`. Rename when the open-world run flow is designed. | 2026-11-12 | — |
 | KI-023 | 🟡 | performance | Maps are built whole at load (no streaming / chunking). Untested on a real GPU with a full 160 x 160 map. | 2026-11-12 | `City._ready`; add chunked building + visibility ranges if it stutters. |
 | KI-024 | 🟡 | enemies | The AI road graph treats stairs, ramps and stepped plazas as ordinary (more expensive) ground: enemy cars may drive off ramps or struggle on tall stairs. Sheer platforms over 0.45 m are solid for the graph. | 2026-11-12 | `MapData.is_solid`, `City._build_road_graph`. |
-| KI-025 | ⚪ | UI | The run summary (rides, cash, kills, wrecks) is no longer shown anywhere since a wreck stopped ending the run. | 2026-11-12 | `ShiftManager.end_shift`, `hud._on_shift_ended` are still there. |
 | KI-026 | 🟡 | balance | Untested numbers: limp mode (30 km/h, misfire, steering wander), repair prices ($60 wreck, $0.8 / HP). | 2026-11-12 | `Taxi` "Limp mode" exports, `RepairShop` exports. |
 | KI-027 | 🟡 | balance | Encounter frequency, the Bruiser / Street Gang cars and the three hostile passengers are untuned first guesses (D-059). Bruisers weigh 1.5 x the taxi: check they do not pin it against walls. | 2026-11-13 | `StreetEncounters` exports, `data/events/`, `data/enemies/`. |
 | KI-028 | ⚪ | editor | No warning about walled-in areas: taxi stops placed inside one still get passengers and destinations nobody can reach (enemies no longer spawn there, D-057). | 2026-11-13 | `City.count_cut_off_cells()` exists for it. |
 | KI-020 | ⚪ | enemies | An ambusher blocks only part of a 16 m wide intersection and is shown by the threat markers while out of view. | 2026-11-12 | Consider two cars nose to nose / hiding markers for AMBUSH mode. |
+| KI-029 | 🟡 | tests | `enemy_city_autotest` fails ~1 run in 4 ("not all hitmen reached the taxi"): one hitman piles up unstuck recoveries and is destroyed before arriving. Also on the code before Iteration 10 (clean worktree of the last commit: 2 of 8 failed). | 2026-11-15 | Random spawn spots; re-run, or seed the spawns. |
+| KI-030 | ⚪ | street life | No consequences for running pedestrians over (only a stat); traffic cars cannot be destroyed (bullets shove them); pedestrians cannot be shot; no traffic rules at intersections. | 2026-11-15 | D-065; decide with the user. |
 
 Severity: 🔴 blocker · 🟠 major · 🟡 minor · ⚪ cosmetic/tech-debt
 
 ## Resolved
+- KI-025 (2026-11-15) — the run stats are shown in the new pause menu (D-061).
 - KI-022 (2026-11-12) — a wreck now costs: limp mode until a repair shop, $60 (D-056).
 - KI-019 (2026-11-12) — accidental mid-ride kick: a normal fare can no longer be ended by the driver; Q only works while a ride event allows it (D-052).
 - KI-016 (2026-11-11) — instant 180° turn when throttling out of a reverse → D-041.

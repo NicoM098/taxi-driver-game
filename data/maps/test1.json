@@ -1,7 +1,7 @@
 {
 	"cell": 8.0,
 	"depth": 50,
-	"format": 1,
+	"format": 2,
 	"name": "TEST1",
 	"pieces": [
 		{
@@ -266,7 +266,7 @@
 		},
 		{
 			"d": 1,
-			"h": 2.0,
+			"h": 3.0,
 			"id": "",
 			"mat": "building_a",
 			"name": "",
@@ -279,7 +279,7 @@
 		},
 		{
 			"d": 1,
-			"h": 2.0,
+			"h": 3.0,
 			"id": "",
 			"mat": "building_a",
 			"name": "",
@@ -383,7 +383,7 @@
 		},
 		{
 			"d": 4,
-			"h": 2.0,
+			"h": 1.0,
 			"id": "",
 			"mat": "building_a",
 			"name": "",
@@ -396,7 +396,7 @@
 		},
 		{
 			"d": 1,
-			"h": 2.0,
+			"h": 1.0,
 			"id": "",
 			"mat": "building_a",
 			"name": "",
@@ -409,7 +409,7 @@
 		},
 		{
 			"d": 7,
-			"h": 2.0,
+			"h": 1.0,
 			"id": "",
 			"mat": "building_a",
 			"name": "",
@@ -422,7 +422,7 @@
 		},
 		{
 			"d": 1,
-			"h": 2.0,
+			"h": 1.0,
 			"id": "",
 			"mat": "building_a",
 			"name": "",
@@ -1774,7 +1774,7 @@
 		},
 		{
 			"d": 7,
-			"h": 2.0,
+			"h": 1.0,
 			"id": "",
 			"mat": "building_a",
 			"name": "",
@@ -1787,7 +1787,7 @@
 		},
 		{
 			"d": 1,
-			"h": 2.0,
+			"h": 3.0,
 			"id": "",
 			"mat": "building_a",
 			"name": "",
@@ -1800,7 +1800,7 @@
 		},
 		{
 			"d": 1,
-			"h": 2.0,
+			"h": 3.0,
 			"id": "",
 			"mat": "building_a",
 			"name": "",
@@ -1813,7 +1813,7 @@
 		},
 		{
 			"d": 1,
-			"h": 2.0,
+			"h": 3.0,
 			"id": "",
 			"mat": "building_a",
 			"name": "",
@@ -1826,7 +1826,7 @@
 		},
 		{
 			"d": 1,
-			"h": 2.0,
+			"h": 3.0,
 			"id": "",
 			"mat": "building_a",
 			"name": "",
@@ -1839,7 +1839,7 @@
 		},
 		{
 			"d": 1,
-			"h": 2.0,
+			"h": 1.0,
 			"id": "",
 			"mat": "building_a",
 			"name": "",
@@ -1852,7 +1852,7 @@
 		},
 		{
 			"d": 1,
-			"h": 2.0,
+			"h": 1.0,
 			"id": "",
 			"mat": "building_a",
 			"name": "",
@@ -1865,7 +1865,7 @@
 		},
 		{
 			"d": 1,
-			"h": 2.0,
+			"h": 1.0,
 			"id": "",
 			"mat": "building_a",
 			"name": "",
@@ -1878,7 +1878,7 @@
 		},
 		{
 			"d": 1,
-			"h": 2.0,
+			"h": 3.0,
 			"id": "",
 			"mat": "building_a",
 			"name": "",
@@ -1891,7 +1891,7 @@
 		},
 		{
 			"d": 1,
-			"h": 2.0,
+			"h": 3.0,
 			"id": "",
 			"mat": "building_a",
 			"name": "",
@@ -3461,6 +3461,149 @@
 			"w": 30,
 			"x": 1,
 			"z": 1
+		},
+		{
+			"d": 1,
+			"h": 0.0,
+			"id": "",
+			"mat": "building_a",
+			"name": "",
+			"rot": 0,
+			"shape": "can",
+			"type": "drink",
+			"w": 1,
+			"x": 18,
+			"z": 26
+		},
+		{
+			"d": 1,
+			"h": 0.0,
+			"id": "",
+			"mat": "building_a",
+			"name": "",
+			"rot": 0,
+			"shape": "can",
+			"type": "drink",
+			"w": 1,
+			"x": 8,
+			"z": 24
+		},
+		{
+			"d": 1,
+			"h": 0.0,
+			"id": "",
+			"mat": "building_a",
+			"name": "",
+			"rot": 0,
+			"shape": "can",
+			"type": "drink",
+			"w": 1,
+			"x": 18,
+			"z": 3
+		},
+		{
+			"d": 1,
+			"h": 0.0,
+			"id": "",
+			"mat": "building_a",
+			"name": "",
+			"rot": 0,
+			"shape": "can",
+			"type": "drink",
+			"w": 1,
+			"x": 19,
+			"z": 33
+		},
+		{
+			"d": 1,
+			"h": 0.0,
+			"id": "",
+			"mat": "building_a",
+			"name": "",
+			"rot": 0,
+			"shape": "can",
+			"type": "drink",
+			"w": 1,
+			"x": 10,
+			"z": 40
+		},
+		{
+			"d": 1,
+			"h": 0.0,
+			"id": "",
+			"mat": "building_a",
+			"name": "",
+			"rot": 0,
+			"shape": "can",
+			"type": "drink",
+			"w": 1,
+			"x": 27,
+			"z": 44
+		},
+		{
+			"d": 1,
+			"h": 0.0,
+			"id": "",
+			"mat": "building_a",
+			"name": "",
+			"rot": 0,
+			"shape": "can",
+			"type": "drink",
+			"w": 1,
+			"x": 47,
+			"z": 34
+		},
+		{
+			"d": 1,
+			"h": 0.0,
+			"id": "",
+			"mat": "building_a",
+			"name": "",
+			"rot": 0,
+			"shape": "can",
+			"type": "drink",
+			"w": 1,
+			"x": 39,
+			"z": 22
+		},
+		{
+			"d": 1,
+			"h": 6.0,
+			"id": "",
+			"mat": "building_a",
+			"name": "",
+			"rot": 2,
+			"shape": "store",
+			"type": "gunshop",
+			"w": 1,
+			"x": 17,
+			"z": 42
+		},
+		{
+			"d": 1,
+			"h": 6.0,
+			"id": "",
+			"mat": "building_a",
+			"name": "",
+			"rot": 3,
+			"shape": "store",
+			"type": "gunshop",
+			"w": 1,
+			"x": 48,
+			"z": 13
+		},
+		{
+			"d": 1,
+			"h": 6.0,
+			"id": "",
+			"mat": "building_a",
+			"name": "",
+			"rot": 1,
+			"shape": "store",
+			"type": "gunshop",
+			"w": 1,
+			"x": 1,
+			"z": 3
 		}
 	],
 	"width": 50

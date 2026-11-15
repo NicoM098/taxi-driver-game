@@ -7,6 +7,7 @@
 [ext_resource type="Script" path="res://src/ride/shift_manager.gd" id="5_shift"]
 [ext_resource type="Script" path="res://src/enemies/enemy_director.gd" id="6_enemies"]
 [ext_resource type="Script" path="res://src/enemies/street_encounters.gd" id="7_encounters"]
+[ext_resource type="Script" path="res://src/world/street_life.gd" id="8_streetlife"]
 
 [node name="Game" type="Node3D"]
 
@@ -30,3 +31,6 @@ script = ExtResource("6_enemies")
 
 [node name="StreetEncounters" type="Node" parent="."]
 script = ExtResource("7_encounters")
+
+[node name="StreetLife" type="Node3D" parent="."]
+script = ExtResource("8_streetlife")

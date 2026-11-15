@@ -34,6 +34,7 @@ const GENERIC_STREETS := ["Main St.", "Station Rd.", "Park Ave.", "Mill Lane", "
 var map: MapData
 var stops: Array[TaxiStop] = []
 var repair_shops: Array[RepairShop] = []
+var gun_shops: Array[GunShop] = []
 ## District ids that have at least one stop.
 var districts: Dictionary = {}
 
@@ -135,6 +136,12 @@ func count_cut_off_cells() -> int:
 	return total - biggest
 
 
+## True if `pos` is on plain street (not solid, not under any area piece such as a sidewalk).
+func is_plain_street(pos: Vector3) -> bool:
+	var c := map.world_to_cell(pos)
+	return _plain(c.x, c.y)
+
+
 ## True if a car can be at `pos` (inside the map, not in a solid piece).
 func is_free(pos: Vector3) -> bool:
 	var c := map.world_to_cell(pos)
@@ -216,6 +223,14 @@ func _build_piece(p: Dictionary) -> void:
 			shop.pad_radius = pad["radius"]
 			add_child(shop)
 			repair_shops.append(shop)
+		"gunshop":
+			add_child(MapBuilder.build_piece(map, p))
+			var store := GunShop.new()
+			var store_pad := MapBuilder.repair_pad(map, p)
+			store.pad_position = store_pad["pos"]
+			store.pad_radius = store_pad["radius"]
+			add_child(store)
+			gun_shops.append(store)
 		_:
 			add_child(MapBuilder.build_piece(map, p))
 
@@ -245,7 +260,7 @@ func _surface_height(cell: Vector2i) -> float:
 	match String(p["type"]):
 		"plaza":
 			return float(p["h"])
-		"building", "sidewalk", "containers", "repair":
+		"building", "sidewalk", "containers", "repair", "gunshop":
 			return MapBuilder.CURB
 	return 0.0
 

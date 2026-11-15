@@ -334,3 +334,43 @@ Format:
 **Tested:** import clean; curb, 9 vehicle scenarios, jump, map, ride, enemy, enemy-city, hostiles, events PASS. Not re-run (untouched systems): dossier, weapon, pickup, editor switch, profile check. NOT tested by a human.
 **Problems / notes:** the user did not say where or how it happened; the landing case is what the probe reproduced. If damage still shows up on sidewalks, ask for the spot (which piece, speed, after a jump or not). The first probe run was invalid (the city moves the taxi to the player start; tests must `teleport()` after that).
 **Next session should:** 1) get the re-test (now 7 points in the iteration note); 2) close Iteration 08; 3) ask the scope of the neighbourhoods iteration.
+
+
+## 2026-11-15 — Session 13 — Docs match the repo; main menu, tutorial, polish, local build
+**Iteration:** [[Iteration 09 - Menu, Tutorial & Build]] (new) · [[Iteration 08 - Open-World Base & Map Editor]] still open · **Phases touched:** 10, 12 (export)
+**Goal:** user: "update the docs to match, the goal for this session will be to create a very simple main menu and tutorial (really short) and to polish some small stuff and then compile a complete build for local testing".
+**Done:**
+- Docs: the project is now the git repo `taxi-driver-game/` (project at the root, vault in `docs/`): [[CLAUDE]] §1 / §5 / §6 (git rules replace "no git"), [[Getting Started]] (tech table, layout, running, controls, map paths), [[Architecture]]. New root `CLAUDE.md` pointer. `.gitignore` += `/build/`.
+- D-061: `src/ui/menu/main_menu.{gd,tscn}` = main scene; pause menu in `main.gd` (resume / skip tutorial / main menu / quit + run stats → KI-025 resolved); F11 fullscreen in `InputDevice`; editor "Main menu" button.
+- D-062: `src/ui/tutorial/tutorial.gd` (Main/UI/Tutorial), `GameState.tutorial_active`, `PassengerSpawner.tutorial_profiles` / `tutorial_profile()`, `StreetEncounters` off during it.
+- D-063: `export_presets.cfg`, `MapData.save_dir()` / `find_path()` (user://maps/ in builds), `config/version` 0.9.0. Build exported to `build/windows/`.
+- Fix: `tests/editor_switch_autotest` deleted `user://active_map.txt` at the end (the user's `TEST1` choice was lost after every run); it now restores the previous choice and removes the throw-away map file.
+**Files changed:** `project.godot` (via `tools/setup_project.gd`), `src/main/{main.gd,main.tscn}`, `src/autoload/{game_state,input_device}.gd`, `src/passengers/passenger_spawner.gd`, `src/enemies/street_encounters.gd`, `src/world/map_data.gd`, `src/editor/map_editor.gd`, `tests/editor_switch_autotest.gd`; new `src/ui/menu/*`, `src/ui/tutorial/tutorial.gd`, `tests/{tutorial_autotest,ui_shots}.{gd,tscn}`, `export_presets.cfg`, `CLAUDE.md`. The user's `data/maps/test1.json` was not touched (it was already modified in git before the session). Nothing committed.
+**Tested:** import clean; tutorial (new), ride, dossier, events, map, hostiles, enemy, enemy-city, pickup, weapon, jump, curb, vehicle, editor switch PASS; profiles OK; menu / controls / tutorial / pause screenshots looked at (pause overlay darkened after the first look); exe: headless boot to the menu, `--map=test1` and `--map=builtin` load without errors, windowed screenshot renders (D3D12). NOT tested by a human: anything in the build, gamepad navigation of the menus, fullscreen toggle.
+**Problems / notes:** a shell heredoc ate a `\a` in a Windows path in Getting Started (fixed). The polish items were Claude's pick — the user did not list any.
+**Next session should:** 1) collect the build playtest (Iteration 09, 7 points) and the Iteration 08 re-test; 2) close both; 3) ask the scope of the neighbourhoods iteration.
+
+
+## 2026-11-15 — Session 14 — Street life, new fares, gun shop, weapon hotbar
+**Iteration:** [[Iteration 10 - Street Life, Gun Shop & Weapon Bar]] (new) · 08 and 09 still await playtests · **Phases touched:** 02, 05, 07, 09
+**Goal:** user: "i want to add a little variety of npcs and drives, the weapon shop witha couple of options and a better ui for weapon selection that is more visually clear". Asked what "npcs and drives" meant → "Both" (street life + new passengers).
+**Done:**
+- D-064: `WeaponData` slot / blurb / prices, `data/weapons/rifle.tres`, start with the revolver, `WeaponController` add / refill / catalogue / slot keys; `gunshop` map piece (`MapData`, `MapBuilder._gunshop`, `City`, editor), `src/world/gun_shop.gd`, `src/ui/shop/gun_shop_ui.gd` in Main/UI; Main ignores Esc while the shop is open; two gun shops in the built-in city.
+- D-067: `src/ui/hud/weapon_bar.gd` replaces the weapon text in `hud.gd`; bottom hint moved right.
+- D-065: `src/world/{street_life,pedestrian,traffic_car,traffic_ai}.gd`, StreetLife node in `game.tscn`, `EnemyCar.build_body / build_wheels` static, `City.is_plain_street`, `EventBus.pedestrian_hit`, "Pedestrians hit" in `ShiftManager` + pause stats.
+- D-066: `data/passengers/{dog_in_a_suit,night_nurse,future_man,street_musician}.tres`.
+- Tests: new `tests/shop_autotest`, `tests/streetlife_autotest`; `weapon_autotest` now sets all four guns owned; `enemy_city_autotest` prints where a stuck hitman is.
+- Version 0.10.0, build re-exported.
+**Files changed:** see above + `src/autoload/{game_state,event_bus}.gd`, `src/main/{main.gd,main.tscn,game.tscn}`, `src/enemies/enemy_car.gd`, `src/world/{city,map_data,map_builder}.gd`, `src/editor/map_editor.gd`, `src/ride/shift_manager.gd`, `src/ui/hud/hud.gd`, `data/weapons/*.tres`, `tools/setup_project.gd`, `project.godot`. User maps untouched. Nothing committed.
+**Tested:** listed in [[Status]]. First street-life run found half the traffic frozen: the look-ahead ray hit building walls while cars approached a corner → vehicles-only ray (all 8 drive since). The street-life test also tripped on recycled cars (test fix). `enemy_city` failures checked against a clean worktree of the last commit: same flakiness there (KI-029). NOT tested by a human: everything.
+**Problems / notes:** the editor-switch test passed 2 of 5 windowed runs, failing on its select click (real mouse suspected, editor input untouched). `TEST1` has no gun shop.
+**Next session should:** 1) playtest of build 0.10.0 (Iterations 08-10); 2) fix, close; 3) next scope (neighbourhoods or more shops).
+
+
+## 2026-11-15 — Session 14 (cont.) — Money carried over into a new run
+**Iteration:** [[Iteration 10 - Street Life, Gun Shop & Weapon Bar]] · **Phases touched:** 10
+**Goal:** user: "I THINK THE MONEY IS SAVING even when you start a new run".
+**Done:** D-068 — the map editor's PLAY now resets the run (it was the only entry to the game without `GameState.reset_run()`; nothing is ever written to a save file). Regression check added to `tests/editor_switch_autotest`. Build re-exported.
+**Tested:** tutorial, map PASS; editor switch: the new cash / guns check passes (cash $0, revolver only after P) but the run FAILED on its mouse-click steps both times — the user was using the PC (they saved `TEST1` at 01:37 with three new 1x1 gun shops while the test ran). The test never wrote `test1.json` (no test pillar in it).
+**Problems / notes:** don't run windowed tests while the user is working. The user's gun shops are 1x1 (tiny store, still works; 3x3+ looks right).
+**Next session should:** as before — playtest of the build (Iterations 08-10).

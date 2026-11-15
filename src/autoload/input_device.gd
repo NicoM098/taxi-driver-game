@@ -2,6 +2,7 @@ extends Node
 ## Tracks the last-used input device (keyboard/mouse vs gamepad) and accumulates mouse-look
 ## motion. Mouse look is read from here because the 3D world lives inside a SubViewport,
 ## which does not reliably receive captured-mouse motion events.
+## Also owns the global F11 fullscreen toggle (works in every scene: menu, game, editor).
 
 signal device_changed(using_gamepad: bool)
 
@@ -17,6 +18,10 @@ func _ready() -> void:
 
 
 func _input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo 			and (event as InputEventKey).physical_keycode == KEY_F11:
+		toggle_fullscreen()
+		get_viewport().set_input_as_handled()
+		return
 	if event is InputEventMouseMotion:
 		var motion := event as InputEventMouseMotion
 		if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
@@ -29,6 +34,11 @@ func _input(event: InputEvent) -> void:
 		_set_gamepad(true)
 	elif event is InputEventJoypadMotion and absf((event as InputEventJoypadMotion).axis_value) > AXIS_THRESHOLD:
 		_set_gamepad(true)
+
+
+func toggle_fullscreen() -> void:
+	var full := DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN
+	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED if full else DisplayServer.WINDOW_MODE_FULLSCREEN)
 
 
 ## Returns mouse motion (screen pixels) since the last call, then clears it.

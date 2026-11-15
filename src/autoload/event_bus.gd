@@ -81,6 +81,11 @@ signal enemy_destroyed(enemy: Node, bounty: int)
 @warning_ignore("unused_signal")
 signal explosion(position: Vector3, strength: float)
 
+# Street life
+## The taxi ran a pedestrian over.
+@warning_ignore("unused_signal")
+signal pedestrian_hit(position: Vector3)
+
 # Items
 ## The player drove through a Monstrous Energy can (first-person drink animation, heal flash).
 @warning_ignore("unused_signal")

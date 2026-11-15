@@ -128,6 +128,14 @@ func _finish() -> void:
 		for e in _enemies:
 			if is_instance_valid(e) and not _reached.has(e.name):
 				print("[CityEnemyTest]   %s still %.0f m away at %s, mode %s" % [e.name, e.global_position.distance_to(_taxi.global_position), e.global_position.round(), EnemyDriverAI.Mode.keys()[e.ai.mode]])
+				var city := get_tree().get_first_node_in_group(&"city") as City
+				var cell := city.map.world_to_cell(e.global_position)
+				var near := PackedStringArray()
+				for dz in range(-1, 2):
+					for dx in range(-1, 2):
+						var idx := city.map.piece_at(cell + Vector2i(dx, dz), false)
+						near.append(String(city.map.pieces[idx]["type"]) if idx >= 0 else "street")
+				print("[CityEnemyTest]   cell %s, 3x3 around: %s" % [cell, near])
 		_errors.append("not all hitmen reached the taxi within 40 s")
 	if _errors.is_empty():
 		print("[CityEnemyTest] PASS")

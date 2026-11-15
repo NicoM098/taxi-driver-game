@@ -35,3 +35,6 @@ Cash, owned weapons/ammo, upgrade levels, perks, inventory, shift number → sav
 - Shift 1 should earn enough for 1 cheap gun OR 1 upgrade.
 - Businessman fare ≈ 4–6× a normal fare.
 - Burglar theft ≈ 20–40% of shift cash if not stopped.
+
+## 7. As built (2026-11-15)
+Shops are places in the open world, not a garage between shifts. First one: the **gun shop** (D-064) — guns and ammo. Repair shops charge for repairs (D-056). Body parts, dashboard items and perks: still to come.

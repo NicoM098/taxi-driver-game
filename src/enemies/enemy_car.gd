@@ -38,8 +38,9 @@ func _ready() -> void:
 	angular_damp = 0.3
 	max_speed = data.max_speed
 	engine_force = data.engine_force
-	_build_body()
-	_build_wheels()
+	_body_mat = load(data.body_material)
+	_body = build_body(self, _body_mat, data.siren)
+	build_wheels(self)
 
 	health = HealthComponent.new()
 	health.max_hp = data.hp
@@ -69,7 +70,9 @@ func _ready() -> void:
 	crashed.connect(_on_crash)
 
 
-func _build_body() -> void:
+## Collision boxes + blockout body of an AI car (also used by traffic). Returns the lower
+## body mesh (flashes when hit).
+static func build_body(car: RigidBody3D, body_mat: Material, siren: bool = false) -> MeshInstance3D:
 	var col := CollisionShape3D.new()
 	var shape := BoxShape3D.new()
 	# Underside 0.1 m below the wheel mounts: clears a 0.2 m curb even with the suspension
@@ -77,29 +80,29 @@ func _build_body() -> void:
 	shape.size = Vector3(1.7, 0.6, 4.2)
 	col.shape = shape
 	col.position.y = 0.2
-	add_child(col)
+	car.add_child(col)
 	var cabin_col := CollisionShape3D.new()
 	var cabin_shape := BoxShape3D.new()
 	cabin_shape.size = Vector3(1.5, 0.6, 2.0)
 	cabin_col.shape = cabin_shape
 	cabin_col.position = Vector3(0, 0.8, 0.3)
-	add_child(cabin_col)
+	car.add_child(cabin_col)
 
-	_body_mat = load(data.body_material)
 	var lower := BoxMesh.new()
 	lower.size = Vector3(1.8, 0.8, 4.3)
-	_body = Blockout.add_mesh(self, lower, Vector3(0, 0.1, 0), _body_mat)
+	var body := Blockout.add_mesh(car, lower, Vector3(0, 0.1, 0), body_mat)
 	var cabin := BoxMesh.new()
 	cabin.size = Vector3(1.6, 0.6, 2.0)
-	Blockout.add_mesh(self, cabin, Vector3(0, 0.8, 0.3), load("res://assets/materials/taxi_black.tres"))
-	if data.siren:
+	Blockout.add_mesh(car, cabin, Vector3(0, 0.8, 0.3), load("res://assets/materials/taxi_black.tres"))
+	if siren:
 		var light := BoxMesh.new()
 		light.size = Vector3(0.4, 0.15, 0.25)
-		Blockout.add_mesh(self, light, Vector3(-0.25, 1.18, 0.3), load("res://assets/materials/siren_red.tres"))
-		Blockout.add_mesh(self, light, Vector3(0.25, 1.18, 0.3), load("res://assets/materials/siren_blue.tres"))
+		Blockout.add_mesh(car, light, Vector3(-0.25, 1.18, 0.3), load("res://assets/materials/siren_red.tres"))
+		Blockout.add_mesh(car, light, Vector3(0.25, 1.18, 0.3), load("res://assets/materials/siren_blue.tres"))
+	return body
 
 
-func _build_wheels() -> void:
+static func build_wheels(car: RigidBody3D) -> void:
 	var tyre := CylinderMesh.new()
 	tyre.top_radius = 0.35
 	tyre.bottom_radius = 0.35
@@ -109,7 +112,7 @@ func _build_wheels() -> void:
 	var tyre_mat: Material = load("res://assets/materials/taxi_black.tres")
 	var wheels_root := Node3D.new()
 	wheels_root.name = "Wheels"
-	add_child(wheels_root)
+	car.add_child(wheels_root)
 	for w: Array in WHEELS:
 		var wheel := TaxiWheel.new()
 		wheel.position = Vector3(w[0], 0.0, w[1])

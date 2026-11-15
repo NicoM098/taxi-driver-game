@@ -63,6 +63,8 @@ func _physics_process(delta: float) -> void:
 	_ride_time = _ride_time + delta if _on_ride() else 0.0
 	if MapData.override != null and not run_in_tests:
 		return
+	if GameState.tutorial_active:
+		return
 	if _shift != null and not _shift.is_active:
 		return
 	if _rides != null and _rides.is_wrecked():

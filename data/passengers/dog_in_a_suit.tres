@@ -1,0 +1,78 @@
+[gd_resource type="Resource" script_class="PassengerProfile" format=3]
+
+[ext_resource type="Script" path="res://src/core/resources/passenger_profile.gd" id="1_profile"]
+[ext_resource type="Script" path="res://src/core/resources/examinable.gd" id="2_exam"]
+[ext_resource type="Script" path="res://src/core/resources/passenger_action.gd" id="3_action"]
+[ext_resource type="Script" path="res://src/events/ride_event.gd" id="4_event"]
+[ext_resource type="Script" path="res://src/events/dialogue_event.gd" id="5_dialogue"]
+[ext_resource type="Script" path="res://src/events/reward_event.gd" id="6_reward"]
+
+[sub_resource type="Resource" id="Exam_collar"]
+script = ExtResource("2_exam")
+id = &"collar"
+label = "the gold collar tag"
+reveal_text = "Engraved: \"IF FOUND, RETURN TO 1 GOLDEN HEIGHTS. GENEROUS REWARD.\" He is not an executive. He is lost."
+time_cost = 2.0
+reveals_traits = Array[StringName]([&"lost"])
+
+[sub_resource type="Resource" id="Exam_briefcase"]
+script = ExtResource("2_exam")
+id = &"briefcase"
+label = "the briefcase"
+reveal_text = "One rubber bone, a stock report chewed in half, and a surprising amount of cash in small, damp bills."
+time_cost = 2.0
+
+[sub_resource type="Resource" id="Action_return"]
+script = ExtResource("3_action")
+id = &"return_home"
+label = "Take him home to Golden Heights (reward)"
+outcome = 0
+requires_traits = Array[StringName]([&"lost"])
+fare_mult = 2.5
+destination_district = &"suburbs"
+result_text = "\"Woof.\" (That sounded like yes.)"
+
+[sub_resource type="Resource" id="Event_bark_1"]
+script = ExtResource("5_dialogue")
+trigger = 1
+trigger_value = 6.0
+trigger_random = 4.0
+lines = PackedStringArray("Woof.", "*sniffs the seat very thoroughly*", "Arf! (He sticks his head out of the window.)")
+
+[sub_resource type="Resource" id="Event_bark_2"]
+script = ExtResource("5_dialogue")
+trigger = 3
+trigger_value = 0.6
+lines = PackedStringArray("*growls at a cat on the sidewalk*", "Awooo!", "*taps the briefcase meaningfully*")
+
+[sub_resource type="Resource" id="Event_pay"]
+script = ExtResource("6_reward")
+trigger = 4
+kinds = Array[StringName]([&"cash"])
+cash_amount = 60
+line = "(He drops a soggy wad of bills on the seat.)"
+
+[resource]
+script = ExtResource("1_profile")
+id = &"dog_in_a_suit"
+display_name = "Dog in a Suit"
+color = Color(0.45, 0.3, 0.18, 1)
+fare_base = 45
+fare_per_100m = 10
+tip_multiplier = 1.8
+min_distance = 180.0
+max_distance = 420.0
+time_multiplier = 1.2
+occupation = "Executive (allegedly)"
+name_pool = PackedStringArray("Mr. Biscuits", "Sir Barksworth", "Rex Pemberton III", "Duchess")
+age_min = 3
+age_max = 9
+notes = "A golden retriever in a pinstripe suit and tie. Carries [url=briefcase]a briefcase[/url] in his mouth. Wears [url=collar]a gold collar tag[/url]. Has not said a word. Pants politely."
+examinables = Array[ExtResource("2_exam")]([SubResource("Exam_collar"), SubResource("Exam_briefcase")])
+actions = Array[ExtResource("3_action")]([SubResource("Action_return")])
+hidden_traits = Array[StringName]([&"lost"])
+kick_reaction = 0
+kick_line = "*a long, sad whimper*"
+ride_events = Array[ExtResource("4_event")]([SubResource("Event_bark_1"), SubResource("Event_bark_2"), SubResource("Event_pay")])
+spawn_weight = 0.6
+districts = Array[StringName]([&"downtown", &"suburbs"])

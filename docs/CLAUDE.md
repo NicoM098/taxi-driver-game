@@ -9,8 +9,9 @@ tags: [meta, claude]
 ## 1. Project at a glance
 - **Game:** **TaxiDriver** (final title) — proof-of-concept demo, **open world with no shift clock** (D-051; direction: neighbourhoods with storylines + shops, see [[Development Plan]]), KB+M **and controller**, PS1-style look ([[Art Direction]]). First-person arcade taxi game. *Crazy Taxi* driving × *Papers, Please* passenger screening × *Half Grip*-style first-person shooting from the cab.
 - **Engine:** Godot **4.6.1** (stable), **GDScript**, Forward+ renderer, **Jolt Physics** (3D), D3D12 on Windows.
-- **Godot project folder:** `TaxiDriver/new-game-project/` (contains `project.godot`).
-- **Docs vault (Obsidian):** `TaxiDriver/Crazytaxi/` — everything design/plan/progress lives here.
+- **Repo = Godot project:** `C:\Users\DLain\Documents\Godot proyects\Txi Driver Repo\taxi-driver-game\` — `project.godot` sits at the repo root (= `res://`). Git repo, branch `main`.
+- **Docs vault (Obsidian):** `docs/` inside the repo — everything design/plan/progress lives here (Godot ignores it: no resources inside).
+- **Builds:** `build/windows/TaxiDriver.exe` (export preset "Windows Desktop", git-ignored) — see §5.
 - **Godot executable:** `C:\Users\DLain\Downloads\Godot_v4.6.1-stable_win64.exe\Godot_v4.6.1-stable_win64.exe`
   (console build for headless checks: `...\Godot_v4.6.1-stable_win64_console.exe`)
 
@@ -52,7 +53,7 @@ tags: [meta, claude]
 ## 5. Verifying work
 - Headless parse/import check (catches script errors):
   ```
-  "C:\Users\DLain\Downloads\Godot_v4.6.1-stable_win64.exe\Godot_v4.6.1-stable_win64_console.exe" --headless --path "C:\Users\DLain\Documents\Godot proyects\TaxiDriver\new-game-project" --import
+  "C:\Users\DLain\Downloads\Godot_v4.6.1-stable_win64.exe\Godot_v4.6.1-stable_win64_console.exe" --headless --path "C:\Users\DLain\Documents\Godot proyects\Txi Driver Repo\taxi-driver-game" --import
   ```
 - Run a specific scene: add `res://path/scene.tscn` after `--path ...` (without `--headless` to see it).
 - **Vehicle autotest** (physics regression, must PASS after any vehicle change):
@@ -68,19 +69,26 @@ tags: [meta, claude]
 - **Jump test** (must PASS after any ramp / container / vehicle-air change): `res://tests/jump_autotest.tscn` (headless, `--fixed-fps 60`; `-- --explore` prints ramp heights x run-ups).
 - **Curb test** (must PASS after any vehicle collision-shape / suspension / sidewalk change): `res://tests/curb_autotest.tscn` (headless, `--fixed-fps 60`; `-- --explore` prints the table without failing). Tests that place the taxi themselves must `teleport()` it after the city has moved it to the player start.
 - **Game ↔ editor switch test** (after any change to `main.gd` input or the editor's input): `<console exe> --path <project> res://tests/editor_switch_autotest.tscn` — WINDOWED, sends real key / mouse events (M, pan, wheel, tool button, place, select, Del, P); `-- --direct` opens the editor without going through the game. Keep the real mouse out of the window while it runs (it overrides the simulated position → false FAIL).
-- **Map editor**: `res://src/editor/map_editor.tscn` (**M** in the game; P or the PLAY button goes back. Never bind F9 / F10: Godot's embedded game view uses them for suspend / next frame). Maps are JSON in `new-game-project/data/maps/`; the user's maps are **their work — never overwrite or delete them** (the test only uses `_autotest_map.json`).
+- **Map editor**: `res://src/editor/map_editor.tscn` (**M** in the game; P or the PLAY button goes back. Never bind F9 / F10: Godot's embedded game view uses them for suspend / next frame). Maps are JSON in `data/maps/` (an exported build saves its maps to `user://maps/` instead); the user's maps are **their work — never overwrite or delete them** (the test only uses `_autotest_map.json`).
 - **Arrow visual check**: `<console exe> --path <project> res://tests/arrow_shots.tscn -- --shot-dir=<scratchpad>` (5 screenshots at fixed angles).
 - **Weapon test** (must PASS after any combat change): `<console exe> --headless --path <project> --fixed-fps 60 res://tests/weapon_autotest.tscn`.
 - **Screenshot check** (visuals; opens a window briefly; add `--world=res://src/combat/shooting_range.tscn` / `--hold=aim,fire` for combat states): `<console exe> --path <project> -- --screenshot=<scratchpad>/shot.png --screenshot-frame=90 [--no-ps1]`, then view the PNG.
+- **Shop test** (must PASS after any gun shop / weapon economy / weapon-controller change): `res://tests/shop_autotest.tscn` (headless, `--fixed-fps 60`; `-- --shot-dir=<dir>` windowed: shop + hotbar screenshots).
+- **Street-life test** (must PASS after any pedestrian / traffic / StreetLife change): `res://tests/streetlife_autotest.tscn` (headless, `--fixed-fps 60`; `-- --shot-dir=<dir>` windowed: a street screenshot). Street life is OFF in every other test (`MapData.override`), like street encounters.
+- **Tutorial test** (must PASS after any tutorial / spawner / main-menu → game change): `res://tests/tutorial_autotest.tscn` (headless, `--fixed-fps 60`).
+- **Menu screenshots**: `<console exe> --path <project> res://tests/ui_shots.tscn -- --shot-dir=<scratchpad>` (main menu, controls panel, tutorial prompt, pause menu).
+- **The game starts on the main menu** (`src/ui/menu/main_menu.tscn` = main scene). Args `--screenshot=`, `--world=`, `--hold=`, `--map=` skip it straight to `main.tscn`.
+- **Build** (after a session that changes the game, if the user wants a fresh build): `<console exe> --headless --path <project> --export-release "Windows Desktop" build/windows/TaxiDriver.exe`, then smoke-test `build/windows/TaxiDriver.console.exe --headless --quit-after 900 -- --map=builtin` (look for `[City] map ...` and no errors).
 - **Project settings** (input map, autoloads, layers, shader globals) live in `res://tools/setup_project.gd` — edit it and re-run with `--headless --script res://tools/setup_project.gd`, then `--import`.
 - Gameplay feel cannot be verified headless — tell the user exactly what to test in-editor and what to look for, and record their feedback in the iteration note.
 - Be honest in [[Status]]: "written but untested" ≠ "done".
 
-## 6. No version control — be careful
-The project does **not** use git (quick proof of concept). There is no undo:
-- Read a file before overwriting it; prefer targeted edits over full rewrites.
-- Before a risky restructure (moving/renaming many files, rewriting a big scene), copy the affected files to `new-game-project/_backup/<date>/` first (add a `.gdignore` file in `_backup/` so Godot ignores it), and mention it in the Session Log.
-- Never delete files without the user's OK.
+## 6. Version control (git)
+The project is a git repo since 2026-11-15 (before that there was none — that is what `_backup/` is from; it keeps its `.gdignore`).
+- **Commit / push only when the user asks.** Uncommitted work is the user's to review.
+- Read a file before overwriting it; prefer targeted edits over full rewrites. Git is now the safety net for risky restructures — no more manual copies to `_backup/`.
+- Never delete files without the user's OK. **Never touch the user's maps in `data/maps/`** (e.g. `test1.json`), even if git shows them modified.
+- `.godot/` and `build/` are git-ignored.
 
 ## 7. Don'ts
 - Don't copy Crazy Taxi / Papers, Please / Half Grip names, characters, art, music, or levels. We borrow *mechanics/genre* only; all content is original.
@@ -94,5 +102,5 @@ The project does **not** use git (quick proof of concept). There is no undo:
 - `02 - Development Plan/` — [[Development Plan]] + one note per phase
 - `03 - Architecture/` — [[Architecture]], [[Conventions]]
 - `04 - Progress/` — [[Status]], [[Session Log]], [[Decisions Log]], [[Known Issues]]
-- `05 - Iterations/` — user-scoped iterations (active: [[Iteration 08 - Open-World Base & Map Editor]])
+- `05 - Iterations/` — user-scoped iterations (active: [[Iteration 10 - Street Life, Gun Shop & Weapon Bar]]; 08 and 09 await playtests)
 - `Templates/` — note templates

@@ -6,6 +6,8 @@
 [ext_resource type="Script" path="res://src/ui/debug/debug_overlay.gd" id="4_debug"]
 [ext_resource type="Script" path="res://src/ui/hud/hud.gd" id="5_hud"]
 [ext_resource type="Script" path="res://src/dossier/dossier.gd" id="6_dossier"]
+[ext_resource type="Script" path="res://src/ui/tutorial/tutorial.gd" id="7_tutorial"]
+[ext_resource type="Script" path="res://src/ui/shop/gun_shop_ui.gd" id="8_shop"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_post"]
 shader = ExtResource("3_post")
@@ -56,6 +58,25 @@ grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("6_dossier")
 
+[node name="GunShopUI" type="Control" parent="UI"]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("8_shop")
+
+[node name="Tutorial" type="Control" parent="UI"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("7_tutorial")
+
 [node name="DebugOverlay" type="Label" parent="UI"]
 unique_name_in_owner = true
 visible = false
@@ -79,22 +100,5 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-color = Color(0, 0, 0, 0.55)
+color = Color(0.02, 0.02, 0.04, 0.78)
 
-[node name="PauseLabel" type="Label" parent="UI/PauseOverlay"]
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -200.0
-offset_top = -40.0
-offset_right = 200.0
-offset_bottom = 40.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_font_sizes/font_size = 28
-text = "PAUSED
-Esc / Start to resume"
-horizontal_alignment = 1
-vertical_alignment = 1
