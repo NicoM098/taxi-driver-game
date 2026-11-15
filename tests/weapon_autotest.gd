@@ -91,7 +91,7 @@ func _physics_process(delta: float) -> void:
 			if not _wc.is_reloading:
 				var a := _wc.get_ammo()
 				print("[WeaponTest] reloaded: mag %d reserve %d" % [a["mag"], a["reserve"]])
-				if a["mag"] != 6 or a["reserve"] != 36:
+				if a["mag"] != 6 or a["reserve"] != 24:   # 30 - 6 (reserves cut 2026-11-15)
 					_errors.append("reload math wrong (mag %d reserve %d)" % [a["mag"], a["reserve"]])
 				Input.action_press(&"weapon_2")
 				_next()

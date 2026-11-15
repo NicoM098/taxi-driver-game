@@ -29,6 +29,7 @@ const CONTROLS := [
 
 var _buttons: VBoxContainer
 var _controls: PanelContainer
+var _options: OptionsMenu
 var _play: Button
 var _time: float = 0.0
 
@@ -118,6 +119,7 @@ func _build() -> void:
 	_play = _button("PLAY", _on_play)
 	_button("TUTORIAL  (2 min)", _on_tutorial)
 	_button("MAP EDITOR", _on_editor)
+	_button("OPTIONS", _open_options)
 	_button("CONTROLS", _toggle_controls)
 	_button("QUIT", func() -> void: get_tree().quit())
 
@@ -134,6 +136,15 @@ func _build() -> void:
 	version.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 
 	_build_controls()
+	_options = OptionsMenu.new()
+	add_child(_options)
+	_options.anchor_left = 1.0
+	_options.anchor_right = 1.0
+	_options.anchor_top = 0.42
+	_options.offset_left = -600
+	_options.offset_right = -40
+	_options.offset_top = -40
+	_options.closed.connect(func() -> void: _play.grab_focus())
 
 
 func _button(text: String, action: Callable) -> Button:
@@ -195,6 +206,13 @@ func _build_controls() -> void:
 
 func _toggle_controls() -> void:
 	_controls.visible = not _controls.visible
+	if _controls.visible and _options.visible:
+		_options.close()
+
+
+func _open_options() -> void:
+	_controls.visible = false
+	_options.open()
 
 
 func _on_play() -> void:

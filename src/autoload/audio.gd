@@ -23,6 +23,22 @@ const BUSES: Array[StringName] = [BUS_MUSIC, BUS_SFX, BUS_ENGINE, BUS_UI, BUS_VO
 const POOL_FLAT: int = 10
 const POOL_3D: int = 16
 
+## In-game music, looped while a run is on (main.gd starts / stops it).
+const MUSIC_TRACK: String = "res://assets/audio/Model & HLS - H Funck.mp3"
+## The music sits under the effects by default; the options menu moves it.
+const MUSIC_DEFAULT_DB: float = -6.0
+
+## Volume settings (0..1 per bus), saved by the options menu.
+const SETTINGS_PATH: String = "user://settings.cfg"
+## Buses the options menu shows, in order, with their label. "SFX" also drives UI + Voice.
+const VOLUME_SLIDERS: Array = [
+	[&"Master", "Master"],
+	[&"Music", "Music"],
+	[&"SFX", "Effects"],
+	[&"Engine", "Engine & tyres"],
+]
+const DEFAULT_VOLUME: float = 0.8
+
 ## Off in headless runs: the autotests must stay silent and fast.
 var enabled: bool = true
 
@@ -31,12 +47,14 @@ var _flat: Array[AudioStreamPlayer] = []
 var _spatial: Array[AudioStreamPlayer3D] = []
 var _next_flat: int = 0
 var _next_spatial: int = 0
+var _music: AudioStreamPlayer = null
 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS   # UI clicks still work while paused
 	enabled = not _is_headless()
 	_make_buses()
+	load_settings()
 	if not enabled:
 		return
 	_make_pools()
@@ -137,16 +155,75 @@ func _force_loop(s: AudioStream) -> void:
 	wav.loop_end = int(wav.data.size() / bytes_per_frame)
 
 
-## 0.0 - 1.0. The settings menu will drive this (Phase 10); for now it is the API only.
+## 0.0 - 1.0, driven by the options menu. The Effects slider (SFX) also sets UI and Voice.
 func set_bus_volume(bus: StringName, linear: float) -> void:
+	_set_one(bus, linear)
+	if bus == BUS_SFX:
+		_set_one(BUS_UI, linear)
+		_set_one(BUS_VOICE, linear)
+
+
+func _set_one(bus: StringName, linear: float) -> void:
 	var idx := AudioServer.get_bus_index(String(bus))
 	if idx >= 0:
-		AudioServer.set_bus_volume_db(idx, linear_to_db(clampf(linear, 0.0, 1.0)))
+		linear = clampf(linear, 0.0, 1.0)
+		AudioServer.set_bus_volume_db(idx, linear_to_db(linear) if linear > 0.001 else -80.0)
+		AudioServer.set_bus_mute(idx, linear <= 0.001)
 
 
 func get_bus_volume(bus: StringName) -> float:
 	var idx := AudioServer.get_bus_index(String(bus))
-	return db_to_linear(AudioServer.get_bus_volume_db(idx)) if idx >= 0 else 0.0
+	if idx < 0:
+		return 0.0
+	return 0.0 if AudioServer.is_bus_mute(idx) else db_to_linear(AudioServer.get_bus_volume_db(idx))
+
+
+## Applies the saved volumes (DEFAULT_VOLUME for anything never set).
+func load_settings() -> void:
+	var cfg := ConfigFile.new()
+	cfg.load(SETTINGS_PATH)   # missing file = defaults
+	for row: Array in VOLUME_SLIDERS:
+		set_bus_volume(row[0], float(cfg.get_value("audio", String(row[0]), DEFAULT_VOLUME)))
+
+
+func save_settings() -> void:
+	var cfg := ConfigFile.new()
+	cfg.load(SETTINGS_PATH)
+	for row: Array in VOLUME_SLIDERS:
+		cfg.set_value("audio", String(row[0]), get_bus_volume(row[0]))
+	cfg.save(SETTINGS_PATH)
+
+
+## Starts the in-game track, looping (no-op if it is already playing).
+func play_music(path: String = MUSIC_TRACK) -> void:
+	if not enabled:
+		return
+	if _music == null:
+		_music = AudioStreamPlayer.new()
+		_music.name = "Music"
+		_music.bus = String(BUS_MUSIC)
+		_music.volume_db = MUSIC_DEFAULT_DB
+		_music.process_mode = Node.PROCESS_MODE_ALWAYS   # keeps playing in the pause menu
+		add_child(_music)
+	if _music.playing and _music.stream != null and _music.stream.resource_path == path:
+		return
+	var s: AudioStream = load(path) if ResourceLoader.exists(path) else null
+	if s == null:
+		push_warning("[Audio] missing music: " + path)
+		return
+	if s is AudioStreamMP3:
+		(s as AudioStreamMP3).loop = true
+	elif s is AudioStreamOggVorbis:
+		(s as AudioStreamOggVorbis).loop = true
+	else:
+		_force_loop(s)
+	_music.stream = s
+	_music.play()
+
+
+func stop_music() -> void:
+	if _music != null:
+		_music.stop()
 
 
 # --- Internals -------------------------------------------------------------------------

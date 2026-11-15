@@ -32,11 +32,21 @@ var _held_actions: PackedStringArray = []
 var _pause_stats: Label
 var _pause_resume: Button
 var _pause_skip_tutorial: Button
+var _pause_column: VBoxContainer
+var _options: OptionsMenu
+var _game_over: Control
+var _game_over_stats: Label
+var _game_over_button: Button
+var is_game_over: bool = false
+## Seconds between the explosion and the game-over screen.
+const GAME_OVER_DELAY: float = 2.5
 
 
 func _ready() -> void:
 	_post_material = _container.material
 	_build_pause_menu()
+	_build_game_over()
+	EventBus.player_died.connect(_on_player_died)
 	_parse_cmdline()
 	SceneLoader.world_scene_requested.connect(_on_world_scene_requested)
 	get_viewport().size_changed.connect(_update_resolution)
@@ -45,6 +55,11 @@ func _ready() -> void:
 		_load_world(start_scene)
 	_apply_ps1()
 	_set_paused(false)
+	Audio.play_music()
+
+
+func _exit_tree() -> void:
+	Audio.stop_music()
 
 
 func _process(_delta: float) -> void:
@@ -60,6 +75,8 @@ func _process(_delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if is_game_over:
+		return   # only the game-over buttons work now
 	var dossier := get_tree().get_first_node_in_group(&"dossier") as Dossier
 	if dossier != null and dossier.is_open:
 		return   # the passenger file owns pause + mouse while it is open
@@ -139,6 +156,10 @@ func _on_world_viewport_resized() -> void:
 func _set_paused(paused: bool) -> void:
 	get_tree().paused = paused
 	_pause_overlay.visible = paused
+	if not paused and _options != null and _options.visible:
+		_options.close()
+	if _pause_column != null:
+		_pause_column.visible = true
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if paused else Input.MOUSE_MODE_CAPTURED
 	if paused:
 		_pause_stats.text = _run_stats_text()
@@ -157,6 +178,12 @@ func _build_pause_menu() -> void:
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 10)
 	center.add_child(col)
+	_pause_column = col
+	_options = OptionsMenu.new()
+	center.add_child(_options)
+	_options.closed.connect(func() -> void:
+		col.visible = true
+		_pause_resume.grab_focus())
 	var title := Label.new()
 	title.text = "PAUSED"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -175,6 +202,9 @@ func _build_pause_menu() -> void:
 		if tutorial != null:
 			tutorial.skip()
 		_set_paused(false))
+	_pause_button(col, "OPTIONS", func() -> void:
+		col.visible = false
+		_options.open())
 	_pause_button(col, "MAIN MENU", func() -> void:
 		get_tree().paused = false
 		GameState.tutorial_active = false
@@ -192,6 +222,68 @@ func _pause_button(parent: Control, text: String, action: Callable) -> Button:
 	b.pressed.connect(action)
 	parent.add_child(b)
 	return b
+
+
+# --- Game over ----------------------------------------------------------------------------
+
+## Life ran out (user request 2026-11-15): the cab explodes, then this screen with the run's
+## stats; the only way on is back to the main menu (a new run starts from there).
+func _on_player_died() -> void:
+	if is_game_over:
+		return
+	is_game_over = true
+	await get_tree().create_timer(GAME_OVER_DELAY).timeout
+	if not is_inside_tree():
+		return
+	var dossier := get_tree().get_first_node_in_group(&"dossier") as Dossier
+	if dossier != null and dossier.is_open:
+		dossier.visible = false
+	_pause_overlay.visible = false
+	get_tree().paused = true
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	_game_over_stats.text = _run_stats_text()
+	_game_over.visible = true
+	_game_over_button.grab_focus()
+
+
+func _build_game_over() -> void:
+	_game_over = ColorRect.new()
+	(_game_over as ColorRect).color = Color(0.25, 0.0, 0.0, 0.72)
+	_game_over.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_game_over.process_mode = Node.PROCESS_MODE_ALWAYS
+	_game_over.visible = false
+	_pause_overlay.get_parent().add_child(_game_over)
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_game_over.add_child(center)
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 12)
+	center.add_child(col)
+	var title := Label.new()
+	title.text = "GAME OVER"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 64)
+	title.add_theme_color_override("font_color", Color(1.0, 0.25, 0.15))
+	title.add_theme_color_override("font_outline_color", Color.BLACK)
+	title.add_theme_constant_override("outline_size", 12)
+	col.add_child(title)
+	var sub := Label.new()
+	sub.text = "Your cab went up in flames."
+	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sub.add_theme_font_size_override("font_size", 22)
+	col.add_child(sub)
+	_game_over_stats = Label.new()
+	_game_over_stats.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_game_over_stats.add_theme_font_size_override("font_size", 17)
+	_game_over_stats.add_theme_color_override("font_color", Color(0.9, 0.85, 0.85))
+	col.add_child(_game_over_stats)
+	col.add_child(Control.new())
+	_game_over_button = _pause_button(col, "MAIN MENU", func() -> void:
+		get_tree().paused = false
+		GameState.tutorial_active = false
+		GameState.reset_run()
+		get_tree().change_scene_to_file(MENU_SCENE))
+	_pause_button(col, "QUIT GAME", func() -> void: get_tree().quit())
 
 
 ## The run so far (there is no end-of-run screen since a wreck stopped ending the run).

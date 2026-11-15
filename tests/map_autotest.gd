@@ -164,6 +164,8 @@ func _test_custom_map(map: MapData) -> void:
 	var names: PackedStringArray = []
 	var by_district := {}
 	for s in city.stops:
+		if s.curbside:
+			continue   # generated along the kerbs, not part of the hand-made map
 		names.append(s.stop_name)
 		by_district[s.district] = int(by_district.get(s.district, 0)) + 1
 	print("[MapTest] C stops %s, districts %s, repair shops %d" % [names, by_district, city.repair_shops.size()])

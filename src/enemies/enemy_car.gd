@@ -46,6 +46,7 @@ func _ready() -> void:
 	_body = build_body(self, _body_mat, data.siren)
 	build_wheels(self)
 	_add_engine_audio()
+	add_child(HostileMarker.new())   # tells it apart from civilian traffic
 
 	health = HealthComponent.new()
 	health.max_hp = data.hp

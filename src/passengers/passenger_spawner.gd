@@ -10,6 +10,10 @@ extends Node3D
 @export var respawn_interval: float = 1.0
 ## Profiles used while the tutorial runs (GameState.tutorial_active): calm fares only.
 @export var tutorial_profiles: Array[StringName] = [&"commuter"]
+## Share of waiting passengers that are generated on the spot (PassengerGenerator) instead of
+## one of the hand-made archetypes. Off in automated tests (MapData.override) so they stay
+## deterministic about which profiles exist.
+@export_range(0.0, 1.0) var procedural_share: float = 0.6
 
 var profiles: Array[PassengerProfile] = []
 var waiting: Array[WaitingPassenger] = []
@@ -137,6 +141,8 @@ func _pick_profile() -> PassengerProfile:
 		if calm != null:
 			return calm
 	var shift := maxi(GameState.shift_number, 1)
+	if MapData.override == null and _rng.randf() < procedural_share:
+		return PassengerGenerator.generate(_rng, shift)
 	var total := 0.0
 	for p in profiles:
 		if p.min_shift <= shift:

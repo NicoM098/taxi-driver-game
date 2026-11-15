@@ -89,7 +89,7 @@ func _physics_process(delta: float) -> void:
 				_errors.append("refill refused")
 			var a := _wc.get_ammo(_wc.weapons[_wc.index_of_slot(2)])
 			print("[ShopTest] refill: ammo %d | %d, cash %d" % [a["mag"], a["reserve"], GameState.cash])
-			if a["reserve"] != 180 or a["mag"] != 30 or GameState.cash != 65:
+			if a["reserve"] != 120 or a["mag"] != 30 or GameState.cash != 65:
 				_errors.append("refill wrong")
 			if _ui.refill(&"smg"):
 				_errors.append("refilled a full weapon")

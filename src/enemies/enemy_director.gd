@@ -11,9 +11,25 @@ extends Node3D
 @export var spawn_min_distance: float = 70.0
 @export var spawn_max_distance: float = 140.0
 @export var despawn_distance: float = 330.0
-@export var police_heat: int = 3
-@export var police_interval: float = 20.0
-@export var heat_decay_interval: float = 45.0
+## Heat is more aggressive since 2026-11-15 (user: "a little more aggressive", then "really
+## hard, make it in between"): police from heat 2, a bit more often, heat cools a bit slower.
+@export var police_heat: int = 2
+@export var police_interval: float = 19.0
+@export var heat_decay_interval: float = 55.0
+@export_group("Crimes against civilians")
+## Heat for running a pedestrian over / blowing up a civilian car.
+@export var pedestrian_heat: int = 1
+@export var civilian_car_heat: int = 1
+## Seconds until the police react once the heat is high enough (instead of police_interval).
+@export var crime_response_time: float = 8.0
+@export_group("Price on your head")
+## From this heat on, somebody has put a reward on the driver: street gangs come hunting too
+## (user request 2026-11-15), on top of the police.
+@export var bounty_heat: int = 4
+## Seconds between two waves of bounty hunters (shrinks a bit with every heat star above).
+@export var bounty_interval: float = 50.0
+## Gang cars per wave at bounty_heat; one more per heat star above it.
+@export var bounty_wave: int = 2
 @export_group("Relentless pursuit")
 ## How often an outrun car comes back (0 = it is gone once you lose it).
 @export var pursuit_relocations: int = 2
@@ -30,6 +46,8 @@ var _police: EnemyCarData
 var _taxi: Taxi
 var _city: City
 var _police_timer: float = 0.0
+var _bounty_timer: float = 8.0
+var _gang: EnemyCarData
 var _heat_timer: float = 0.0
 var _rng := RandomNumberGenerator.new()
 var _used_spawns: PackedVector3Array = PackedVector3Array()  # within one spawn call
@@ -41,6 +59,13 @@ func _ready() -> void:
 	_rng.randomize()
 	_hitman = load("res://data/enemies/hitman_sedan.tres")
 	_police = load("res://data/enemies/police_cruiser.tres")
+	_gang = load("res://data/enemies/gang_coupe.tres")
+	EventBus.heat_changed.connect(_on_heat_changed)
+	# Crimes against civilians (user request 2026-11-15): the police hear about it.
+	EventBus.pedestrian_hit.connect(func(_pos: Vector3) -> void:
+		_civilian_crime(pedestrian_heat, "PEDESTRIAN DOWN - WITNESSES CALLED THE COPS"))
+	EventBus.civilian_killed.connect(func(_pos: Vector3, _kind: StringName) -> void:
+		_civilian_crime(civilian_car_heat, "CIVILIAN CAR DESTROYED - THE COPS ARE COMING"))
 	EventBus.enemy_destroyed.connect(_on_enemy_destroyed)
 	EventBus.shift_started.connect(func(_n: int) -> void:
 		clear_all()
@@ -67,6 +92,14 @@ func _physics_process(delta: float) -> void:
 		if GameState.heat >= police_heat and _police_timer <= 0.0:
 			_police_timer = police_interval
 			spawn_pursuers(1, _police)
+			# Heat 5: they come in pairs.
+			if GameState.heat >= police_heat + 3:
+				spawn_pursuers(1, _police)
+		_bounty_timer -= delta
+		if GameState.heat >= bounty_heat and _bounty_timer <= 0.0:
+			var over := GameState.heat - bounty_heat
+			_bounty_timer = maxf(bounty_interval - over * 8.0, 30.0)
+			_spawn_bounty_hunters(bounty_wave + over)
 		_heat_timer += delta
 		if GameState.heat > 0 and _heat_timer >= heat_decay_interval:
 			_heat_timer = 0.0
@@ -357,6 +390,41 @@ func _on_enemy_destroyed(enemy: Node, bounty: int) -> void:
 			shift.register_bonus_cash(bounty)
 	EventBus.hud_message.emit("%s DOWN%s" % [car.data.display_name.to_upper(), "  +$%d" % bounty if bounty > 0 else ""], &"good")
 	enemies.erase(car)  # the car frees itself (explodes instantly)
+
+
+## Somebody put a price on the driver's head: a gang crew comes to collect, out of sight
+## (half of them waiting ahead when there is a fare aboard).
+func _spawn_bounty_hunters(count: int) -> Array[EnemyCar]:
+	var room := max_enemies - enemies.size()
+	if room <= 0 or _taxi == null:
+		return []
+	count = mini(count, room)
+	var rides := get_tree().get_first_node_in_group(&"ride_manager") as RideManager
+	var cars: Array[EnemyCar] = []
+	if rides != null and rides.state == RideManager.State.RIDING and rides.ride != null:
+		cars = spawn_on_route(rides.ride.destination.global_position, &"pincer", count, _gang)
+	else:
+		cars = spawn_on_route(point_ahead(), &"pincer", count, _gang)
+	if not cars.is_empty():
+		EventBus.hud_message.emit("THERE'S A PRICE ON YOUR HEAD! GANGS ARE HUNTING YOU", &"bad")
+	return cars
+
+
+func _civilian_crime(heat: int, message: String) -> void:
+	if not _gameplay_active() or GameState.tutorial_active:
+		return
+	_heat_timer = 0.0
+	GameState.set_heat(GameState.heat + heat)
+	_police_timer = minf(_police_timer, crime_response_time)
+	EventBus.hud_message.emit(message, &"bad")
+
+
+func _on_heat_changed(heat: int) -> void:
+	# Crossing into bounty territory: the first crew is quick to show up.
+	if heat >= bounty_heat and _bounty_timer > 8.0:
+		_bounty_timer = 8.0
+	elif heat < bounty_heat:
+		_bounty_timer = 8.0
 
 
 func _gameplay_active() -> bool:

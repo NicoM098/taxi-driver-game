@@ -150,7 +150,9 @@ func _process(delta: float) -> void:
 			RideManager.State.DOSSIER:
 				_hint_label.text = "Read the passenger file"
 			RideManager.State.IDLE:
-				if rides.is_wrecked():
+				if rides.is_dead():
+					_hint_label.text = ""
+				elif rides.is_wrecked():
 					_hint_label.text = "WRECKED — follow the arrow to a repair shop (red beacon) and stop on the yellow pad"
 				else:
 					_hint_label.text = "Find a passenger (yellow beam) and stop next to them"

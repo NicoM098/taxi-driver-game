@@ -4,8 +4,8 @@ extends Node
 ##  2. stop next to a passenger -> ride starts
 ##  3. stop in the destination ring -> paid, cash > 0
 ##  4. second ride runs out of time -> ride_failed
-##  5. wrecking the taxi does not end anything: it limps (slow) and nobody boards it;
-##     stopping on a repair shop's pad repairs it for a fee
+##  5. a damaged taxi is repaired for a fee on a repair shop's pad
+##  6. taxi body at 0 HP = dead: explosion + game over (no limping since 2026-11-15)
 ## Run: Godot_console.exe --headless --path <project> --fixed-fps 60 res://tests/ride_autotest.tscn
 ## Visual check (no --headless): add `-- --shot-dir=<folder>` to save PNGs mid-ride.
 
@@ -107,28 +107,12 @@ func _physics_process(delta: float) -> void:
 				print("[RideTest] second ride failed as expected: %s" % _failed_reason)
 				GameState.add_cash(100)
 				_cash_before = GameState.cash
-				(_taxi.get_node("TaxiDamage") as TaxiDamage).taxi_health.apply_damage(999999.0)
+				(_taxi.get_node("TaxiDamage") as TaxiDamage).taxi_health.apply_damage(50.0)
 				_next()
 			elif _step_t > 3.0:
 				_fail("ride did not fail on timeout")
-		6:  # wrecked: still in the game, limping, the arrow points at a repair shop
+		6:  # damaged (not dead): a repair shop fixes it for a fee
 			if _step_t > 0.5:
-				var dmg := _taxi.get_node("TaxiDamage") as TaxiDamage
-				var target := _rides.get_guide_target()
-				print("[RideTest] wrecked=%s limp=%s run active=%s ended=%s, arrow -> %s" % [
-					dmg.is_wrecked, _taxi.limp, _shift.is_active, _shift_ended, target.get("kind", &"none")])
-				if not dmg.is_wrecked or not _taxi.limp:
-					_errors.append("a wrecked taxi does not limp")
-				if _shift_ended or not _shift.is_active:
-					_errors.append("the wreck ended the run")
-				if target.get("kind", &"") != &"repair":
-					_errors.append("the arrow does not point at a repair shop")
-				# Park next to a waiting passenger: nobody boards a wreck.
-				_go_to_passenger()
-		7:
-			if _step_t > 2.0:
-				if _rides.state != RideManager.State.IDLE:
-					_errors.append("a passenger boarded a wrecked taxi")
 				var city := get_tree().get_first_node_in_group(&"city") as City
 				var shop := city.nearest_repair_shop(_taxi.global_position)
 				if shop == null:
@@ -136,18 +120,26 @@ func _physics_process(delta: float) -> void:
 					return
 				_taxi.teleport(Transform3D(Basis.IDENTITY, shop.pad_position + Vector3(0, 1.0, 0)))
 				_next()
-		8:
+		7:
 			var dmg := _taxi.get_node("TaxiDamage") as TaxiDamage
-			if not dmg.is_wrecked:
-				print("[RideTest] repaired at the shop after %.1f s: taxi %.0f HP, limp=%s, cash %d -> %d" % [
-					_step_t, dmg.taxi_health.hp, _taxi.limp, _cash_before, GameState.cash])
-				if _taxi.limp or dmg.taxi_health.hp < dmg.taxi_health.max_hp:
-					_errors.append("the repair did not fix the taxi")
-				if GameState.cash != _cash_before - 60:
-					_errors.append("the repair did not cost the wreck fee")
-				_finish()
+			if dmg.taxi_health.hp >= dmg.taxi_health.max_hp - 0.5:
+				print("[RideTest] repaired at the shop after %.1f s, cash %d -> %d" % [_step_t, _cash_before, GameState.cash])
+				if GameState.cash >= _cash_before:
+					_errors.append("the repair was free")
+				# Taxi body at 0 = dead too (user 2026-11-15): explosion + game over, no limping.
+				dmg.taxi_health.apply_damage(999999.0)
+				_next()
 			elif _step_t > 5.0:
 				_fail("stopping on the repair pad did not repair the taxi")
+		8:
+			if _step_t > 3.5:
+				var dmg := _taxi.get_node("TaxiDamage") as TaxiDamage
+				var main := get_child(0)
+				print("[RideTest] taxi destroyed: dead=%s limp=%s game over=%s" % [dmg.is_dead, _taxi.limp, main.is_game_over])
+				if not dmg.is_dead or _taxi.limp or not main.is_game_over:
+					_errors.append("a destroyed taxi did not end the run")
+				get_tree().paused = false
+				_finish()
 
 
 var _shot_taken: bool = false

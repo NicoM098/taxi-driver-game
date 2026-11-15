@@ -3,10 +3,10 @@ extends Node3D
 ## Player taxi damage model (Phase 06). Child of the Taxi.
 ## - Taxi body HP: crashes (above a threshold, not jump landings) + bullets on the body hitbox.
 ## - Driver HP: bullets through the cabin hitbox (scaled); passenger is hit by a share of those.
-## - Smoke under 50 % body HP, fire under 20 %. Taxi or driver at 0 -> WRECKED: the cab keeps
-##   moving but drives terribly (Taxi.limp) until it is repaired at a RepairShop (user,
-##   2026-11-12). No further damage while wrecked. In worlds without a repair shop (shooting
-##   range, maps without one) it repairs itself after `auto_repair_time`.
+## - Smoke under 50 % body HP, fire under 20 %. Taxi or driver at 0 -> the cab explodes and the
+##   run is over (user, 2026-11-15; main.gd shows game over). Repair shops fix damage before that.
+##   In worlds without a repair shop (shooting range) a wreck repairs itself after
+##   `auto_repair_time` instead.
 
 signal wrecked(reason: StringName)
 
@@ -27,6 +27,8 @@ var driver_health: HealthComponent
 var passenger_health: HealthComponent
 var passenger_aboard: bool = false
 var is_wrecked: bool = false
+## The driver died: the run is over (no repair, no limping).
+var is_dead: bool = false
 
 var _since_landing: float = 99.0
 var _repair_timer: float = -1.0
@@ -96,6 +98,8 @@ func _process(delta: float) -> void:
 
 
 func repair() -> void:
+	if is_dead:
+		return   # dead is dead: the run is over
 	var was_wrecked := is_wrecked
 	is_wrecked = false
 	taxi_health.revive()
@@ -153,14 +157,29 @@ func _wreck(reason: StringName) -> void:
 	is_wrecked = true
 	wrecked.emit(reason)
 	EventBus.taxi_wrecked.emit(reason)
-	var what := "WRECKED!" if reason == &"taxi_destroyed" else "YOU'RE SHOT TO PIECES!"
-	if get_tree().get_first_node_in_group(&"repair_shops") != null and taxi != null:
-		taxi.limp = true
-		EventBus.hud_message.emit(what + "  Limp to a repair shop", &"bad")
-	else:
-		EventBus.hud_message.emit(what, &"bad")
-		_set_player_control(false)
-		_repair_timer = auto_repair_time
+	# Either bar at 0 ends the run (user 2026-11-15: "when your life runs out you explode").
+	# Only worlds without repair shops (shooting range) keep the old self-repair.
+	if reason == &"driver_killed" or get_tree().get_first_node_in_group(&"repair_shops") != null:
+		_die()
+		return
+	EventBus.hud_message.emit("WRECKED!", &"bad")
+	_set_player_control(false)
+	_repair_timer = auto_repair_time
+
+
+## The driver is dead (user request 2026-11-15): the cab blows up, the player loses control and
+## the run is over. Same when the taxi body hits 0, in any world that has repair shops.
+func _die() -> void:
+	is_dead = true
+	_set_player_control(false)
+	_fire.emitting = true
+	if taxi != null:
+		CombatFx.explosion(taxi.get_parent(), taxi.global_position)
+		EventBus.explosion.emit(taxi.global_position, 1.5)
+		taxi.apply_central_impulse(Vector3(0, taxi.mass * 6.0, 0))
+		taxi.apply_torque_impulse(Vector3(_rng.randf_range(-1, 1), 0, _rng.randf_range(-1, 1)) * taxi.mass * 2.0)
+	EventBus.hud_message.emit("YOU'RE DEAD", &"bad")
+	EventBus.player_died.emit()
 
 
 func _set_player_control(enabled: bool) -> void:

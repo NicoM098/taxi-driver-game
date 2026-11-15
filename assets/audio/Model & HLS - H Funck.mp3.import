@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://bnerkq0frevfo"
+path="res://.godot/imported/Model & HLS - H Funck.mp3-07b71a75b8f07421b086cdab6fc477f0.mp3str"
+
+[deps]
+
+source_file="res://assets/audio/Model & HLS - H Funck.mp3"
+dest_files=["res://.godot/imported/Model & HLS - H Funck.mp3-07b71a75b8f07421b086cdab6fc477f0.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

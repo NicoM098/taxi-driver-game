@@ -72,9 +72,11 @@ func _ready() -> void:
 	_build_street_lamps()
 	for p in map.pieces:
 		_build_piece(p)
+	var map_stops := stops.size()
+	_build_curbside_stops()
 	set_mood(_mood)
-	print("[City] map '%s': %d x %d cells, %d pieces, %d stops, %d repair shops, %d lamps (%s)" % [
-		map.name, map.width, map.depth, map.pieces.size(), stops.size(), repair_shops.size(),
+	print("[City] map '%s': %d x %d cells, %d pieces, %d stops (+%d curbside), %d repair shops, %d lamps (%s)" % [
+		map.name, map.width, map.depth, map.pieces.size(), map_stops, stops.size() - map_stops, repair_shops.size(),
 		_lamps.size(), Lighting.mood_name(_mood)])
 	_place_player.call_deferred()
 
@@ -304,6 +306,80 @@ func _add_stop(p: Dictionary) -> void:
 		MapBuilder.mat("beacon_green"))
 	stops.append(stop)
 	districts[district] = true
+
+
+## Extra pick-up / drop-off points along the kerbs (user request 2026-11-15: "the drop off zones
+## are always the same"). Any plain street cell next to a sidewalk, plaza or building front can be one,
+## kept CURBSIDE_SPACING apart from each other and from the map's own stops and shops, and
+## only in the drivable area the map's stops are in (never in a walled-in courtyard).
+## A fresh random set every run (fixed in automated tests).
+const CURBSIDE_SPACING: float = 44.0
+const CURBSIDE_MAX: int = 90
+
+
+func _build_curbside_stops() -> void:
+	var rng := RandomNumberGenerator.new()
+	if MapData.override != null:
+		rng.seed = 1234
+	else:
+		rng.randomize()
+	var taken: Array[Vector3] = []
+	for stop in stops:
+		taken.append(stop.global_position)
+	for shop in repair_shops:
+		taken.append(shop.pad_position)
+	for shop in gun_shops:
+		taken.append(shop.pad_position)
+	var region := region_at(stops[0].global_position) if not stops.is_empty() else -1
+	# Candidates: [cell, direction index towards the kerb].
+	var candidates: Array[Array] = []
+	for z in map.depth:
+		for x in map.width:
+			if not _plain(x, z):
+				continue
+			if region >= 0 and _region[z * map.width + x] != region:
+				continue
+			for d in 4:
+				var dir := MapData.DIRS[d]
+				var n := Vector2i(x + int(dir.x), z + int(dir.z))
+				var idx := map.piece_at(n, false)
+				if idx < 0:
+					continue
+				var kind := String(map.pieces[idx]["type"])
+				if kind == "sidewalk" or kind == "plaza" or kind == "building":
+					candidates.append([Vector2i(x, z), d])
+					break
+	# Shuffle (Fisher-Yates with our rng, so tests are repeatable).
+	for i in range(candidates.size() - 1, 0, -1):
+		var j := rng.randi_range(0, i)
+		var tmp: Array = candidates[i]
+		candidates[i] = candidates[j]
+		candidates[j] = tmp
+	var added := 0
+	for c: Array in candidates:
+		if added >= CURBSIDE_MAX:
+			break
+		var cell: Vector2i = c[0]
+		var street := map.cell_center(cell.x, cell.y)
+		var too_close := false
+		for t in taken:
+			if Vector2(t.x - street.x, t.z - street.z).length() < CURBSIDE_SPACING:
+				too_close = true
+				break
+		if too_close:
+			continue
+		var dir := MapData.DIRS[int(c[1])]
+		var walk := street + dir * (MapData.CELL * 0.5 + 0.6)
+		walk.y = _surface_height(map.world_to_cell(walk))
+		var district := map.district_at(cell)
+		var stop := TaxiStop.new()
+		add_child(stop)
+		stop.curbside = true
+		stop.setup(_next_name(district, cell), district, street, walk, MapBuilder.mat("beacon_green"))
+		stops.append(stop)
+		districts[district] = true
+		taken.append(street)
+		added += 1
 
 
 ## Height a pedestrian stands at in a cell (sidewalk / plaza top / street).

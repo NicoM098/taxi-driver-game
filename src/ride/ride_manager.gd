@@ -51,6 +51,9 @@ var _taxi: Taxi
 var _city: City
 var _spawner: PassengerSpawner
 var _shift: ShiftManager
+## Drop-offs used lately (oldest first): skipped while there is another choice.
+const RECENT_DESTINATIONS: int = 8
+var _recent_destinations: Array[TaxiStop] = []
 
 
 func _ready() -> void:
@@ -102,9 +105,16 @@ func is_wrecked() -> bool:
 	return dmg != null and dmg.is_wrecked
 
 
+func is_dead() -> bool:
+	var dmg := _taxi.get_node_or_null("TaxiDamage") as TaxiDamage if _taxi != null else null
+	return dmg != null and dmg.is_dead
+
+
 ## What the dashboard arrow should point at:
 ## {pos: Vector3, kind: &"destination" / &"passenger" / &"repair"}.
 func get_guide_target() -> Dictionary:
+	if is_dead():
+		return {}
 	if is_wrecked() and _city != null:
 		var shop := _city.nearest_repair_shop(_taxi.global_position)
 		return {"pos": shop.pad_position, "kind": &"repair"} if shop != null else {}
@@ -433,14 +443,26 @@ func _on_chain_broken(_points: float) -> void:
 # --- Helpers -----------------------------------------------------------------------
 
 ## Preference: in distance range AND preferred district > in distance range (any district)
-## > farthest free stop. Never silently picks a short ride.
+## > farthest free stop. Never silently picks a short ride. The last few drop-offs are skipped
+## while there is any other choice (playtest 2026-11-15: "they are always the same").
 func _pick_destination(profile: PassengerProfile, from: Vector3) -> TaxiStop:
+	var stop := _pick_destination_from(profile, from, true)
+	if stop == null:
+		stop = _pick_destination_from(profile, from, false)
+	if stop != null:
+		_recent_destinations.append(stop)
+		while _recent_destinations.size() > RECENT_DESTINATIONS:
+			_recent_destinations.pop_front()
+	return stop
+
+
+func _pick_destination_from(profile: PassengerProfile, from: Vector3, skip_recent: bool) -> TaxiStop:
 	var preferred: Array[TaxiStop] = []
 	var in_range: Array[TaxiStop] = []
 	var farthest: TaxiStop = null
 	var farthest_d := 0.0
 	for stop in _city.stops:
-		if stop.occupied:
+		if stop.occupied or (skip_recent and _recent_destinations.has(stop)):
 			continue
 		var d := _flat_distance(stop.global_position, from)
 		if d > farthest_d:
@@ -455,7 +477,7 @@ func _pick_destination(profile: PassengerProfile, from: Vector3) -> TaxiStop:
 		return preferred.pick_random()
 	if not in_range.is_empty():
 		return in_range.pick_random()
-	return farthest
+	return null if skip_recent else farthest
 
 
 func _pick_destination_in(district: StringName, from: Vector3) -> TaxiStop:

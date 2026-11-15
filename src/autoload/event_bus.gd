@@ -79,6 +79,9 @@ signal player_hit(amount: float, from: Vector3)
 ## Taxi destroyed or driver killed. reason: &"taxi_destroyed" / &"driver_killed".
 @warning_ignore("unused_signal")
 signal taxi_wrecked(reason: StringName)
+## The driver's life ran out: the taxi blows up and the run is over (main.gd shows game over).
+@warning_ignore("unused_signal")
+signal player_died
 @warning_ignore("unused_signal")
 signal passenger_killed
 @warning_ignore("unused_signal")
@@ -91,6 +94,9 @@ signal explosion(position: Vector3, strength: float)
 ## The taxi ran a pedestrian over.
 @warning_ignore("unused_signal")
 signal pedestrian_hit(position: Vector3)
+## The player destroyed a civilian car (kind &"car"). Witnesses call the police.
+@warning_ignore("unused_signal")
+signal civilian_killed(position: Vector3, kind: StringName)
 
 # Items
 ## The player drove through a Monstrous Energy can (first-person drink animation, heal flash).
