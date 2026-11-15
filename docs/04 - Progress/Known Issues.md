@@ -46,3 +46,14 @@ Severity: 🔴 blocker · 🟠 major · 🟡 minor · ⚪ cosmetic/tech-debt
 - KI-010 (2026-11-11) — handbrake + steer at speed spun the car 180° (regression from D-025) → drift angle limiter (D-027).
 - KI-003 (2026-11-11) — handbrake too aggressive at low speed → effect now speed-scaled (D-019). 35 km/h handbrake turn: 178° spin → 98° controlled turn.
 - KI-004 (2026-11-11) — steering wheel direction confirmed correct by user.
+
+## KI-026 — `events_autotest` fails intermittently (2026-11-14)
+**Two failures in ~30 runs during session 13** (~7 %), both inside a batch that ran the whole
+suite; never reproduced when run on its own (18 consecutive passes across two attempts, including
+2 forced immediately after a re-import to test whether a cold first run was to blame — it is not). The only changes in that session were a shader and material edit, which cannot affect
+headless gameplay logic, so this is almost certainly pre-existing and random (archetype rolls /
+timing). Not reproduced, so not diagnosed. If it shows up again, capture the full output — the test
+prints every step and `_finish()` prints one `FAIL: <error>` line per failed check, so redirect
+stdout to a file when running the suite (`> out.txt 2>&1`) instead of grepping only for PASS/FAIL.
+Suspected cause: something time- or order-dependent in the ride/archetype sequence rather than the
+random rolls, since `--fixed-fps 60` should otherwise make the run deterministic.

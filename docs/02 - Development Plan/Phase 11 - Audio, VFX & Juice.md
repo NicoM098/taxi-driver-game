@@ -10,10 +10,10 @@ status: not-started
 
 ## Tasks
 ### Audio
-- [ ] `Audio` autoload; buses: Master, Music, SFX, Engine, UI, Voice.
-- [ ] Engine sound: pitch by RPM/speed, layered loops; tyre screech by slip; impacts by force.
-- [ ] Guns: per-weapon shot/reload/empty sounds, interior vs exterior reverb.
-- [ ] Passenger barks (placeholder gibberish/vocal blips), door open/close, dossier paper sounds, cash register.
+- [x] `Audio` autoload; buses: Master, Music, SFX, Engine, UI, Voice. (D-066)
+- [x] Engine sound: pitch by RPM/speed, layered loops; tyre screech by slip; impacts by force. (D-066)
+- [x] Guns: per-weapon shot/reload/empty sounds. ~~interior vs exterior reverb~~ deferred. (D-066)
+- [x] Dossier paper sounds, cash register, pickups, taking a hit. ~~Passenger vocal blips, doors~~ deferred. (D-066)
 - [ ] Music: radio stations idea (switch station in cab) — confirm scope.
 
 ### VFX

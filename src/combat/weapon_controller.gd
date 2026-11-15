@@ -184,6 +184,8 @@ func _physics_process(delta: float) -> void:
 			_fire(w)
 		elif a["reserve"] > 0:
 			_start_reload(w)
+		else:
+			EventBus.weapon_empty.emit(w)
 
 	if _cab != null:
 		_cab.hold_look = raise_amount > 0.5
@@ -307,6 +309,7 @@ func _start_reload(w: WeaponData) -> void:
 		return
 	is_reloading = true
 	_reload_left = w.reload_time
+	EventBus.weapon_reloading.emit(w)
 
 
 func _handle_switch_input() -> void:

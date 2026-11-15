@@ -2,7 +2,7 @@ extends Node
 ## Boot scene. Owns:
 ##  - the low-res world SubViewport (PS1 look) + post-process dither material,
 ##  - the native-resolution UI layer (debug overlay, pause menu with the run stats, tutorial),
-##  - pause and debug toggles (F1 PS1, F2 overlay, F4 physics interpolation),
+##  - pause and debug toggles (F1 PS1, F2 overlay, F4 physics interpolation, F6 time of day),
 ##  - M: leave the game for the map editor, src/editor/map_editor.tscn (not F9: Godot's
 ##    embedded game view uses F9 to suspend the running game, which froze the editor the
 ##    moment it opened).
@@ -87,6 +87,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	elif event.is_action_pressed(&"debug_toggle_interpolation"):
 		get_tree().physics_interpolation = not get_tree().physics_interpolation
+	elif event.is_action_pressed(&"debug_cycle_mood"):
+		var city := get_tree().get_first_node_in_group(&"city") as City
+		if city != null:
+			print("[Main] time of day: ", Lighting.mood_name(city.cycle_mood()))
 	elif event is InputEventMouseButton and event.is_pressed() and not get_tree().paused:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	else:

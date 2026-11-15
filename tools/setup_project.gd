@@ -40,6 +40,7 @@ func _physics() -> void:
 func _autoloads() -> void:
 	var autoloads := {
 		"EventBus": "res://src/autoload/event_bus.gd",
+		"Audio": "res://src/autoload/audio.gd",
 		"GameState": "res://src/autoload/game_state.gd",
 		"PlayerStats": "res://src/autoload/player_stats.gd",
 		"SaveManager": "res://src/autoload/save_manager.gd",
@@ -100,6 +101,8 @@ func _input_map() -> void:
 	_action("debug_spawn_pursuers", [_key(KEY_F7)])
 	_action("debug_next_passenger", [_key(KEY_F8)])
 	_action("debug_toggle_interpolation", [_key(KEY_F4)])
+	# F5 is "run project" and F9 / F10 are the embedded game view's suspend / next frame.
+	_action("debug_cycle_mood", [_key(KEY_F6)])
 
 
 func _action(action_name: String, events: Array, deadzone: float = 0.2) -> void:

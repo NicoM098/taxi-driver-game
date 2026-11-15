@@ -45,6 +45,17 @@ var _road_points: PackedVector3Array = PackedVector3Array()
 ## in by buildings is its own region: nothing spawned there could ever get out.
 var _region: PackedInt32Array = PackedInt32Array()
 var _name_index: Dictionary = {}
+## Street lamps: one every LAMP_SPACING cells along a kerb (8 m cells -> one every 32 m).
+const LAMP_SPACING: int = 4
+const LAMP_POST_HEIGHT: float = 4.4
+const LAMP_REACH: float = 0.75
+const LAMP_RANGE: float = 17.0
+const LAMP_MAX: int = 420
+
+var _mood: Lighting.Mood = Lighting.DEFAULT
+var _env: Environment = null
+var _sun: DirectionalLight3D = null
+var _lamps: Array[OmniLight3D] = []
 
 
 func _ready() -> void:
@@ -52,15 +63,53 @@ func _ready() -> void:
 	if map == null:
 		map = MapData.load_active()
 	_flags = map.flags()
-	Blockout.add_environment(self)
+	var lit := Blockout.add_environment(self, _mood)
+	_env = lit["env"]
+	_sun = lit["sun"]
 	_build_ground_and_walls()
 	_build_road_graph()
 	_build_lane_dashes()
+	_build_street_lamps()
 	for p in map.pieces:
 		_build_piece(p)
-	print("[City] map '%s': %d x %d cells, %d pieces, %d stops, %d repair shops" % [
-		map.name, map.width, map.depth, map.pieces.size(), stops.size(), repair_shops.size()])
+	set_mood(_mood)
+	print("[City] map '%s': %d x %d cells, %d pieces, %d stops, %d repair shops, %d lamps (%s)" % [
+		map.name, map.width, map.depth, map.pieces.size(), stops.size(), repair_shops.size(),
+		_lamps.size(), Lighting.mood_name(_mood)])
 	_place_player.call_deferred()
+
+
+## Time of day. Switches the environment, the street lamps and how hard lit windows burn (D-064).
+func set_mood(mood: Lighting.Mood) -> void:
+	_mood = mood
+	Lighting.apply(_env, _sun, mood)
+	var energy := Lighting.lamp_energy(mood)
+	for lamp in _lamps:
+		lamp.light_energy = energy
+		lamp.visible = energy > 0.0
+	# The lamp's own glass has to stop glowing too, or a switched-off lamp still looks lit (D-065).
+	var glow := Lighting.lamp_glow(mood)
+	var head_mat := MapBuilder.mat("lamp_head") as ShaderMaterial
+	if head_mat != null:
+		head_mat.set_shader_parameter(&"emission_strength", glow)
+	var emission := Lighting.window_emission(mood)
+	var lit_amount := Lighting.window_lit_amount(mood)
+	for name in [&"building_a", &"building_b", &"building_c"]:
+		var mat := MapBuilder.mat(String(name)) as ShaderMaterial
+		if mat != null:
+			mat.set_shader_parameter(&"window_lit_emission", emission)
+			mat.set_shader_parameter(&"window_lit_amount", lit_amount)
+	# Anything that owns its own lights (the taxi's headlights) listens for this.
+	EventBus.mood_changed.emit(int(mood))
+
+
+func mood() -> Lighting.Mood:
+	return _mood
+
+
+func cycle_mood() -> Lighting.Mood:
+	set_mood(Lighting.next(_mood))
+	return _mood
 
 
 # --- Queries ---------------------------------------------------------------------
@@ -182,9 +231,11 @@ func _build_ground_and_walls() -> void:
 
 	var road := PlaneMesh.new()
 	road.size = half * 2.0
-	# ~12 m quads: the PS1 vertex snapping needs a tessellated plane.
-	road.subdivide_width = maxi(roundi(half.x * 2.0 / 12.0) - 1, 1)
-	road.subdivide_depth = maxi(roundi(half.y * 2.0 / 12.0) - 1, 1)
+	# ~6 m quads: the PS1 vertex snapping needs a tessellated plane, and since Iteration 09 the
+	# road has a texture, so affine mapping warps it as well — the bigger the quad, the more the
+	# texture swims when the camera moves (D-063). Halved from 12 m.
+	road.subdivide_width = maxi(roundi(half.x * 2.0 / 6.0) - 1, 1)
+	road.subdivide_depth = maxi(roundi(half.y * 2.0 / 6.0) - 1, 1)
 	Blockout.add_mesh(self, road, Vector3.ZERO, MapBuilder.mat("road"))
 	# Ground only AROUND the city (4 strips), never under the road: overlapping flat planes
 	# z-fought at distance, made worse by PS1 vertex snapping (playtest: asphalt flicker).
@@ -195,6 +246,10 @@ func _build_ground_and_walls() -> void:
 			[Vector2(BORDER, half.y * 2.0), Vector3(half.x + BORDER * 0.5, -0.05, 0)]]:
 		var plane := PlaneMesh.new()
 		plane.size = strip[0]
+		# Same reason as the road: these strips were single huge quads, the worst case for
+		# affine warping (D-063).
+		plane.subdivide_width = maxi(roundi(plane.size.x / 12.0) - 1, 1)
+		plane.subdivide_depth = maxi(roundi(plane.size.y / 12.0) - 1, 1)
 		Blockout.add_mesh(self, plane, strip[1], MapBuilder.mat("ground"))
 
 	var wall := MapBuilder.mat("wall")
@@ -385,6 +440,75 @@ func _build_lane_dashes() -> void:
 	var mmi := MultiMeshInstance3D.new()
 	mmi.multimesh = mm
 	mmi.material_override = MapBuilder.mat("lane_marking")
+	add_child(mmi)
+
+
+## Street lamps along the kerbs (D-064). Visual only — no collision, like the lane dashes, so
+## nothing about driving, routing or the autotests changes. Posts and heads are one MultiMesh
+## each (two draw calls); only the omni lights are real nodes, and they carry no shadows.
+func _build_street_lamps() -> void:
+	var post_xforms: Array[Transform3D] = []
+	var head_xforms: Array[Transform3D] = []
+	var lights: Array[Vector3] = []
+	for z in map.depth:
+		for x in map.width:
+			if not _plain(x, z) or post_xforms.size() >= LAMP_MAX:
+				continue
+			# A lamp stands where a drivable cell meets something built, every LAMP_SPACING
+			# cells along that kerb.
+			var dir := Vector2i.ZERO
+			if not _plain(x - 1, z) and z % LAMP_SPACING == 0:
+				dir = Vector2i(-1, 0)
+			elif not _plain(x + 1, z) and z % LAMP_SPACING == 0:
+				dir = Vector2i(1, 0)
+			elif not _plain(x, z - 1) and x % LAMP_SPACING == 0:
+				dir = Vector2i(0, -1)
+			elif not _plain(x, z + 1) and x % LAMP_SPACING == 0:
+				dir = Vector2i(0, 1)
+			if dir == Vector2i.ZERO:
+				continue
+			var out := Vector3(dir.x, 0.0, dir.y)
+			var base := map.cell_center(x, z) + out * (MapData.CELL * 0.5 - 0.5)
+			base.y = 0.0
+			post_xforms.append(Transform3D(Basis.IDENTITY,
+					base + Vector3(0, LAMP_POST_HEIGHT * 0.5, 0)))
+			# The head leans out over the road, away from the building.
+			var head := base + Vector3(0, LAMP_POST_HEIGHT, 0) - out * LAMP_REACH
+			var turn := Basis(Vector3.UP, PI * 0.5) if dir.x != 0 else Basis.IDENTITY
+			head_xforms.append(Transform3D(turn, head))
+			lights.append(head - Vector3(0, 0.25, 0))
+	if post_xforms.is_empty():
+		return
+
+	var post := BoxMesh.new()
+	post.size = Vector3(0.22, LAMP_POST_HEIGHT, 0.22)
+	_add_multimesh(post, post_xforms, MapBuilder.mat("lamp_post"))
+	var head_mesh := BoxMesh.new()
+	head_mesh.size = Vector3(0.5, 0.22, LAMP_REACH * 2.0)
+	_add_multimesh(head_mesh, head_xforms, MapBuilder.mat("lamp_head"))
+
+	for pos in lights:
+		var omni := OmniLight3D.new()
+		omni.position = pos
+		omni.omni_range = LAMP_RANGE
+		omni.omni_attenuation = 1.4
+		omni.light_color = Lighting.LAMP_COLOR
+		omni.light_energy = Lighting.lamp_energy(_mood)
+		omni.shadow_enabled = false
+		add_child(omni)
+		_lamps.append(omni)
+
+
+func _add_multimesh(mesh: Mesh, xforms: Array[Transform3D], mat: Material) -> void:
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.mesh = mesh
+	mm.instance_count = xforms.size()
+	for idx in xforms.size():
+		mm.set_instance_transform(idx, xforms[idx])
+	var mmi := MultiMeshInstance3D.new()
+	mmi.multimesh = mm
+	mmi.material_override = mat
 	add_child(mmi)
 
 

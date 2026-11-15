@@ -3,29 +3,20 @@ extends RefCounted
 ## Static helpers to build blockout geometry and the default PS1 environment in code.
 
 
-static func add_environment(parent: Node) -> void:
+static func add_environment(parent: Node, mood: Lighting.Mood = Lighting.DEFAULT) -> Dictionary:
 	var env := Environment.new()
-	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color(0.56, 0.6, 0.72)
-	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.62, 0.64, 0.78)
-	env.ambient_light_energy = 0.7
-	env.tonemap_mode = Environment.TONE_MAPPER_LINEAR
-	env.fog_enabled = true
-	env.fog_mode = Environment.FOG_MODE_DEPTH
-	env.fog_light_color = env.background_color
-	env.fog_density = 1.0
-	env.fog_depth_begin = 70.0
-	env.fog_depth_end = 220.0
 	var world_env := WorldEnvironment.new()
+	world_env.name = "WorldEnvironment"
 	world_env.environment = env
 	parent.add_child(world_env)
 
 	var sun := DirectionalLight3D.new()
-	sun.rotation_degrees = Vector3(-55.0, -35.0, 0.0)
-	sun.light_energy = 1.1
-	sun.shadow_enabled = false
+	sun.name = "Sun"
 	parent.add_child(sun)
+
+	# Everything mood-dependent (sky, ambient, fog, sun colour / angle) lives in Lighting (D-064).
+	Lighting.apply(env, sun, mood)
+	return {"env": env, "sun": sun}
 
 
 ## Static box with collision (layer `world`).

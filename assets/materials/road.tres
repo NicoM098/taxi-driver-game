@@ -1,8 +1,13 @@
 [gd_resource type="ShaderMaterial" format=3]
 
 [ext_resource type="Shader" path="res://src/core/shaders/ps1_world.gdshader" id="1_ps1"]
+[ext_resource type="Texture2D" path="res://assets/textures/A_classic/ground-street/Gravel023.png" id="2_tex"]
 
 [resource]
 shader = ExtResource("1_ps1")
-shader_parameter/albedo = Color(0.17, 0.17, 0.19, 1)
+shader_parameter/albedo = Color(0.310, 0.319, 0.378, 1)
 shader_parameter/snap_multiplier = 0.0
+shader_parameter/uv_mode = 1
+shader_parameter/world_uv_metres = 3.0
+shader_parameter/albedo_texture = ExtResource("2_tex")
+shader_parameter/affine_multiplier = 0.25
