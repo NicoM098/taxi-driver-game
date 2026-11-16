@@ -24,6 +24,12 @@ var is_destroyed: bool = false
 ## Set when the player's taxi (gun or bumper) last damaged this car.
 var hurt_by_player: bool = false
 
+## Civilian engines are audible but well under the enemies' (-14 dB) and the player's (-6): the
+## street should not be eerie, and an engine you can hear clearly that is not yours still reads as
+## trouble. One number to change if that balance turns out wrong (D-078).
+const CIVILIAN_ENGINE_DB: float = -21.0
+
+var _engine: AudioStreamPlayer3D = null
 var _body: MeshInstance3D
 var _body_mat: Material
 var _smoke: CPUParticles3D
@@ -57,6 +63,9 @@ func _ready() -> void:
 	_smoke = CombatFx.make_particles("res://assets/materials/fx_smoke.tres", 10, 1.2, 0.35, 2.0)
 	_smoke.position = Vector3(0, 0.6, -1.7)
 	add_child(_smoke)
+	# Not the player's car: skip the taxi's non-positional engine rig and run a positional one
+	# below, the way the enemy cars do (D-078).
+	engine_audio_local = false
 	ai = TrafficAI.new()
 	ai.name = "AI"
 	ai.car = self
@@ -65,6 +74,20 @@ func _ready() -> void:
 	super._ready()
 	crashed.connect(ai.on_crash)
 	crashed.connect(_on_crash)
+	if Audio.enabled:
+		_engine = Audio.make_loop_3d(&"engine_mid", self, Audio.BUS_ENGINE, 55.0)
+		_engine.play()
+
+
+func _process(_delta: float) -> void:
+	if _engine == null:
+		return
+	if is_destroyed:
+		_engine.volume_db = -80.0
+		return
+	var t := clampf(linear_velocity.length() / maxf(max_speed, 1.0), 0.0, 1.0)
+	_engine.pitch_scale = lerpf(0.74, 1.12, t)
+	_engine.volume_db = CIVILIAN_ENGINE_DB + linear_to_db(clampf(0.45 + 0.55 * t, 0.0001, 1.0))
 
 
 func _add_hitbox(size: Vector3, pos: Vector3, mult: float) -> void:

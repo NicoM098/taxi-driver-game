@@ -379,7 +379,7 @@ Format:
 <!-- Sessions below were logged on Nico's branch in parallel (same session numbers, different machine). Merged 2026-11-15; his decision ids renamed D-06x -> DV-06x. -->
 
 ## 2026-11-14 — Session 13 (Nico, branch `feat/visuals-and-audio`) — Claude tooling, doc paths, and the start of the texture pass
-**Iteration:** [[Iteration 09 - Texture Pass]] (new) · **Phases touched:** 00 (art pipeline)
+**Iteration:** [[Iteration 09V - Texture Pass]] (new) · **Phases touched:** 00 (art pipeline)
 **Goal:** user: set up the best AI tooling first; then "Vamos por texturas primero" / "Solo CC0".
 **Done:**
 - **Tooling research.** No official Godot MCP exists (neither Anthropic nor the Godot Foundation);
@@ -407,7 +407,7 @@ Format:
 **Files changed:** `src/core/shaders/ps1_world.gdshader` (rewritten, 150 lines);
 `assets/materials/{building_a,building_b,building_c,road,sidewalk,ground,wall,container_blue,container_green,container_red,prop,ramp,lane_marking}.tres`;
 new `assets/textures/README.md`, new `CLAUDE.md` (root), new
-`docs/05 - Iterations/Iteration 09 - Texture Pass.md`; `docs/CLAUDE.md`, `docs/Getting Started.md`.
+`docs/05 - Iterations/Iteration 09V - Texture Pass.md`; `docs/CLAUDE.md`, `docs/Getting Started.md`.
 No backup folder this time: everything is committed in git (DV-061 is the first change to rely on it).
 **Tested:** import clean. map, ride, hostiles, enemy, enemy-city, weapon, dossier, pickup, curb, jump
 and the 9 vehicle scenarios PASS; `check_profiles` OK (11 files). Before/after/tuned screenshots from
@@ -484,7 +484,7 @@ lit windows already emit.
 
 
 ## 2026-11-14 — Session 14 (Nico, branch `feat/visuals-and-audio`) — Iteration 10: lights and night
-**Iteration:** [[Iteration 10 - Lights & Night]] (new) · **Phases touched:** 11 (the lighting half of juice)
+**Iteration:** [[Iteration 10V - Lights & Night]] (new) · **Phases touched:** 11 (the lighting half of juice)
 **Goal:** user: "Luces y noche", chosen over the Iteration 08 re-test.
 **Done (DV-064):**
 - **`src/world/lighting.gd`** (new): day / dusk / night moods — sky, ambient, sun, fog, lamp energy,
@@ -504,7 +504,7 @@ a headlight 0.6 m above a flat road grazes it (`N·L ≈ sin(4°) ≈ 0.07`) aga
 and aiming it steeply down instead buries the pool under the car's own bodywork. Settled at y +0.35,
 -6°, energy 45, which lands the pool 5-25 m ahead and catches the kerbs.
 **Files changed:** new `src/world/lighting.gd`, `assets/materials/{lamp_post,lamp_head,headlight}.tres`,
-`docs/05 - Iterations/Iteration 10 - Lights & Night.md`; edited `src/world/{blockout,city}.gd`,
+`docs/05 - Iterations/Iteration 10V - Lights & Night.md`; edited `src/world/{blockout,city}.gd`,
 `src/vehicle/taxi.gd`, `src/main/main.gd`, `src/core/shaders/ps1_world.gdshader`,
 `tools/setup_project.gd` + `project.godot` (the F6 action).
 **Tested:** import clean; **the 9 vehicle scenarios** (taxi.gd changed), map, ride, events, hostiles,
@@ -534,7 +534,7 @@ oldest open item by two sessions.
 
 
 ## 2026-11-14 — Session 15 (Nico, branch `feat/visuals-and-audio`) — Iteration 11: audio
-**Iteration:** [[Iteration 11 - Audio]] (new) · **Phases touched:** 11 (the audio half)
+**Iteration:** [[Iteration 11V - Audio]] (new) · **Phases touched:** 11 (the audio half)
 **Goal:** user: "Audio", with Iteration 08 out being playtested by a friend — so nothing was
 touched in the editor, the piece kit, map data or the wreck → repair loop.
 **Done (DV-066):**
@@ -555,7 +555,7 @@ touched in the editor, the piece kit, map data or the wreck → repair loop.
 - **Two new EventBus signals**, `weapon_reloading` and `weapon_empty`, emitted by
   `weapon_controller.gd` — the only gameplay file touched, and only to announce what it already did.
 **Files changed:** new `tools/gen_sfx.py`, `src/autoload/audio.gd`, `assets/audio/` (21 wav + imports),
-`docs/05 - Iterations/Iteration 11 - Audio.md`; edited `src/autoload/event_bus.gd`,
+`docs/05 - Iterations/Iteration 11V - Audio.md`; edited `src/autoload/event_bus.gd`,
 `src/combat/weapon_controller.gd`, `src/vehicle/taxi.gd`, `tools/setup_project.gd` + `project.godot`
 (the `Audio` autoload), `docs/03 - Architecture/Architecture.md`, Phase 11.
 **Tested:** import clean; map, ride, events, hostiles, enemy, enemy-city, weapon, dossier, pickup,
@@ -626,3 +626,42 @@ weapon, dossier, pickup, curb, jump PASS.
 **Tested:** n/a (git / docs)
 **Problems / notes:** `feature/iterations-09-10` is still local only.
 **Next session should:** get the playtest of 0.10.5 against the Iteration 12 checklist; decide whether `temp/playtest-merge` becomes the integration branch.
+
+
+## 2026-11-16 — Session 17 — Iteration 13: closing the seams of the merge
+**Iteration:** [[Iteration 13 - Merge Integration]] (new) · **Phases touched:** 11
+**Goal:** user: "hagamos una iteración corta de integración", with the music track explicitly left
+in stand-by (KI-034).
+**Review of the merge first:** all 16 autotests pass on `temp/playtest-merge`, the visuals survived
+intact, and DLain47 **extended** the `Audio` autoload (volume sliders, saved settings, music bus)
+rather than forking it. The merge is healthy.
+**Done (D-078):**
+- **The real integration bug:** `TrafficCar extends Taxi`, so every civilian car inherited the
+  player's **non-positional** engine rig — 13 cars x 4 loops = 52 flat loops at the driver's own
+  volume regardless of distance. `Taxi.engine_audio_local` now gates it; civilians run one
+  positional layer at -21 dB over 55 m, like the enemy cars. Measured before and after.
+- **Tail lights** on `Taxi`, inherited by every civilian: emissive lenses, dim red at dusk/night,
+  bright under brake or handbrake, off in daylight except when braking. No extra `Light3D`.
+- **D-079:** Nico's iteration notes renamed `09V` / `10V` / `11V` (`git mv`), matching the `DV-`
+  decisions; numbering shared again from 13. References updated; convention recorded in
+  [[CLAUDE]] §8 and [[Status]].
+**A correction worth keeping:** the first review claimed traffic and pedestrians had no lights.
+Wrong — grepping `traffic_car.gd` missed what it inherits. Measuring found the opposite problem.
+**Files changed:** `src/vehicle/taxi.gd`, `src/world/traffic_car.gd`, new
+`assets/materials/taillight{,_brake,_off}.tres`, new `docs/05 - Iterations/Iteration 13 - Merge
+Integration.md`, renamed Nico's three iteration notes, `docs/CLAUDE.md`, [[Status]], [[00 - Home]].
+**Tested:** import clean; all 16 autotests PASS. Night screenshot taken; tail lamps verified by
+state at both moods on both car types. NOT seen by a human in motion.
+**Problems / notes:** `streetlife_autotest` failed once windowed, passed every headless run.
+**Next session should:** 1) the user drives a night street with traffic; 2) the playtest feedback
+on 0.10.5 (Iterations 08-12); 3) the juice, still pending from Phase 11.
+
+### Session 17 (cont.) — approved, and the audio map checked
+**User:** drove it at night with traffic — works. Confirmed the fix from the inside ("en tus
+primeras pruebas se sentía demasiado ruido de motores"), and asked whether police, enemies and
+civilians are all positional so the mix cannot deafen. **Checked: they are** — police are
+`EnemyCar` with `police_cruiser.tres` (80 m / -14 dB), civilians 55 m / -21 dB, only the player's
+own car is non-positional, which is correct. Table in the Iteration 13 note. **Nothing changed.**
+**Found while checking:** `enemy_gunner.gd` has 3 `CombatFx` calls and zero `Audio` — enemy
+gunfire is completely silent. Reported, not fixed.
+**Iteration 13 closed.**

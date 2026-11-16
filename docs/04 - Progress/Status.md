@@ -6,11 +6,31 @@ updated: 2026-11-15
 
 > **Read this first every session.** Claude updates it at the end of every session.
 
-## Where we left off (2026-11-15, session 16)
+## Where we left off (2026-11-16, session 17)
+- **[[Iteration 13 - Merge Integration]] is CLOSED** — driven at night with traffic and approved
+  ("funciona, perfecto"). The user's own report confirms the diagnosis from the inside: what felt
+  like "too much engine noise" was the 52 non-positional loops.
+  Closes the seams the merge left: civilian cars no longer inherit the player's non-positional
+  engine rig (52 flat audio loops became 4 + one positional layer each at -21 dB), every car that
+  extends `Taxi` now has tail lamps that light at dusk and flare under braking (D-078), and the
+  iteration numbering is unambiguous again (D-079: `09V` / `10V` / `11V`, shared from 13 on).
+- **The merge itself was reviewed and is healthy:** 16/16 autotests, visuals intact, and the
+  `Audio` autoload was extended rather than forked.
+- **The music track is on hold by the user's instruction** (KI-034) — the repo is public and the
+  file is in it; to be dealt with later, deliberately not now.
+- **Vehicle audio is positional everywhere it should be** (table in the Iteration 13 note): police
+  and enemies 80 m / -14 dB, civilians 55 m / -21 dB, the player's own car non-positional because
+  he sits in it. Asked and verified, not changed.
+- **Open hole:** `enemy_gunner.gd` fires with tracers and muzzle flash and **no sound**. Being shot
+  at is silent.
+- **No iteration is active.** The 0.10.5 playtest feedback (Iterations 08-12) is the bigger open
+  item; the juice (Phase 11) is still pending.
+
+### Previous: 2026-11-15, session 16
 - **Branch:** `temp/playtest-merge` = `feature/iterations-09-10` (yours) + Nico's `feat/visuals-and-audio` (textures, lights, audio) + Iteration 12 (commit `8e36cf3`). **Pushed 2026-11-16** to `origin/temp/playtest-merge` (DLain47 is now a collaborator); `feature/iterations-09-10` is still local only. `main` still has only the initial commit.
 - **Active:** [[Iteration 12 - Heat, Fares & Game Over]] — built & auto-verified: heat from 2★ + gang bounty from 4★ (D-070), music + OPTIONS menu (D-071), smaller ammo reserves (D-072), procedural passengers (D-073), curbside drop-offs (D-074), destructible traffic + civilian crimes = heat (D-075), red marker over hostiles (D-076), death = explosion + GAME OVER (D-077). Difficulty re-tuned "in between".
 - **Build 0.10.5** (`build/windows/TaxiDriver.exe`, `build/TaxiDriver-0.10.5-windows.7z`) sent to the user for a friend. The user played 0.10.4 once (wreck bug → fixed in 0.10.5).
-- **Docs:** Nico's decisions are DV-061…DV-068 in [[Decisions Log]]; his sessions are in [[Session Log]]; his iteration notes are Iterations 09 Texture Pass / 10 Lights & Night / 11 Audio.
+- **Docs:** Nico's decisions are DV-061…DV-068 in [[Decisions Log]]; his sessions are in [[Session Log]]; his iteration notes are **09V / 10V / 11V** — the `V` suffix (matching the `DV-` decisions) marks the parallel visual/audio line and resolves the two 09s and two 10s the merge created (D-079).
 - **Flaky tests:** `hostiles` ~1/5 (KI-032), `enemy_city` ~1/4 (KI-029) — both pre-existing.
 - **First thing next session:** playtest feedback on 0.10.5 (Iteration 12 checklist, also covers 08-11); decide the fate of `temp/playtest-merge`.
 

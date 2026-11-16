@@ -145,7 +145,19 @@ var _tyre_player: AudioStreamPlayer = null
 var _revs: float = 0.0           # 0..1 within the current gear
 var _gear: int = 0
 var _shift_t: float = 0.0        # counts down through a gear change (the throttle-cut dip)
+## False on cars that are not the one the player sits in. The engine rig below builds
+## NON-positional players, which is right for the driver and wrong for everyone else: a civilian
+## 200 m away would be as loud as your own engine (D-078). Those cars run their own positional
+## engine instead. Set it before `super._ready()`.
+var engine_audio_local: bool = true
+
 var _headlights: Array[SpotLight3D] = []
+var _taillight_lenses: Array[MeshInstance3D] = []
+var _lights_on: bool = true
+var _braking_lights: bool = false
+var _tail_lit: Material = load("res://assets/materials/taillight.tres")
+var _tail_brake: Material = load("res://assets/materials/taillight_brake.tres")
+var _tail_off: Material = load("res://assets/materials/taillight_off.tres")
 var _headlight_lenses: Array[MeshInstance3D] = []
 var _lens_lit: Material = load("res://assets/materials/headlight.tres")
 var _lens_dark: Material = load("res://assets/materials/headlight_off.tres")
@@ -181,7 +193,7 @@ func _ready() -> void:
 ## Three generated loops (idle / mid / high) crossfaded by revs and pitched together: the classic
 ## arcade engine. `Audio` is an autoload and silent in headless runs, so the tests stay quiet.
 func _add_engine_audio() -> void:
-	if not Audio.enabled:
+	if not Audio.enabled or not engine_audio_local:
 		return
 	for layer in ENGINE_LAYERS:
 		var p := Audio.make_loop(layer, self, Audio.BUS_ENGINE)
@@ -260,13 +272,31 @@ func _on_mood_changed(mood: int) -> void:
 	_set_headlights(Lighting.headlights_on(mood as Lighting.Mood))
 
 
-## Headlights off in daylight (D-065): the user drove all three moods and the one thing that read
-## as wrong was the car and the street being lit at midday.
+## Lights off in daylight (D-065): the user drove all three moods and the one thing that read as
+## wrong was the car and the street being lit at midday. Tail lamps follow the same switch (D-078).
 func _set_headlights(on: bool) -> void:
+	_lights_on = on
 	for spot in _headlights:
 		spot.visible = on
 	for lens in _headlight_lenses:
 		lens.material_override = _lens_lit if on else _lens_dark
+	_update_taillights(true)
+
+
+## Red at the back, brighter under braking. Emissive only - no extra Light3D, because every
+## civilian car inherits this and nine more lights per street is not worth it (D-078).
+func _update_taillights(force: bool = false) -> void:
+	var braking := input.brake > 0.1 or input.handbrake
+	if not force and braking == _braking_lights:
+		return
+	_braking_lights = braking
+	var mat: Material = _tail_off
+	if _lights_on:
+		mat = _tail_brake if braking else _tail_lit
+	elif braking:
+		mat = _tail_brake            # brake lights work in daylight too, as they do on a real car
+	for lens in _taillight_lenses:
+		lens.material_override = mat
 
 
 ## Headlights (D-064). Built in code so taxi.tscn stays hand-editable.
@@ -281,9 +311,16 @@ func _add_headlights() -> void:
 		mesh.position = Vector3(side * 0.62, 0.02, -2.32)
 		add_child(mesh)
 
+		var tail := MeshInstance3D.new()
+		tail.mesh = lens
+		tail.material_override = _tail_lit
+		tail.position = Vector3(side * 0.66, 0.1, 2.3)
+		add_child(tail)
+		_taillight_lenses.append(tail)
+
 		var spot := SpotLight3D.new()
 		spot.position = Vector3(side * 0.62, 0.35, -2.36)
-				# Aimed well down at the tarmac: a headlight only 0.5 m off the ground that points straight
+		# Aimed well down at the tarmac: a headlight only 0.5 m off the ground that points straight
 		# ahead hits the road at a grazing angle, where lambert gives it almost nothing (measured).
 		spot.rotation_degrees = Vector3(-6.0, 0.0, 0.0)
 		spot.spot_range = 45.0
@@ -338,6 +375,7 @@ func _physics_process(delta: float) -> void:
 			rear_count += 1
 	rear_slip_signed = rear_sum / float(maxi(rear_count, 1))
 	is_drifting = grounded_wheel_count > 0 and rear_slip > drift_slip_threshold
+	_update_taillights()
 	_update_engine_audio(delta)
 	_apply_turn_speed_retention()
 	_apply_yaw_stability(up)

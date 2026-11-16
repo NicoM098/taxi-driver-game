@@ -709,3 +709,43 @@ First pass (too hard per user): police every 16 s, pairs from 4★, decay 70 s, 
 **Context:** user: "when your life runs out you explode and have to start again from the main menu"; after 0.10.4: "im still getting the wrecked message and still able to drive" (the TAXI bar still meant limp mode). **Supersedes D-056** (limp to a repair shop) in every world with repair shops.
 **Decision:** `TaxiDamage._wreck`: driver killed, or taxi destroyed in a world with repair shops → `_die()`: `is_dead`, player input off, fire, explosion + impulse, "YOU'RE DEAD", `EventBus.player_died`. `repair()` does nothing once dead. `main.gd` waits 2.5 s, pauses, shows **GAME OVER** (red overlay, run stats, MAIN MENU → `reset_run()` + menu, QUIT); the pause key is ignored. `RideManager.get_guide_target()` / the HUD hint go blank when dead. Worlds without repair shops (shooting range) keep the old self-repair. Repair shops still sell repairs before that. `ride_autotest` now checks paid repair → destroyed taxi = game over.
 **Status:** accepted (auto-verified: ride test + `heat_passengers_autotest` H; game-over screenshot checked)
+
+## D-078 — Only the player's car gets the non-positional engine rig; everyone has tail lights (2026-11-16)
+**Context:** Iteration 13, closing the seams of the merge. A first review claimed the civilian cars
+had no lights and no engine. **That was wrong**: `TrafficCar extends Taxi`, so every civilian
+inherits the headlights and the whole engine rig through `super._ready()`. Grepping
+`traffic_car.gd` for `Light3D` found nothing because the code is in the parent — measured instead
+of grepped, a street-life run builds **9 to 13 civilian cars, each with headlights and four audio
+loops**.
+**The real bug:** `Audio.make_loop()` builds a **non-positional** `AudioStreamPlayer`. That is
+right for the car the player sits in and wrong for every other car: 13 civilians x 4 loops = **52
+flat loops at the player's own engine volume**, no matter how far away the car is. The enemy cars
+(DV-067) already did it properly with `make_loop_3d`.
+**Decision:**
+- `Taxi.engine_audio_local` (default true) gates the flat rig. `TrafficCar` sets it false before
+  `super._ready()` and runs **one positional layer** instead, the way the enemy cars do.
+  Verified: 1 flat rig (the taxi) and 13 positional civilian engines in a street-life run, down
+  from 40+ flat loops.
+- **Civilians are audible but quiet: -21 dB**, against the enemies' -14 and the player's -6, over
+  55 m. The street should not be eerie, and an engine you can hear *clearly* that is not yours
+  still reads as trouble. `TrafficCar.CIVILIAN_ENGINE_DB` is the one number to move if that balance
+  is wrong.
+- **Tail lights** on `Taxi`, so every civilian car inherits them too: two emissive lenses at the
+  back, dim red normally and bright under brake or handbrake. **Emissive only, no `Light3D`** —
+  nine more real lights per street is not worth it. They follow the time of day with the
+  headlights (DV-065), except that braking lights up in daylight as it does on a real car.
+  Verified at both moods on both car types: 2 lenses each, `taillight.tres` at night,
+  `taillight_off.tres` by day.
+**Status:** accepted (auto-verified: import clean; all 16 autotests PASS) — needs the user's eyes
+and ears on a night street with traffic.
+
+## D-079 — The `V` suffix untangles the merged iteration numbering (2026-11-16)
+**Context:** the merge left `05 - Iterations/` with **two Iteration 09s and two Iteration 10s**
+(Menu/Tutorial vs Texture Pass; Street Life vs Lights & Night), which makes every `[[Iteration 09
+- ...]]` wikilink ambiguous. The decisions had already been resolved by renaming Nico's to
+`DV-061…DV-068`.
+**Decision:** the same convention for the notes — Nico's three become **`09V` / `10V` / `11V`**,
+DLain47's keep the plain numbers, and **numbering is shared again from 13 on**. Renamed with
+`git mv` so the history follows; all references updated in [[00 - Home]] and [[Session Log]], and
+the convention is recorded in [[CLAUDE]] §8 and [[Status]].
+**Status:** accepted

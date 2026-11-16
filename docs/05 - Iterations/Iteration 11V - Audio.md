@@ -1,6 +1,6 @@
 ---
 tags: [iteration]
-iteration: 11
+iteration: 11V
 status: awaiting playtest
 started: 2026-11-14
 finished:

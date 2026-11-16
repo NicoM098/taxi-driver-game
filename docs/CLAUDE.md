@@ -103,5 +103,5 @@ The project is a git repo since 2026-11-15 (before that there was none — that 
 - `02 - Development Plan/` — [[Development Plan]] + one note per phase
 - `03 - Architecture/` — [[Architecture]], [[Conventions]]
 - `04 - Progress/` — [[Status]], [[Session Log]], [[Decisions Log]], [[Known Issues]]
-- `05 - Iterations/` — user-scoped iterations (active: [[Iteration 12 - Heat, Fares & Game Over]]; 08-11 await playtests. Nico's Iterations 09-11 share numbers with ours — see D-069)
+- `05 - Iterations/` — user-scoped iterations. **Two parallel lines of work merged on 2026-11-15**: plain numbers are DLain47's (08-12), and `09V` / `10V` / `11V` plus the `DV-0xx` decisions are Nico's visual & audio line. Numbering is shared again from 13 on (D-079). Active: [[Iteration 13 - Merge Integration]]; 08-12 await playtests
 - `Templates/` — note templates
