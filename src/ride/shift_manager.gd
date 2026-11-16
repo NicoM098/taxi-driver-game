@@ -16,6 +16,7 @@ var rides_completed: int = 0
 var rides_failed: int = 0
 var cash_earned: int = 0
 var best_drift_links: int = 0
+var best_air_time: float = 0.0
 var passengers_kicked: int = 0
 var passengers_killed: int = 0
 var enemies_destroyed: int = 0
@@ -101,6 +102,11 @@ func register_bonus_cash(amount: int) -> void:
 ## Cash a passenger took from the driver (ride events).
 func register_stolen(amount: int) -> void:
 	cash_stolen += amount
+
+
+## Longest single jump of the run (D-081).
+func register_air_time(seconds: float) -> void:
+	best_air_time = maxf(best_air_time, seconds)
 
 
 func register_drift_links(links: int) -> void:

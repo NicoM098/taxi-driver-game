@@ -11,6 +11,8 @@
 [ext_resource type="Material" path="res://assets/materials/interior_trim.tres" id="9_trim"]
 [ext_resource type="Material" path="res://assets/materials/interior_seat.tres" id="10_seat"]
 [ext_resource type="Script" path="res://src/vehicle/drift_chain.gd" id="11_drift"]
+[ext_resource type="Script" path="res://src/vehicle/style_meter.gd" id="21_style"]
+[ext_resource type="Script" path="res://src/vehicle/skid_marks.gd" id="22_skid"]
 [ext_resource type="Script" path="res://src/vehicle/guide_arrow.gd" id="12_arrow"]
 [ext_resource type="Material" path="res://assets/materials/guide_green.tres" id="13_green"]
 [ext_resource type="Material" path="res://assets/materials/guide_yellow.tres" id="14_yellow"]
@@ -324,6 +326,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, 0.62, 1.1)
 
 [node name="DriftChain" type="Node" parent="."]
 script = ExtResource("11_drift")
+
+[node name="StyleMeter" type="Node" parent="."]
+script = ExtResource("21_style")
+
+[node name="SkidMarks" type="Node" parent="."]
+script = ExtResource("22_skid")
 
 [node name="HeadPivot" type="Node3D" parent="." node_paths=PackedStringArray("vehicle")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.38, 1, 0.38)

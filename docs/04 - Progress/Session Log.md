@@ -675,3 +675,30 @@ the cadence rises. A pistol now means police and an SMG means gangs.
 **Tested:** import clean, all 16 autotests PASS; the hitman's shot observed at runtime
 (`shot_smg`, pitch 1.04). The police and gang rows are arithmetic from the same code, not observed
 — neither fires in any current test. Not heard by a human.
+
+
+## 2026-11-16 — Session 18 — Iteration 14: juice
+**Iteration:** [[Iteration 14 - Juice]] (new) · **Phases touched:** 11
+**Goal:** user: "ahora si podemos seguir con el juice. Lo planifiquemos primero antes de
+implementar" → plan presented → "Core + near miss".
+**Planning found the plan was wrong:** camera shake (with trauma), speed FOV kick, muzzle flash,
+tracers, impacts, explosions, damage smoke — and a **complete drift-chain system** with multiplier,
+speed reward, cash payout and HUD bar — all already existed. Rebuilding "style points" from scratch
+would have duplicated `drift_chain.gd`.
+**Done (D-081):** `EventBus.style_earned` + a bigger HUD popup; `RideManager` pays style exactly
+like a drift chain (one currency); `StyleMeter` (air time + near miss) and `SkidMarks` as children
+of `taxi.tscn` — **never on `Taxi` itself**, because `TrafficCar extends Taxi` and thirteen
+civilians would score; hit-stop of 70 real ms at `time_scale` 0.15 plus camera trauma, off in
+headless; 480-slot MultiMesh ring buffer for the rubber, lifted 3.5 cm over the asphalt.
+**New test:** `tests/style_autotest` (17th). The near-miss rule could not be covered otherwise —
+the closest another car gets to the player in any existing test is **58 m**. Three cases: fast and
+close (exactly one popup), slow and close (none), fast and wide (none). The slow case first passed
+for the wrong reason, which the logged closest distance exposed.
+**Bug only the real game could show:** `SkidMarks` added its MultiMesh while the world scene was
+still setting up its children, which Godot refuses. Every test builds its world by hand, so none
+hit it. Fixed with `call_deferred`.
+**Tested:** import clean; 17 autotests PASS; air time observed at 1.38-1.97 s; 556 skid stamps on a
+drift run against 142 driving normally. `hostiles` failed once (its known KI-032 rate) and
+`weapon_autotest` ~1 in 5 — root cause found (unseeded pellet spread), logged as **KI-036**, not
+fixed because it is not this iteration's code.
+**Next session should:** the user drives it; near-miss frequency is the first number to move.

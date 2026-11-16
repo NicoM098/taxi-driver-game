@@ -9,6 +9,7 @@ const COLORS := {
 	&"good": Color(0.45, 1, 0.45),
 	&"bad": Color(1, 0.4, 0.35),
 	&"drift": Color(1, 0.75, 0.2),
+	&"style": Color(1, 0.88, 0.3),
 }
 
 var _timer_label: Label
@@ -16,6 +17,8 @@ var _cash_label: Label
 var _ride_label: Label
 var _speed_label: Label
 var _hint_label: Label
+var _style_label: Label
+var _style_tween: Tween
 var _drift_label: Label
 var _drift_bar: ColorRect
 var _message_label: Label
@@ -84,6 +87,10 @@ func _ready() -> void:
 	# Popups sit on the dark roof lining above the arrow (they used to cover the arrow).
 	_place(_message_label, 0, 0.115, 1, 0.115, 0, 0, 0, 40)
 	_message_label.modulate.a = 0.0
+	# The style popup sits under the message line, bigger: it is a reward, not a notification.
+	_style_label = _label(46, HORIZONTAL_ALIGNMENT_CENTER)
+	_place(_style_label, 0, 0.2, 1, 0.2, 0, 0, 0, 58)
+	_style_label.modulate.a = 0.0
 	# Passenger barks (subtitles) above the bottom hint; urgent ride alerts mid-screen.
 	_bark_label = _label(26, HORIZONTAL_ALIGNMENT_CENTER)
 	_place(_bark_label, 0.15, 1, 0.85, 1, 0, -170, 0, -96)
@@ -110,6 +117,7 @@ func _ready() -> void:
 	_summary_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 
 	EventBus.hud_message.connect(show_message)
+	EventBus.style_earned.connect(_on_style_earned)
 	EventBus.passenger_bark.connect(show_bark)
 	EventBus.ride_alert.connect(show_alert)
 	EventBus.shift_ended.connect(_on_shift_ended)
@@ -166,6 +174,28 @@ func _process(delta: float) -> void:
 	else:
 		_drift_label.text = ""
 		_drift_bar.visible = false
+
+
+## The arcade popup: big, centre-right, punches in and fades. Style only - ordinary messages
+## stay as the quiet line (D-081).
+func show_style(text: String) -> void:
+	_style_label.text = text
+	_style_label.modulate = COLORS[&"style"]
+	_style_label.modulate.a = 1.0
+	_style_label.pivot_offset = _style_label.size * 0.5
+	_style_label.scale = Vector2(1.45, 1.45)
+	if _style_tween != null:
+		_style_tween.kill()
+	_style_tween = create_tween()
+	var punch := _style_tween.tween_property(_style_label, "scale", Vector2.ONE, 0.18)
+	punch.set_trans(Tween.TRANS_BACK)
+	punch.set_ease(Tween.EASE_OUT)
+	_style_tween.tween_interval(0.9)
+	_style_tween.tween_property(_style_label, "modulate:a", 0.0, 0.5)
+
+
+func _on_style_earned(_kind: StringName, label: String, _points: float) -> void:
+	show_style(label)
 
 
 func show_message(text: String, kind: StringName = &"info") -> void:

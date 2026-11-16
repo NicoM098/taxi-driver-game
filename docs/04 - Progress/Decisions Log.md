@@ -775,3 +775,45 @@ that already existed.
 observed firing at runtime — `shot_smg`, pitch 1.04. **The police and gang rows are arithmetic
 from the same two lines of code, not observed**: neither fires in any current test) — needs the
 user's ears.
+
+## D-081 — Juice: air time, hit-stop, skid marks and near misses (2026-11-16)
+**Context:** Iteration 14, the last of [[Phase 11 - Audio, VFX & Juice]]. **Checking first changed
+the plan**: camera shake with a trauma system, speed FOV kick, muzzle flash, tracers, impacts,
+explosions and damage smoke all already existed, and so did a complete drift-chain system
+(`drift_chain.gd` — links, ×3 multiplier, speed reward, cash, HUD bar). Style scoring was not
+missing; it was missing everywhere except drifting.
+**Decision 1 — one economy.** New `EventBus.style_earned(kind, label, points)`; `RideManager` turns
+the points into money exactly as it does a drift chain (tip while riding, cash otherwise). The game
+has one style currency rather than three, and nothing that scores needs to know about cash or UI.
+**Decision 2 — the juice lives on a child node of `taxi.tscn`,** next to `DriftChain`, never on
+`Taxi` itself: `TrafficCar extends Taxi`, so anything on the parent script fires for all thirteen
+civilians on the street. `StyleMeter` (air time, near misses) and `SkidMarks` are both children.
+**Decision 3 — air time.** Over 0.45 s airborne and 8 m/s at take-off, paid on landing by
+`30 × seconds^1.3` — slightly better than linear, so one long jump beats two short ones.
+"CRAZY JUMP" under 1.2 s, "HUGE AIR" over. `best_air_time` joins the run stats. First numbers were
+nearly twice this; a 1.5 s jump paid $48 against roughly $30 for a good drift chain, which made
+jumping the better business. Now about $26.
+**Decision 4 — hit-stop.** A kill freezes the world for **70 real milliseconds** at `time_scale`
+0.15, plus 0.45 camera trauma. Real milliseconds, because `time_scale` cannot stretch
+`Time.get_ticks_msec()`. **Off in headless**, like the audio: `Engine.time_scale` is global and 17
+autotests run at `--fixed-fps 60`. Dying mid-freeze restores it, or the game-over screen would run
+in slow motion.
+**Decision 5 — skid marks.** A fixed 480-slot `MultiMesh` ring buffer in the world (marks stay
+where they were laid), stamped every 0.3 m under a rear wheel sliding past 2 m/s, lifted 3.5 cm so
+it clears the asphalt (KI-017). The oldest stamp is overwritten rather than freed: how the era this
+copies did it, and it cannot leak. Added **deferred** — when the taxi comes up with the world
+scene, its parent is still setting up children and a direct `add_child()` is refused. That bug only
+appeared when driving the real game; no test world hits it.
+**Decision 6 — near miss.** Sphere query (3.1 m) against the traffic and enemy layers every 0.12 s,
+requiring **9 m/s of closing speed** — scraping past at the same speed is not a thrill — with a
+2.5 s cooldown per car so one long overtake cannot machine-gun popups.
+**New: `tests/style_autotest`.** The near-miss rule had no coverage and could not get any from the
+existing tests: the closest another car comes to the player in `streetlife_autotest` is **58 m**.
+The new test drives past a parked civilian three times — fast and close (exactly one popup, not one
+per frame), slow and close (nothing), fast and wide (nothing). The first version of the slow case
+passed for the wrong reason (it never reached the car), which the logged closest-distance exposed.
+**HUD:** style gets its own popup — bigger, punching in and fading — instead of the quiet message
+line, because a reward should not look like a notification.
+**Status:** accepted (auto-verified: import clean; 17 autotests PASS including the new one; air
+time observed at 1.38-1.97 s in `jump_autotest`; 556 skid stamps during a drift run against 142
+driving normally) — **needs the user's hands**, above all on how often near misses fire.

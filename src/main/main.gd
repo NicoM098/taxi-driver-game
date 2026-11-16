@@ -17,6 +17,13 @@ const DEBUG_WORLDS := ["res://src/main/game.tscn", "res://src/combat/shooting_ra
 
 var ps1_enabled: bool = true
 
+## Hit-stop (D-081).
+const HIT_STOP_SCALE: float = 0.15
+const HIT_STOP_MS: int = 70
+
+var _hit_stop_until: int = 0
+var _headless: bool = DisplayServer.get_name() == "headless" or OS.has_feature("headless")
+
 @onready var _container: SubViewportContainer = %WorldContainer
 @onready var _viewport: SubViewport = %WorldViewport
 @onready var _debug_overlay: Control = %DebugOverlay
@@ -47,6 +54,7 @@ func _ready() -> void:
 	_build_pause_menu()
 	_build_game_over()
 	EventBus.player_died.connect(_on_player_died)
+	EventBus.enemy_destroyed.connect(_on_enemy_destroyed)
 	_parse_cmdline()
 	SceneLoader.world_scene_requested.connect(_on_world_scene_requested)
 	get_viewport().size_changed.connect(_update_resolution)
@@ -62,7 +70,30 @@ func _exit_tree() -> void:
 	Audio.stop_music()
 
 
+## Hit-stop (D-081): a kill freezes the world for a few real milliseconds, which is most of what
+## makes a shot feel like it landed. `Engine.time_scale` is global and the autotests run at
+## `--fixed-fps 60`, so it is off in headless runs exactly like the audio.
+func _on_enemy_destroyed(enemy: Node, _bounty: int) -> void:
+	if _headless or _hit_stop_until > 0:
+		return
+	Engine.time_scale = HIT_STOP_SCALE
+	_hit_stop_until = Time.get_ticks_msec() + HIT_STOP_MS   # real time: time_scale cannot stretch it
+	var taxi := get_tree().get_first_node_in_group(&"player_vehicle") as Node3D
+	if taxi != null and enemy is Node3D:
+		for cam in taxi.find_children("*", "CabCamera", true, false):
+			(cam as CabCamera).add_trauma(0.45)
+
+
+func _end_hit_stop() -> void:
+	if _hit_stop_until <= 0:
+		return
+	_hit_stop_until = 0
+	Engine.time_scale = 1.0
+
+
 func _process(_delta: float) -> void:
+	if _hit_stop_until > 0 and Time.get_ticks_msec() >= _hit_stop_until:
+		_end_hit_stop()
 	for action in _held_actions:
 		Input.action_press(StringName(action))
 	if _screenshot_path.is_empty():
@@ -229,6 +260,7 @@ func _pause_button(parent: Control, text: String, action: Callable) -> Button:
 ## Life ran out (user request 2026-11-15): the cab explodes, then this screen with the run's
 ## stats; the only way on is back to the main menu (a new run starts from there).
 func _on_player_died() -> void:
+	_end_hit_stop()   # dying mid-freeze must not leave the world in slow motion
 	if is_game_over:
 		return
 	is_game_over = true

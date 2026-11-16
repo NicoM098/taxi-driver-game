@@ -103,6 +103,12 @@ signal civilian_killed(position: Vector3, kind: StringName)
 @warning_ignore("unused_signal")
 signal energy_drink_consumed
 
+# Style (Phase 11, D-081). Air time, near misses and anything else stunt-like announce themselves
+# here with raw points; RideManager turns them into money the same way it does a drift chain, and
+# the HUD shows the popup. Drifts keep their own richer signals in DriftChain.
+@warning_ignore("unused_signal")
+signal style_earned(kind: StringName, label: String, points: float)
+
 # World / time of day (Phase 11, D-064)
 ## The city switched time of day. `mood` is a Lighting.Mood. Anything that owns its own lights
 ## (the taxi's headlights, later the enemy cars) listens here instead of polling the city.

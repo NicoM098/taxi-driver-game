@@ -6,7 +6,19 @@ updated: 2026-11-15
 
 > **Read this first every session.** Claude updates it at the end of every session.
 
-## Where we left off (2026-11-16, session 17)
+## Where we left off (2026-11-16, session 18)
+- **Active:** [[Iteration 14 - Juice]] — built & auto-verified, **not in a human's hands yet**.
+  The last of Phase 11: air time ("CRAZY JUMP"), hit-stop on kills, skid marks, near misses, all
+  paying through the drift chain's existing economy (D-081). A new `tests/style_autotest` makes 17.
+- **Checking before planning changed the plan:** camera shake, FOV kick, muzzle flash, tracers,
+  impacts, explosions and a **complete drift-chain system** already existed. Style scoring was not
+  missing, it was missing everywhere except drifting.
+- **KI-036 (new):** `weapon_autotest` is flaky ~1 in 5 — the shotgun's pellets scatter from an
+  unseeded RNG. Cause identified, deliberately not fixed (not this iteration's code).
+- **First thing next session:** the user drives it — near-miss frequency is the number most likely
+  to be wrong.
+
+### Previous: 2026-11-16, session 17
 - **[[Iteration 13 - Merge Integration]] is CLOSED** — driven at night with traffic and approved
   ("funciona, perfecto"). The user's own report confirms the diagnosis from the inside: what felt
   like "too much engine noise" was the 52 non-positional loops.

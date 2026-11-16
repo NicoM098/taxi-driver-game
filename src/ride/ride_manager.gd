@@ -58,6 +58,7 @@ var _recent_destinations: Array[TaxiStop] = []
 
 func _ready() -> void:
 	add_to_group(&"ride_manager")
+	EventBus.style_earned.connect(_on_style_earned)
 	EventBus.shift_ended.connect(_on_shift_ended)
 	EventBus.taxi_wrecked.connect(_on_taxi_wrecked)
 	EventBus.passenger_killed.connect(func() -> void:
@@ -434,6 +435,23 @@ func _on_chain_banked(points: float, links: int) -> void:
 		GameState.add_cash(dollars)
 		_shift.register_bonus_cash(dollars)
 		EventBus.hud_message.emit("STYLE +$%d" % dollars, &"drift")
+
+
+## Air time, near misses and anything else stunt-like pay exactly like a drift chain, so the game
+## has one style currency instead of three (D-081). The HUD popup is the label; this adds the money
+## to it once it knows the amount.
+func _on_style_earned(_kind: StringName, label: String, points: float) -> void:
+	var dollars := roundi(points * dollars_per_drift_point)
+	if dollars <= 0:
+		return
+	if state == State.RIDING and ride != null:
+		ride.tip += dollars
+	elif _shift != null and _shift.is_active:
+		GameState.add_cash(dollars)
+		_shift.register_bonus_cash(dollars)
+	else:
+		return
+	EventBus.hud_message.emit("%s +$%d" % [label, dollars], &"drift")
 
 
 func _on_chain_broken(_points: float) -> void:
