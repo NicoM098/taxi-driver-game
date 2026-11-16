@@ -749,3 +749,29 @@ DLain47's keep the plain numbers, and **numbering is shared again from 13 on**. 
 `git mv` so the history follows; all references updated in [[00 - Home]] and [[Session Log]], and
 the convention is recorded in [[CLAUDE]] §8 and [[Status]].
 **Status:** accepted
+
+## D-080 — Enemy gunfire is audible, and the gun says who is shooting (2026-11-16)
+**Context:** found while auditing the positional audio for D-078: `enemy_gunner.gd` drew tracers,
+muzzle flashes and impacts and played **no sound at all**. Being shot at from a car was silent —
+you saw the bullets and heard nothing. The hits already made noise (`taxi_damaged`, `player_hit`);
+the shot itself did not.
+**Decision:** one positional one-shot per bullet from the muzzle, at **-4 dB** — under the player's
+own shots (-2 dB), and positional, so a burst from across the street reads as distance instead of
+as being next to your ear. Firing rates are 5-8 shots/s and `Audio`'s positional pool is
+round-robin, so a firefight cuts its own oldest shots rather than piling up (DV-066).
+**Which gun, without a new field:** derived from the car's own `fire_rate`, so a new enemy sorts
+itself out and DLain47's `EnemyCarData` is untouched. A slow, deliberate cadence is the police
+sidearm; anything faster is a criminal's SMG. The report gets snappier as the cadence rises.
+
+| Enemy | fire_rate | sound | pitch |
+|---|---|---|---|
+| `police_cruiser` | 5 | `shot_revolver` | 1.00 |
+| `hitman_sedan` | 6 | `shot_smg` | 1.04 |
+| `gang_coupe` | 8 | `shot_smg` | 1.12 |
+
+So a pistol means police and an SMG means gangs — a cue that costs nothing and comes out of data
+that already existed.
+**Status:** accepted (auto-verified: import clean, all 16 autotests PASS; the hitman's shot was
+observed firing at runtime — `shot_smg`, pitch 1.04. **The police and gang rows are arithmetic
+from the same two lines of code, not observed**: neither fires in any current test) — needs the
+user's ears.

@@ -6,6 +6,14 @@ extends Node3D
 ## world | player_taxi | hitboxes
 const LOS_MASK := (1 << 0) | (1 << 1) | (1 << 5)
 
+## Being shot at used to be silent: tracers and a muzzle flash, no sound (D-080). The gun is
+## picked from the car's own fire rate, so it needs no new field and a new enemy sorts itself:
+## a slow, deliberate cadence is the police sidearm, anything faster is a criminal's SMG.
+const SMG_FIRE_RATE: float = 6.0
+## Under the player's own shots (-2 dB), and positional, so a burst from across the street reads
+## as distance rather than as being next to your ear.
+const SHOT_DB: float = -4.0
+
 var car: EnemyCar
 var shots_fired: int = 0
 
@@ -54,6 +62,7 @@ func _physics_process(delta: float) -> void:
 			(hit["collider"] as Hitbox).take_hit(car.data.damage, muzzle)
 		CombatFx.impact(fx_parent, end, hit["normal"], 0.12)
 	CombatFx.tracer(fx_parent, muzzle, end)
+	_play_shot(muzzle)
 
 	_burst_left -= 1
 	if _burst_left <= 0:
@@ -61,6 +70,16 @@ func _physics_process(delta: float) -> void:
 		_cooldown = car.data.burst_pause
 	else:
 		_cooldown = 1.0 / car.data.fire_rate
+
+
+## One shot, from the muzzle. The pool in `Audio` is round-robin, so a firefight cuts its own
+## oldest shots instead of piling up (DV-066).
+func _play_shot(muzzle: Vector3) -> void:
+	var fast := car.data.fire_rate >= SMG_FIRE_RATE
+	var sound: StringName = &"shot_smg" if fast else &"shot_revolver"
+	# The faster the cadence, the snappier the report.
+	var pitch := 1.0 + clampf((car.data.fire_rate - 5.0) * 0.04, 0.0, 0.2)
+	Audio.play_at(sound, muzzle, Audio.BUS_SFX, SHOT_DB, pitch * _rng.randf_range(0.97, 1.03))
 
 
 func _has_line_of_sight(from: Vector3, to: Vector3) -> bool:

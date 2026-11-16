@@ -665,3 +665,13 @@ own car is non-positional, which is correct. Table in the Iteration 13 note. **N
 **Found while checking:** `enemy_gunner.gd` has 3 `CombatFx` calls and zero `Audio` — enemy
 gunfire is completely silent. Reported, not fixed.
 **Iteration 13 closed.**
+
+### Session 17 (cont. 2) — enemy gunfire (D-080)
+User: "Dale". `enemy_gunner.gd` now plays one positional shot per bullet from the muzzle at -4 dB,
+under the player's own. The gun is derived from `car.data.fire_rate` rather than a new field, so
+DLain47's `EnemyCarData` is untouched and a new enemy sorts itself: police (5/s) get
+`shot_revolver`, hitmen (6/s) and gang coupes (8/s) get `shot_smg`, pitched a little snappier as
+the cadence rises. A pistol now means police and an SMG means gangs.
+**Tested:** import clean, all 16 autotests PASS; the hitman's shot observed at runtime
+(`shot_smg`, pitch 1.04). The police and gang rows are arithmetic from the same code, not observed
+— neither fires in any current test. Not heard by a human.

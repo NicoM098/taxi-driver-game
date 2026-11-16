@@ -21,8 +21,9 @@ updated: 2026-11-15
 - **Vehicle audio is positional everywhere it should be** (table in the Iteration 13 note): police
   and enemies 80 m / -14 dB, civilians 55 m / -21 dB, the player's own car non-positional because
   he sits in it. Asked and verified, not changed.
-- **Open hole:** `enemy_gunner.gd` fires with tracers and muzzle flash and **no sound**. Being shot
-  at is silent.
+- **Closed the same day (D-080):** enemy gunfire is audible — one positional shot per bullet at
+  -4 dB, and the gun is picked from the car's own fire rate, so **a pistol means police and an SMG
+  means gangs**. Not heard by a human yet.
 - **No iteration is active.** The 0.10.5 playtest feedback (Iterations 08-12) is the bigger open
   item; the juice (Phase 11) is still pending.
 
