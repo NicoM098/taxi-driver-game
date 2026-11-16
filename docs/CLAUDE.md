@@ -18,10 +18,12 @@ tags: [meta, claude]
 ## 2. Session protocol (ALWAYS follow)
 ### At the start of every session
 1. Read [[Status]] — current phase, what is done, what is next.
-2. Read the latest entries in [[Session Log]] (bottom of file = newest).
-3. Read the active iteration note in `05 - Iterations/` (if one is open) and the phase note it targets in `02 - Development Plan/`.
-4. Skim [[Decisions Log]] and [[Known Issues]] if touching a related system.
-5. Confirm with the user what this session's goal is if it is not obvious.
+2. Read the top of [[Changelog]] — **what the other person pushed since you last worked**. Two
+   people build this on separate branches; this is how you find out without reading a diff.
+3. Read the latest entries in [[Session Log]] (bottom of file = newest).
+4. Read the active iteration note in `05 - Iterations/` (if one is open) and the phase note it targets in `02 - Development Plan/`.
+5. Skim [[Decisions Log]] and [[Known Issues]] if touching a related system.
+6. Confirm with the user what this session's goal is if it is not obvious.
 
 ### During the session
 - **Technology / implementation decisions: decide yourself, don't ask** (user instruction 2026-11-10). Pick the recommended option, log it in [[Decisions Log]], move on. Only ask about iteration scope or creative/game-design calls that change what the game *is*.
@@ -87,6 +89,12 @@ tags: [meta, claude]
 ## 6. Version control (git)
 The project is a git repo since 2026-11-15 (before that there was none — that is what `_backup/` is from; it keeps its `.gdignore`).
 - **Commit / push only when the user asks.** Uncommitted work is the user's to review.
+- **Every push adds an entry to [[Changelog]] first** (same commit, or the one before it). Two
+  people build this game on separate branches, each with their own Claude session, and that file is
+  how the other one finds out what changed without reading a diff. One block per push: date · who ·
+  branch · commit range, then what changed in plain language and the decision ids for the *why*.
+  Flag anything that changes shared code or how the other person's systems behave — that is the
+  part worth their time.
 - Read a file before overwriting it; prefer targeted edits over full rewrites. Git is now the safety net for risky restructures — no more manual copies to `_backup/`.
 - Never delete files without the user's OK. **Never touch the user's maps in `data/maps/`** (e.g. `test1.json`), even if git shows them modified.
 - `.godot/` and `build/` are git-ignored.

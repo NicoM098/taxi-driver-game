@@ -22,7 +22,7 @@ First-person arcade taxi game: drive fast, screen your passengers, shoot your wa
 - [[Architecture]] · [[Conventions]]
 
 ## Progress
-- [[Status]] · [[Session Log]] · [[Decisions Log]] · [[Known Issues]]
+- [[Status]] · [[Changelog]] — what the other branch pushed · [[Session Log]] · [[Decisions Log]] · [[Known Issues]]
 
 ## Iterations
 - ✅ [[Iteration 01 - It Drives]]

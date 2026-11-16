@@ -817,3 +817,21 @@ line, because a reward should not look like a notification.
 **Status:** accepted (auto-verified: import clean; 17 autotests PASS including the new one; air
 time observed at 1.38-1.97 s in `jump_autotest`; 556 skid stamps during a drift run against 142
 driving normally) — **needs the user's hands**, above all on how often near misses fire.
+
+## D-082 — Every push writes a Changelog entry (2026-11-16)
+**Context:** user: a changelog "como para compartir con mi amigo y que él después, cuando levante
+su sesión de Claude, pueda ver qué cambios hice yo". Two people build this game on separate
+branches, each with their own Claude session, and until now the only ways to find out what the
+other had done were reading a diff or reading someone else's [[Session Log]] — which is written for
+whoever wrote it, not for the other person.
+**Decision:** [[Changelog]] in `04 - Progress/`, newest first. **Every push adds an entry first**
+(same commit or the one before it): date · who · branch · commit range, then what changed in plain
+language and the decision ids for the *why*. Deliberately short — the Session Log keeps the detail,
+the Decisions Log the reasoning, Status the present. The part worth the other person's time is
+**anything that changes shared code or how their systems behave**, so that gets flagged explicitly
+(e.g. "`TrafficCar extends Taxi`, so anything on the parent script fires for every civilian car").
+It is step 2 of the session protocol ([[CLAUDE]] §2) and a rule in §6, so both sides' Claude reads
+it on the way in and writes it on the way out.
+**Back-filled** on creation with every push on this branch from both lines of work, plus a "Known
+gaps between the branches" section — which is how the missing `dbbd221` was spotted.
+**Status:** accepted

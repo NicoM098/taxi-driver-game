@@ -1,9 +1,9 @@
 ---
 tags: [iteration]
 iteration: 11V
-status: awaiting playtest
+status: closed
 started: 2026-11-14
-finished:
+finished: 2026-11-15
 ---
 # Iteration 11 — Audio
 

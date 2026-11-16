@@ -702,3 +702,14 @@ drift run against 142 driving normally. `hostiles` failed once (its known KI-032
 `weapon_autotest` ~1 in 5 — root cause found (unseeded pellet spread), logged as **KI-036**, not
 fixed because it is not this iteration's code.
 **Next session should:** the user drives it; near-miss frequency is the first number to move.
+
+### Session 18 (cont.) — the Changelog (D-082)
+User asked for a changelog to share with DLain47, so his Claude session can see what changed here.
+Created [[Changelog]], back-filled with every push on this branch from **both** lines of work
+(mine `5789037`, `a2c6309`, `24cd7b0`, `8364a41`; his `ac1b810`, `8e36cf3..addcaac`), each entry
+flagging what touches the other person's code. Added the rule to [[CLAUDE]] §6 and made reading it
+step 2 of the session protocol in §2.
+**Found while back-filling:** `dbbd221` — the commit that closed Iteration 11V after the audio was
+approved — is on `feat/visuals-and-audio` only; the playtest merge was taken at `5789037`, one
+commit earlier, so this branch still had the note as "awaiting playtest". Re-applied by hand and
+recorded under "Known gaps between the branches".

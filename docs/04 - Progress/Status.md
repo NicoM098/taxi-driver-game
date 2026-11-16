@@ -7,6 +7,13 @@ updated: 2026-11-15
 > **Read this first every session.** Claude updates it at the end of every session.
 
 ## Where we left off (2026-11-16, session 18)
+- **New convention (D-082): [[Changelog]].** Every push adds an entry there first — date, who,
+  branch, commit range, what changed, and anything that touches the other person's systems. It
+  exists so DLain47's Claude session (and mine) can catch up without reading a diff. It is now step
+  2 of the session protocol in [[CLAUDE]] §2, and the rule is in §6.
+- **Fixed in passing:** [[Iteration 11V - Audio]] still said "awaiting playtest" on this branch —
+  the commit that closed it (`dbbd221`) is on `feat/visuals-and-audio`, and the playtest merge was
+  taken one commit earlier. Re-applied by hand; noted in the Changelog's "Known gaps".
 - **Active:** [[Iteration 14 - Juice]] — built & auto-verified, **not in a human's hands yet**.
   The last of Phase 11: air time ("CRAZY JUMP"), hit-stop on kills, skid marks, near misses, all
   paying through the drift chain's existing economy (D-081). A new `tests/style_autotest` makes 17.
