@@ -89,6 +89,16 @@ tags: [meta, claude]
 ## 6. Version control (git)
 The project is a git repo since 2026-11-15 (before that there was none — that is what `_backup/` is from; it keeps its `.gdignore`).
 - **Commit / push only when the user asks.** Uncommitted work is the user's to review.
+- **Ask which branch before pushing. Never inherit the checked-out one by default** (2026-11-16:
+  Iteration 15 went straight onto the shared `temp/playtest-merge` because that was simply the
+  branch open at the time).
+  - **A new iteration or an unproven idea gets its own branch** (`feat/<thing>`), and only merges
+    into the shared branch **once the user has played it**. The shared branch is what the other
+    person pulls and builds from; an unplaytested feature landing there turns up in their build
+    without warning.
+  - Fixes and tuning to work the user has already approved can go straight onto the shared branch.
+  - If something lands on the wrong branch and **the other person has already pulled it, leave it
+    there**: rewriting a branch they have breaks their next pull. Say so and carry on.
 - **Every push adds an entry to [[Changelog]] first** (same commit, or the one before it). Two
   people build this game on separate branches, each with their own Claude session, and that file is
   how the other one finds out what changed without reading a diff. One block per push: date · who ·

@@ -21,6 +21,17 @@ updated: 2026-11-16
 
 ---
 
+## 2026-11-16 · Nico · `temp/playtest-merge` · `9dd5a8c`
+**A branch rule, for both of us** ([[CLAUDE]] §6). Iteration 15 went straight onto this shared
+branch because it was simply the one open at the time, and that is the branch you pull and build
+from — an unplaytested feature landing here turns up in your build without warning. From now on:
+- **Ask which branch before pushing**, never inherit the checked-out one.
+- **A new iteration or an unproven idea gets its own `feat/<thing>` branch**, and merges here only
+  once it has been played. Fixes and tuning to approved work can come straight here.
+- **If something lands on the wrong branch and you have already pulled it, it stays** — rewriting
+  a branch you have breaks your next pull. (Which is exactly what happened with the minimap, so it
+  stays where it is.)
+
 ## 2026-11-16 · Nico · `temp/playtest-merge` · `1b38641`
 **Iteration 15 — Minimap** (D-083). Square, rotates with the car, shows a radius, flat.
 - **Drawn from `MapData.flags()`, not from a second camera.** The flags grid is already one byte
