@@ -75,3 +75,8 @@ Pedestrians on the curbs (dodge, flee gunfire, can be run over — no consequenc
 
 ## 6. Balancing knobs
 Spawn weights per district & shift number, fare ranges, pursuer counts, theft %, examine time cost.
+
+## Generated passengers, curbside stops, crimes (2026-11-15, Iteration 12)
+- **60 % of fares are generated** (D-073): occupation × mood × 1-2 file details; details can reveal a trait that unlocks a choice (charge double, hazard pay, ask a cop for a favour, turn a suspect in) or warns of trouble (being followed, a gun, a thief). The hand-made archetypes above are the other 40 %.
+- **Drop-offs:** extra curbside stops generated along the kerbs every run; the last 8 destinations are not repeated (D-074).
+- **Price on your head:** at 4★ street gangs hunt the taxi in waves (D-070). Running a pedestrian over or destroying a civilian car = +1★ and the police come quickly (D-075). Hostile cars carry a red marker (D-076).

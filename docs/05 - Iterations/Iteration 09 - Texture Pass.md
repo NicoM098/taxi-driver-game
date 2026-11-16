@@ -44,7 +44,7 @@ non-CC0 asset. Re-testing Iteration 08 (still open, separate).
 - [x] Texture slots documented so the user only has to drop the pack in `assets/textures/`
 - [x] Screenshots before/after from `tests/view_shots.tscn`
 
-## Textures wired (2026-11-14, D-062)
+## Textures wired (2026-11-14, DV-062)
 Pack look in use: **A_classic** (64x64, 16 colours, ordered dither).
 
 | Material | Texture | m / tile |
@@ -71,7 +71,7 @@ Swap a texture = change the `ExtResource` path in the `.tres` **and** recompute 
 ## User test checklist
 - [x] Drive around: do the buildings look like buildings now?
 - [ ] Do the lit windows look random, or is the pattern obvious/repetitive?
-- [x] **After D-063: does the road still stretch / swim in motion?**
+- [x] **After DV-063: does the road still stretch / swim in motion?**
 - [x] Textures while driving: does anything shimmer, moire or tile visibly?
 - [x] Is the brick / concrete scale believable next to the car?
 - [ ] Is the city too dark, too bright, or right?
@@ -82,15 +82,15 @@ Swap a texture = change the `ExtResource` path in the `.tres` **and** recompute 
 ## Feedback from user
 - **2026-11-14, first playtest of the textures:** "Muy bueno pero hay como un efecto psicodelico con
   las texturas que no se que es. Se nota sobre todo con las calles, es como que se 'estiran' y se
-  mueven." → affine mapping, finally visible now that there are textures. Fixed in D-063 (road
+  mueven." → affine mapping, finally visible now that there are textures. Fixed in DV-063 (road
   tessellated, affine dialled down on ground surfaces, isotropic road texture).
-- **2026-11-14, re-test after D-063: "me gusta!"** — approved. The user asked for the trade-off to be
+- **2026-11-14, re-test after DV-063: "me gusta!"** — approved. The user asked for the trade-off to be
   written down for later: [[Art Direction]] > "Tuning the PS1 look" now lists every dial
   (global affine / snap, per-material `affine_multiplier`, `snap_multiplier`, `world_uv_metres`,
   the window parameters) and what to reach for when a specific complaint comes up.
 
 ## Discovered / Deferred
-- The pack has no window/facade textures at all — covered by generating them (D-061) instead of buying
+- The pack has no window/facade textures at all — covered by generating them (DV-061) instead of buying
   the $1 urban pack, per the user's CC0-only call.
 - Lighting and the night palette are the obvious next multiplier now that lit windows emit: the city
   is still lit as flat daytime. Deferred to its own iteration.
@@ -102,11 +102,11 @@ Swap a texture = change the `ExtResource` path in the `.tres` **and** recompute 
 
 ## Result summary
 The city reads as a city. Built: world-space UVs so a tiling texture keeps its real size on
-generated boxes of any dimension (D-061); procedural facade windows with randomly lit ones that
-drive `EMISSION` (D-061); the CC0 A_classic pack wired onto 10 materials with each flat colour
+generated boxes of any dimension (DV-061); procedural facade windows with randomly lit ones that
+drive `EMISSION` (DV-061); the CC0 A_classic pack wired onto 10 materials with each flat colour
 rebalanced against its texture's mean so the palette survived, and all 90 imports forced to
-lossless / no mipmaps / no 3D auto-compression (D-062); and the affine warping that this exposed
-dialled down on ground surfaces (D-063), which the user approved in play.
+lossless / no mipmaps / no 3D auto-compression (DV-062); and the affine warping that this exposed
+dialled down on ground surfaces (DV-063), which the user approved in play.
 
 Still open, by choice: lighting and the night palette (the lit windows already emit, so the city is
 still lit as flat daytime — the obvious next multiplier); 80 of the 90 textures unused; no

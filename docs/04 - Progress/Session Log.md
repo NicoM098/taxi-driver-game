@@ -374,3 +374,244 @@ Format:
 **Tested:** tutorial, map PASS; editor switch: the new cash / guns check passes (cash $0, revolver only after P) but the run FAILED on its mouse-click steps both times — the user was using the PC (they saved `TEST1` at 01:37 with three new 1x1 gun shops while the test ran). The test never wrote `test1.json` (no test pillar in it).
 **Problems / notes:** don't run windowed tests while the user is working. The user's gun shops are 1x1 (tiny store, still works; 3x3+ looks right).
 **Next session should:** as before — playtest of the build (Iterations 08-10).
+
+
+<!-- Sessions below were logged on Nico's branch in parallel (same session numbers, different machine). Merged 2026-11-15; his decision ids renamed D-06x -> DV-06x. -->
+
+## 2026-11-14 — Session 13 (Nico, branch `feat/visuals-and-audio`) — Claude tooling, doc paths, and the start of the texture pass
+**Iteration:** [[Iteration 09 - Texture Pass]] (new) · **Phases touched:** 00 (art pipeline)
+**Goal:** user: set up the best AI tooling first; then "Vamos por texturas primero" / "Solo CC0".
+**Done:**
+- **Tooling research.** No official Godot MCP exists (neither Anthropic nor the Godot Foundation);
+  every one is community-made. Checked the main ones against the GitHub API: Coding-Solo/godot-mcp
+  (6.6k stars but last push 2026-04-16, 75 open issues), tugcantopaloglu (512, active, MIT),
+  3ddelano/gdai (no license file), mkdevkit (4 commits), NPGameDev (15 stars). **Verdict: no MCP for
+  now** — the headless autotests already cover running the game and reading errors, and an MCP would
+  mean a third-party addon inside `res://` (CLAUDE.md §4). Installed instead the skills plugin
+  `godot@awesome-gamedev-agent-skills` (Apache-2.0, 8.8k stars, 16 Godot skills, knowledge only, no
+  addon in the project).
+- **Doc paths fixed.** Created the missing root `CLAUDE.md` (it was referenced but did not exist, so
+  the vault rules were never auto-loaded). Replaced the `C:\Users\DLain\...` paths and the
+  `Crazytaxi/` vault name in `docs/CLAUDE.md` and `docs/Getting Started.md` with this machine's; the
+  14 `<console exe>` commands are now `<godot exe>` (**there is no `_console.exe` build installed and
+  it is not needed — the normal exe prints to stdout from the shell, verified**). §6 "no version
+  control" updated: the project is a git repo on `main` now.
+- **Texture pack chosen** (user: CC0 only): PSX Textures Vol. 1 by Francisco Cidade, CC0, 90 seamless
+  textures x 5 looks, already 32-128 px and 16-32 colours with dither. **Not downloaded yet — the
+  user has to do that** (itch.io). `assets/textures/README.md` has the drop-in instructions,
+  the material-to-family mapping and the import settings.
+- **DV-061 implemented:** `ps1_world.gdshader` rewritten — single `base_uv` so affine mapping works
+  for any UV source, `uv_mode` 1 = world-space planar UVs, and a procedural facade window grid with
+  randomly lit windows driving `EMISSION`. 13 materials patched (3 buildings with windows + varied
+  grids, 10 surfaces moved to world UVs, ready for the pack).
+**Files changed:** `src/core/shaders/ps1_world.gdshader` (rewritten, 150 lines);
+`assets/materials/{building_a,building_b,building_c,road,sidewalk,ground,wall,container_blue,container_green,container_red,prop,ramp,lane_marking}.tres`;
+new `assets/textures/README.md`, new `CLAUDE.md` (root), new
+`docs/05 - Iterations/Iteration 09 - Texture Pass.md`; `docs/CLAUDE.md`, `docs/Getting Started.md`.
+No backup folder this time: everything is committed in git (DV-061 is the first change to rely on it).
+**Tested:** import clean. map, ride, hostiles, enemy, enemy-city, weapon, dossier, pickup, curb, jump
+and the 9 vehicle scenarios PASS; `check_profiles` OK (11 files). Before/after/tuned screenshots from
+`tests/view_shots.tscn` — the city now reads as a city: window grids on every facade, some lit.
+NOT tested by a human: everything above in play.
+**Problems / notes:** `events_autotest` **failed once and then passed 9 times in a row** with no
+change in between — logged as KI-026. A shader/material change cannot affect headless gameplay
+logic, so this looks like pre-existing flakiness, not a regression; worth watching.
+First tuning pass was needed: the initial 3.0-3.4 m cells with a 4.5-6 m ground floor gave short
+buildings a single clipped row of windows that read as a black stripe, and pure-dark glass made
+facades look punched through. Cells are smaller now and unlit glass only replaces 72 % of the wall.
+**Next session should:** 1) get the user's eye on the windows (size, density, how many lit);
+2) the user drops the CC0 pack in `assets/textures/` → wire the textures material by material;
+3) still pending from before: the Iteration 08 re-test (7 points) and closing it.
+
+### Session 13 (cont.) — the pack is in
+The user downloaded **A_classic** and copied it to `assets/textures/A_classic/` (90 PNGs, 64x64,
+9 families). Wired that same session:
+- **Import settings fixed before first use:** all 90 `.import` files now have
+  `detect_3d/compress_to=0`. Godot's default is 1, which silently re-imports a texture as
+  VRAM-compressed **with mipmaps** the first time it is used in 3D — that would have smeared the
+  pack's ordered dither into mush. `mipmaps/generate=false` and `compress/mode=0` (lossless) kept.
+- **Albedo rebalanced, not replaced (DV-062).** The shader does `albedo * texture`, so pasting a
+  texture whose mean is 0.25 onto a material would have darkened the whole city. Each textured
+  material's flat colour is now divided by its texture's mean RGB (clamped at 1.6), so the average
+  surface brightness stays exactly where the blockout had it and the texture only adds grain. The
+  palette from [[Art Direction]] survives.
+- **10 materials textured:** `road` Concrete042A 6 m, `ground` Concrete031 8 m, `sidewalk`
+  Concrete034 2 m, `wall` Concrete034 2.5 m, `building_a` Bricks074, `building_b` Plaster003,
+  `building_c` Plaster001 (all 2.5 m), `container_blue/green/red` Metal032 2 m.
+- **Three corrections after looking at the screenshots:** PaintedPlaster010 read as camouflage
+  blobs on the facades (-> Plaster001); Concrete030's vertical streaks read as marble on `wall`
+  (-> Concrete034); buildings at 4 m per tile made every brick ~50 cm wide (-> 2.5 m).
+  `prop` and `ramp` were textured and reverted to flat colour: a metal texture turned the repair
+  shop into speckled noise, and a ramp has to read as a ramp at speed ([[Art Direction]]: texture
+  only where it helps readability).
+**Tested:** import clean; map, ride, hostiles, enemy, enemy-city, weapon, dossier, pickup, curb,
+jump PASS. **`events_autotest` failed a second time** (KI-026) and then passed 10 runs in a row,
+including 2 forced right after a re-import to test a "first run after import" hypothesis — not
+reproduced, not diagnosed. NOT tested by a human.
+**Next session should:** 1) the user's eye on the textures in motion (tiling, scale, shimmer) and on
+the windows; 2) lighting + night palette is the obvious next multiplier (lit windows already emit);
+3) still pending: the Iteration 08 re-test (7 points) and closing it.
+
+### Session 13 (cont. 2) — first playtest of the textures: the road was swimming
+**User:** *"hay como un efecto psicodelico con las texturas... se nota sobre todo con las calles, es
+como que se estiran y se mueven"*, with a screenshot of smeared road.
+**Diagnosis:** affine texture mapping (D-010), visible for the first time. It has been at full
+strength since Phase 00, but a flat colour has no detail to warp — Iteration 09 gave it something
+to warp. Worst case by construction: the road is the largest surface and is always seen at a
+grazing angle, and the four ground strips had no subdivision at all.
+**Done (DV-063):** road tessellated 12 m -> 6 m quads; ground strips subdivided at 12 m;
+`affine_multiplier` 0.25 on `road` / `ground`, 0.5 on `sidewalk`, 1.0 everywhere else;
+road texture `Concrete042A` -> `Gravel023` at 3 m (its vertical streaks were being stretched into
+long smears — isotropic grain gives the eye nothing to track). Albedo rebalanced (DV-062).
+**Files changed:** `src/world/city.gd` (road + ground subdivision), `assets/materials/{road,ground,sidewalk}.tres`.
+**Tested:** import clean; map, ride, curb, jump, hostiles, enemy-city, events, enemy, weapon,
+dossier, pickup PASS (this time with stdout captured to files per KI-026 — no FAIL lines).
+**NOT tested:** in motion, which is the only place the artefact exists. That re-test is the next thing.
+**Note:** the road went from ~2.2k to ~8.7k triangles on a 400 x 400 m map — irrelevant.
+
+### Session 13 (cont. 3) — DV-063 approved, dials documented
+User re-tested the road after DV-063: **"me gusta!"**, and asked for the decision to be left written
+down in case it needs adjusting again. Added [[Art Direction]] > **"Tuning the PS1 look"**: the
+three global settings, the four per-material parameters, the window parameters, and a
+"if someone complains about X, reach for Y" list (swimming road → `affine_multiplier`, then
+tessellation, then whether the texture has a direction; wobble → `snap_multiplier`; too dark →
+`albedo`, never the texture). DV-063 marked confirmed in play. Iteration 09 acceptance list ticked
+and the note marked **ready to close**; its Result summary is written.
+**Next session should:** 1) close Iteration 09; 2) **the Iteration 08 re-test is now the oldest open
+item (7 of 10 points, since 2026-11-13)** — editor, user map, stairs / plazas / ramps, wreck →
+limp → repair; 3) then lighting + night palette, which is the next big visual multiplier now that
+lit windows already emit.
+
+
+## 2026-11-14 — Session 14 (Nico, branch `feat/visuals-and-audio`) — Iteration 10: lights and night
+**Iteration:** [[Iteration 10 - Lights & Night]] (new) · **Phases touched:** 11 (the lighting half of juice)
+**Goal:** user: "Luces y noche", chosen over the Iteration 08 re-test.
+**Done (DV-064):**
+- **`src/world/lighting.gd`** (new): day / dusk / night moods — sky, ambient, sun, fog, lamp energy,
+  window emission. **Dusk is the default**, as [[Art Direction]] specified back in Phase 00.
+  `Blockout.add_environment()` now takes a mood and returns `{env, sun}`; `City.set_mood()` applies
+  one live; **F6** cycles in play (new action `debug_cycle_mood` in `tools/setup_project.gd`).
+- **Street lamps**: `City._build_street_lamps()` puts one on every kerb cell every 4 cells (32 m),
+  capped at 420 — 311 on the starter city. Two MultiMeshes + shadowless omni lights, **no collision**.
+- **Taxi headlights** in `taxi.gd`, always on, plus emissive lenses and `assets/materials/headlight.tres`.
+- **`ps1_world.gdshader` lit per pixel** (`vertex_lighting` dropped): with 6 m road quads (DV-063) a
+  vertex-lit lamp pool would be a faceted blob.
+- Dusk and night lifted after the first screenshots — the first pass was atmospheric and unplayable.
+**The headlight dead end, written down because it looked like a bug:** at energy 3.2 the headlights
+lit nothing, and at 20 still nothing. Isolated it with a temporary green omni probe on the taxi —
+the road lit up fine, so the surface receives light and spots were not broken. The cause is geometry:
+a headlight 0.6 m above a flat road grazes it (`N·L ≈ sin(4°) ≈ 0.07`) against an albedo of ~0.17,
+and aiming it steeply down instead buries the pool under the car's own bodywork. Settled at y +0.35,
+-6°, energy 45, which lands the pool 5-25 m ahead and catches the kerbs.
+**Files changed:** new `src/world/lighting.gd`, `assets/materials/{lamp_post,lamp_head,headlight}.tres`,
+`docs/05 - Iterations/Iteration 10 - Lights & Night.md`; edited `src/world/{blockout,city}.gd`,
+`src/vehicle/taxi.gd`, `src/main/main.gd`, `src/core/shaders/ps1_world.gdshader`,
+`tools/setup_project.gd` + `project.godot` (the F6 action).
+**Tested:** import clean; **the 9 vehicle scenarios** (taxi.gd changed), map, ride, events, hostiles,
+enemy, enemy-city, weapon, dossier, pickup, curb, jump PASS; `check_profiles` OK (11 files). Output
+captured to files per KI-026 — no FAIL lines anywhere, `events_autotest` included.
+**Performance:** 165 FPS / 6.06 ms with 311 lamps — pinned to this machine's vsync cap (RTX 4070 Ti
+SUPER). No shadows anywhere. One GPU is not a floor.
+**NOT tested by a human:** all of it. The mood has to be chosen by playing (F6).
+**Next session should:** 1) the user picks the mood and says whether it is drivable; 2) close
+Iteration 10 and then 09; 3) **the Iteration 08 re-test is now two sessions old** (7 of 10 points).
+
+### Session 14 (cont.) — the user played all three moods
+**Feedback:** *"Muy bueno! Y lo ideal sería tener variedad. Probe todas y se ven y sienten bien."*
+All three moods stay. Two things came out of it:
+1. **Bug (fixed, DV-065):** in daylight the street lamps' glass, the lit windows and the taxi's
+   headlights all kept burning. DV-064 had only switched off the lamps' omni lights. Added
+   `EventBus.mood_changed`, three per-mood values in `Lighting` (`lamp_glow`, `window_lit`,
+   `headlights_on()`), a `window_lit_amount` shader uniform and an unlit headlight-lens material.
+   Verified headless by forcing each mood: `headlights OFF` at day, `ON` at dusk.
+2. **Request (deferred, written into [[Phase 10 - Game Flow, UI & Save]]):** choosing the time of
+   day when starting a game, from the main menu. F6 stays as the development key. Not built — the
+   menu does not exist yet, and the moods are already data, so it will be one menu option.
+**Tested:** import clean; map, ride, events, hostiles, enemy, enemy-city, weapon, dossier, pickup,
+curb, jump, vehicle PASS, output captured to files (KI-026), no FAIL lines.
+**Next session should:** 1) close Iterations 10 and 09; 2) **the Iteration 08 re-test**, now the
+oldest open item by two sessions.
+
+
+## 2026-11-14 — Session 15 (Nico, branch `feat/visuals-and-audio`) — Iteration 11: audio
+**Iteration:** [[Iteration 11 - Audio]] (new) · **Phases touched:** 11 (the audio half)
+**Goal:** user: "Audio", with Iteration 08 out being playtested by a friend — so nothing was
+touched in the editor, the piece kit, map data or the wreck → repair loop.
+**Done (DV-066):**
+- **Closed Iterations 09 and 10** first, both approved in play.
+- **`tools/gen_sfx.py`**: generates all 21 sounds into `assets/audio/` (22050 Hz mono 16-bit,
+  numpy, fixed seed). Loops are seamless by construction — whole numbers of cycles, and noise built
+  by random-phasing a shaped spectrum, which is periodic by definition (measured wrap discontinuity
+  0.003-0.006 on the engine layers). Chosen over sampling because **no clean CC0 car-engine loop
+  exists**: Kenney has no vehicle audio, and the Freesound CC0 candidates are a truck idle, a
+  sci-fi hover vehicle and a 1:48 Mini recording with no loop point.
+- **`src/autoload/audio.gd`**: six buses (created idempotently in code, not a `.tres`), pooled
+  one-shot players flat (10) and positional (16), `make_loop()` for continuous sources, volume API,
+  and **it connects to the EventBus itself** — 14 sounds wired without a single gameplay script
+  learning about audio. Silent whenever `DisplayServer` is headless.
+- **Taxi engine**: three loops crossfaded by a lagging `_revs` and pitched 0.72-1.65, lifted by the
+  throttle at a standstill, pushed by boost, held low and flat by `limp`. Tyre screech driven by the
+  `rear_slip_signed` the drift logic already computed.
+- **Two new EventBus signals**, `weapon_reloading` and `weapon_empty`, emitted by
+  `weapon_controller.gd` — the only gameplay file touched, and only to announce what it already did.
+**Files changed:** new `tools/gen_sfx.py`, `src/autoload/audio.gd`, `assets/audio/` (21 wav + imports),
+`docs/05 - Iterations/Iteration 11 - Audio.md`; edited `src/autoload/event_bus.gd`,
+`src/combat/weapon_controller.gd`, `src/vehicle/taxi.gd`, `tools/setup_project.gd` + `project.godot`
+(the `Audio` autoload), `docs/03 - Architecture/Architecture.md`, Phase 11.
+**Tested:** import clean; map, ride, events, hostiles, enemy, enemy-city, weapon, dossier, pickup,
+curb, jump, vehicle PASS; `check_profiles` OK. Cross-checked every generated file against the names
+referenced in code (that is how `reload` and `empty_click` were found unwired). Windowed run: all
+four loops report `playing = true`, no warnings, no missing sounds.
+**NOT verified: how it sounds.** Loop continuity, levels, name resolution and playback are objective
+and were checked. Pleasant / too loud / grating is the user's call.
+**Next session should:** 1) the user listens and says what is wrong; 2) the friend's Iteration 08
+feedback when it arrives; 3) deferred from here: music and radio, reverb, enemy engines, volume UI.
+
+### Session 15 (cont.) — the car was the one thing with no sound
+**User:** everything worked except the taxi itself (no engine, no tyres) and the NPC cars.
+**Bug (DV-067):** the loops played once and stopped. Diagnosed by printing player state once a
+second in a windowed run — `playing=false`, `loop=0`, volume and bus fine. Godot's `edit/loop_mode`
+was written into the `.import` files after the bank had already been imported, and `--import`
+reused the cached `.sample`. **My earlier verification was worthless**: it printed `playing = true`
+in the same frame as `play()`, which a one-shot also does. Looping is now forced on the resource in
+`Audio._force_loop()`, where regenerating the bank cannot lose it.
+**Gap (DV-067):** enemy cars never had an engine — scoped out of Iteration 11, but the user expected
+it. New `Audio.make_loop_3d()`, one positional layer per car pitched by speed, 80 m, -14 dB,
+silenced on death. Also lifted the taxi's idle (-9 → -6 dB, floor 0.35 → 0.45).
+**Files changed:** `src/autoload/audio.gd`, `src/vehicle/taxi.gd`, `src/enemies/enemy_car.gd`.
+**Tested:** import clean; the 12 autotests PASS; windowed: the taxi's four loops still playing
+seconds later with `loop=1`, enemy cars starting their own.
+**Next session should:** 1) the user's second listen; 2) the friend's Iteration 08 feedback.
+
+### Session 15 (cont. 2) — the engine gets a gearbox
+**User, second listen:** engine too shrill at high revs; a constant tone with no gear changes is
+unrealistic and annoying; sliding and braking do not sound like rubber on a road.
+**Done (DV-068):**
+- **Five-speed gearbox** (18 / 37 / 58 / 84 / 119 km/h), revs running up inside a gear and dropping
+  on the shift, 0.16 s throttle-cut dip, hysteresis against flutter.
+- **Pitch from revs, timbre from road speed** — so shifting does not reset the engine to an idle note.
+- **Less shrill:** pitch range 0.72-1.65 → 0.80-1.24, and the samples regenerated lower with fewer
+  partials (fundamentals 42/78/132 → 38/64/96 Hz, harmonics 14/18/22 → 12/14/15).
+- **Screech rebuilt**: four resonances (690/1180/1760/2550 Hz) each wobbling at its own rate over
+  broadband scrub and contact rumble, instead of one band of noise with a warble.
+- **Braking now screeches at all** — it was driven only by lateral slip, so straight-line stops were
+  silent. Pitched 0.76 for locked wheels against 0.84-1.16 for a drift.
+**Verified in a windowed drive:** upshifts at 18/37/58/84 km/h (revs 0.82-0.98), downshifts at
+81/55/33/14 km/h (revs 0.04-0.13), and both tyre modes firing with the expected pitches.
+**Tested:** import clean; the 9 vehicle scenarios + map, ride, events, hostiles, enemy, enemy-city,
+weapon, dossier, pickup, curb, jump PASS.
+**Next session should:** the user's third listen; then the friend's Iteration 08 feedback.
+
+## 2026-11-15 — Session 16 — Branches, playtest merge, heat / fares / game over (Iteration 12)
+**Iteration:** [[Iteration 12 - Heat, Fares & Game Over]] (new) · **Phases touched:** 03, 05, 06, 07, 10, 11
+**Goal:** read the project, put the uncommitted Iterations 09-10 work on a branch, try Nico's branch, merge both for a friend's playtest, then a batch of user requests (heat, ammo, music + options, procedural passengers, drop-offs, destructible traffic, hostile markers, death).
+**Done:**
+- Git: `feature/iterations-09-10` created, Iterations 09-10 committed (`ac1b810`). Fetched Nico's `feat/visuals-and-audio` (one commit `5789037`: textures, lights, audio). Throw-away `temp/playtest-merge` with both (D-069, `aa8be56`); Iteration 12 committed on it (`8e36cf3`). Push refused: 403 (KI-033).
+- Answered license questions: Sonniss GDC bundle (commercial OK, no attribution, no redistribution of raw files — careful in a public repo) and CC0 (fully free).
+- D-070 heat + price on your head; D-071 music + OPTIONS; D-072 ammo; D-073 procedural passengers; D-074 curbside drop-offs; D-075 destructible traffic + civilian crimes; D-076 hostile marker; D-077 death = game over. Difficulty pulled back "in between" after the user found the first pass really hard.
+- Docs: Nico's dropped notes restored (DV-061…DV-068), this entry, [[Status]], [[Known Issues]], new iteration note.
+- Builds: 0.10.0 (yours only), then 0.10.1 … 0.10.5 full; 0.10.5 also as `build/TaxiDriver-0.10.5-windows.7z` (28.7 MB; the zip was 42.6 MB, over the 30 MB upload limit) sent to the user for a friend.
+**Files changed:** `src/enemies/{enemy_director,enemy_car,hostile_marker}.gd`, `src/autoload/{audio,event_bus}.gd`, `src/main/main.gd`, `src/ui/menu/{main_menu,options_menu}.gd`, `src/ui/hud/hud.gd`, `src/passengers/{passenger_generator,passenger_spawner}.gd`, `src/ride/ride_manager.gd`, `src/world/{city,taxi_stop,traffic_car}.gd`, `src/vehicle/taxi_damage.gd`, `data/weapons/*.tres`, `assets/audio/Model & HLS - H Funck.mp3`, tests `heat_passengers_autotest` (new), `ride`, `weapon`, `shop`, `map`. User map `test1.json` committed as-is in `ac1b810`, never edited.
+**Tested:** all 16 autotests PASS on the final code (new `heat_passengers` A-H); `hostiles` flaky ~1/5 — also on a clean worktree of the merge (1/8), KI-032; `enemy_city` flaky as before (KI-029); `weapon` failed once on shotgun pellets, then 4/4. Screenshots: hostile marker vs civilian, game-over screen. Build smoke-tested on `TEST1`. The user played 0.10.4 (reported the wreck bug → fixed). NOT tested by a human: music, options, generated passengers, curbside stops, bounty waves, final difficulty.
+**Problems / notes:** both branches numbered decisions D-061…D-068 and iterations 09-11 independently — reconciled in docs only (KI-033). The song is a third-party track; the user chose to push it to a public repo (KI-034). Script export mode 2 hides strings in the exe, so build contents can't be grepped.
+**Next session should:** 1) get the playtest of 0.10.5 (user + friend + Nico) against the Iteration 12 checklist; 2) sort out repo access with Nico and push; 3) decide whether `temp/playtest-merge` becomes the integration branch.

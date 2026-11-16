@@ -410,3 +410,302 @@ Export command: `<console exe> --headless --path <project> --export-release "Win
 **Context:** user: "I THINK THE MONEY IS SAVING even when you start a new run". Nothing is saved to disk (`SaveManager` is never called); the cause was the map editor's PLAY (also reached by M in the game → editor → P, and main menu → MAP EDITOR → PLAY): it loaded `main.tscn` without `GameState.reset_run()`, so cash, bought guns and heat carried into a freshly built world.
 **Decision:** the editor's PLAY calls `GameState.reset_run()` (and turns the tutorial off), like PLAY in the main menu. A wreck is still NOT a new run (limp to a repair shop, D-056). `tests/editor_switch_autotest` checks cash $0 / revolver only after P.
 **Status:** accepted (check passes in the windowed test; that test's mouse-click steps failed while the user was using the PC)
+
+---
+
+# Decisions from Nico's branch `feat/visuals-and-audio` (texture pass, lights, audio)
+> Both branches started numbering at D-061 on the same day, so the two sets clash. In this merged
+> log Nico's are renamed **DV-061 … DV-068** (V = visuals/audio); text copied unchanged otherwise.
+> The menu / gun-shop / street-life decisions above keep D-061 … D-068. New decisions continue at D-069.
+
+## DV-061 — World-space UVs for generated surfaces, and procedural facade windows (2026-11-14)
+**Context:** Iteration 09. The city is built from primitives of wildly different sizes
+(`map_builder.gd`: `tower`, `stepped`, `l_shape`, `round`, plus roads, sidewalks and containers).
+Two problems blocked the texture pass: (1) a tiling texture on `BoxMesh` UVs is stretched by the
+box's dimensions, so the same brick would be a different size on every building; (2) the chosen CC0
+pack ([PSX Textures Vol. 1](https://fcidade.itch.io/psx-textures-vol-1), user's pick, CC0 only) has
+no window or facade textures, and windows are what makes a block of boxes read as a city.
+**Decision:**
+- `ps1_world.gdshader` gets `uv_mode` (0 = mesh UVs as before, 1 = **world-space planar UVs**,
+  projection axis chosen from the dominant normal) and `world_uv_metres` (metres per tile). The
+  city surface materials are on mode 1: `road` 8 m, `ground` 8 m, `lane_marking` 4 m, `sidewalk` 2 m,
+  `wall` 4 m, `building_a/b/c` 4 m, containers / `prop` / `ramp` 2 m. Everything else (taxi,
+  interior, viewmodel, FX, markers) stays on mode 0 — those are hand-sized meshes with real UVs.
+- UV selection moved into the vertex stage as a single `base_uv`, so **affine mapping works for both
+  modes** (the affine trick needs the UV multiplied by `clip.w` before interpolation).
+- **Facade windows are generated, not textured:** on vertical faces only, a world-space grid
+  (`window_cell` metres between centres, `window_fill` fraction of glass, `window_ground_floor`
+  metres of blank wall at street level). A hash of the cell id decides lit vs unlit
+  (`window_lit_chance`), lit ones drive `EMISSION` (`window_lit_emission`), and the two parallel
+  faces of one building are decorrelated by the depth coordinate. Unlit glass only replaces
+  `window_dark_mix` (0.72) of the wall colour so facades keep their hue instead of reading as black
+  holes. Windows fade back into the wall between 45 m and 85 m, because a ~1 m grid at 320x240 turns
+  into moire long before it is readable; the fog finishes the job.
+- Per-material variety so three materials do not read as one repeated facade: `building_a`
+  2.6 x 2.8 m cells / 30 % lit, `building_b` 2.2 x 2.6 m / 22 %, `building_c` 3.0 x 3.2 m / 38 %.
+**Alternative rejected:** buying [PSX Urban City Textures](https://russelldoss.itch.io/psx-urban-city-textures)
+($1) for its window tiles — the user asked for CC0 only, and a fixed window texture would have to be
+UV-scaled per building anyway, which is the problem DV-061 exists to avoid.
+**Status:** accepted (auto-verified: map, ride, hostiles, events, enemy, enemy-city, weapon, dossier,
+pickup, curb, jump and the 9 vehicle scenarios PASS; `check_profiles` OK; before/after screenshots
+from `tests/view_shots.tscn`) — needs the user's eye on window size, density and lit frequency.
+
+## DV-062 — Textures multiply a rebalanced flat colour, and import must not auto-compress (2026-11-14)
+**Context:** Iteration 09, with the CC0 pack (A_classic, 90 x 64x64) in `assets/textures/`.
+`ps1_world.gdshader` computes `ALBEDO = albedo * texture(...)`, and the pack's textures average
+around 0.25-0.45 luminance, so assigning one to a material would have multiplied the whole city
+down to a fraction of its designed brightness and thrown away the palette.
+**Decision:**
+- **Rebalance, don't replace:** a textured material's `albedo` is its old blockout colour divided
+  by the texture's mean RGB (clamped at 1.6). The surface keeps the average brightness the palette
+  called for, and the texture contributes grain and pattern only. Recomputed whenever a texture is
+  swapped. (`road` 0.17,0.17,0.19 -> 0.65,0.70,0.84 over Concrete042A, etc.)
+- **Tile sizes** (`world_uv_metres`): buildings and `wall` 2.5 m, `sidewalk` and containers 2 m,
+  `road` 6 m, `ground` 8 m. Buildings started at 4 m, which made each brick ~50 cm wide.
+- **Import:** every PNG gets `detect_3d/compress_to=0` plus `mipmaps/generate=false` and
+  `compress/mode=0`. Godot's default `detect_3d/compress_to=1` silently re-imports a texture as
+  VRAM-compressed with mipmaps the first time it is used in 3D, which destroys the ordered dither
+  the whole look depends on. This must be redone for any texture added later.
+- **Not everything gets a texture:** `prop`, `ramp` and `lane_marking` stay flat colour. They are
+  gameplay-readable elements (a ramp has to read as a ramp at speed) and a metal texture turned the
+  repair shop into speckled noise. [[Art Direction]]: texture only where it helps readability.
+- **Texture choices are reviewed on screen, not by name:** PaintedPlaster010 read as camouflage on
+  facades and Concrete030 as marble streaks on walls; both were swapped after looking at the
+  view-shot screenshots.
+**Status:** accepted (auto-verified: import clean; map, ride, hostiles, enemy, enemy-city, weapon,
+dossier, pickup, curb, jump PASS; `events_autotest` see KI-026) — needs the user's eye in motion.
+
+## DV-063 — Affine warping is dialled down on ground surfaces (2026-11-14)
+**Context:** user, after the first playtest of the textured city: *"hay como un efecto psicodelico con
+las texturas... se nota sobre todo con las calles, es como que se estiran y se mueven"*. This is
+**affine texture mapping** (D-010, `ps1_affine_strength` = 1.0) finally becoming visible: it was in
+the pipeline from the start but a flat colour has no detail to warp, so nothing showed until
+Iteration 09 put textures on. The error it produces grows with the on-screen size of a polygon and
+with how obliquely it is seen — and the road is both the biggest quad in the game and the one
+always seen edge-on from the driver's seat. The ground strips around the city were worse still:
+single quads hundreds of metres across, with no subdivision at all.
+**Decision:**
+- **Tessellation:** the road plane goes from ~12 m to ~6 m quads, and the four ground strips get
+  ~12 m subdivision (they had none). Affine error per quad falls with quad size. Cost: the road
+  goes from ~2.2k to ~8.7k triangles on a 400 x 400 m map — nothing.
+- **Per-material affine:** `affine_multiplier` 0.25 on `road` and `ground`, 0.5 on `sidewalk`.
+  Walls, buildings and props keep the full 1.0: vertical faces are seen closer to head-on, and
+  that is where the warp reads as charm instead of nausea. The global `ps1_affine_strength` stays
+  at 1.0 so F1 still toggles the whole look.
+- **Road texture swapped** `Concrete042A` -> `ground-street/Gravel023` at 3 m per tile (was 6 m).
+  The concrete's own vertical streaks were being stretched into metre-long smears and were making
+  the swimming far more visible than the warp alone; gravel is isotropic fine grain, so there is no
+  direction for the eye to track. Albedo rebalanced per DV-062 (0.31, 0.32, 0.38).
+**Not done:** dropping road affine to 0. Some warp is the look; 0.25 keeps a trace of it. If it
+still swims in motion, `road`/`ground` to 0.0 is the next step and costs nothing.
+**Status:** **accepted and confirmed in play by the user (2026-11-14: "me gusta")**. Auto-verified:
+import clean; map, ride, curb, jump, hostiles, enemy-city, events, enemy, weapon, dossier, pickup
+PASS. The dials are written up in [[Art Direction]] > "Tuning the PS1 look" so the balance between
+authentic artefact and comfort can be moved again later without re-deriving any of this.
+
+## DV-064 — Time-of-day moods, street lamps, headlights, per-pixel lighting (2026-11-14)
+**Context:** Iteration 10. The city was lit as flat midday (one directional light at 1.1, ambient
+0.7, pale sky, fog 70-220) while [[Art Direction]] had specified a *"dusky city, blue/purple
+shadows, sodium-orange street lights"* since Phase 00, and the lit facade windows from DV-061 were
+driving `EMISSION` into a scene too bright for it to mean anything.
+**Decision:**
+- **`Lighting` (`src/world/lighting.gd`)** holds three moods — **day / dusk / night** — each a sky
+  colour, ambient colour + energy, sun colour / energy / angle, fog colour + range, lamp energy and
+  a window-emission multiplier. **Dusk is the default**, as the design asked. `Blockout.add_environment()`
+  takes a mood and returns `{env, sun}`; `City.set_mood()` re-applies it live, and **F6** cycles in
+  play (F5 is "run project", F9 / F10 are the embedded game view's suspend / next frame).
+- **Street lamps** generated in `City._build_street_lamps()`: on any drivable cell that touches
+  something built, every 4 cells along that kerb (8 m cells → one lamp per 32 m), capped at 420.
+  311 on the starter city. Posts and heads are one MultiMesh each; only the omni lights are nodes,
+  all shadowless. **Visual only, no collision**, like the lane dashes, so routing, driving and the
+  autotests are untouched. Sodium orange `Color(1.0, 0.72, 0.36)`, 17 m range.
+- **Headlights** on the taxi, built in code in `taxi.gd` so `taxi.tscn` stays hand-editable. Always
+  on — arcade taxi, night-ish city, and in daylight they are lost in the sun anyway.
+- **`ps1_world.gdshader` is lit per pixel** (`vertex_lighting` dropped from `render_mode`). With the
+  road tessellated at 6 m (DV-063) a vertex-lit lamp pool would be computed at four corners 6 m apart
+  and read as a faceted blob. Nothing else in the PS1 stack changed, and with only a directional
+  light the two modes were indistinguishable anyway, so this costs nothing visually.
+**Measured, not guessed — why the headlights are at energy 45:** at 3.2 they produced *nothing*
+visible on the road, which looked like a bug and is not one. A headlight sits ~0.6 m above a flat
+road, so the beam hits it at a grazing angle: aimed 4° down, lambert gives `N·L ≈ sin(4°) ≈ 0.07`,
+and against a road whose albedo is ~0.17 the result is invisible. Aiming it steeply down instead
+(-11°) puts the pool within ~4 m of the bumper, where the car's own bodywork hides it from the cab
+camera. Isolated with a temporary omni probe on the taxi, which lit the road fine and proved the
+surface receives light and the problem was the geometry of the beam. Settled at y +0.35, -6° and
+energy 45: the pool lands 5-25 m ahead where the driver can see it, and the kerbs and wall bases
+catch it, which is what actually sells headlights.
+- Dusk and night were lifted after the first screenshots (dusk ambient 0.42 → 0.62, sun 0.6 → 0.9;
+  night ambient 0.26 → 0.34): the first pass was atmospheric and unplayable.
+**Performance:** 165 FPS (6.06 ms) on the starter city with 311 lamps, i.e. pinned to this machine's
+vsync cap on an RTX 4070 Ti SUPER. No shadows anywhere, so the lamps are nearly free — but that is
+one high-end GPU, not a measurement of the floor.
+**Status:** accepted (auto-verified: import clean; the 9 vehicle scenarios, map, ride, events,
+hostiles, enemy, enemy-city, weapon, dossier, pickup, curb, jump PASS; `check_profiles` OK) —
+**needs the user to pick the mood in play (F6) and to say whether it is drivable.**
+
+## DV-065 — Everything that emits light follows the time of day (2026-11-14)
+**Context:** user, after playing all three moods: *"de día las luces del auto y de la calle se
+deberian apagar (de los edificios me imagino que tambien)"*. Right on all three. DV-064 only killed
+the street lamps' **omni lights** in daylight; three other things kept glowing at midday — the
+lamp glass's own `emission_strength`, the lit facade windows from DV-061, and the taxi's headlights,
+which had no way of hearing about the mood at all.
+**Decision:**
+- **`EventBus.mood_changed(mood: int)`**, emitted by `City.set_mood()`. Anything that owns lights
+  listens there instead of polling the city — the architecture rule for this project. The taxi
+  connects to it and also asks the city once on `_ready()`, because a taxi can be built before or
+  after the city (and the test worlds have no city at all, where the headlights stay on).
+- **Three new per-mood values in `Lighting`:** `lamp_glow` (the lamp glass's emission, separate
+  from the light it casts — a switched-off lamp that still glows looks broken), `window_lit`
+  (0 = nobody has a light on) and `headlights_on()`.
+- **New shader uniform `window_lit_amount`**: at 0 a "lit" window falls back to exactly the unlit
+  look, colour and wall-blend included, so daylight facades have no bright squares. The random
+  pattern is untouched, so the same windows light up again at dusk.
+- **Headlight lenses get a second material** (`headlight_off.tres`, no emission): the spot going
+  invisible is not enough, the glass has to stop glowing too.
+**Verified:** headless, `ride_autotest` with the default forced to each mood — `headlights OFF` at
+day, `ON` at dusk. Screenshots of all three moods: day has dark windows and dark lamp heads, dusk
+and night are unchanged.
+**Status:** accepted (auto-verified: import clean; map, ride, events, hostiles, enemy, enemy-city,
+weapon, dossier, pickup, curb, jump, vehicle PASS) — the user approved the three moods themselves
+in play the same day.
+
+## DV-066 — The whole sound bank is generated, and Audio listens on the EventBus (2026-11-14)
+**Context:** Iteration 11. The game was completely silent — no `AudioStreamPlayer` anywhere, no
+sound files, no bus layout.
+**Decision 1 — generated, not sampled.** There is no clean CC0 car-engine loop to be had: Kenney
+publishes no vehicle audio at all, and the Freesound CC0 candidates are a truck idle, a sci-fi
+hover vehicle and a 1:48 contact-mic recording of a Mini with no marked loop point. So
+`tools/gen_sfx.py` (Python + numpy, fixed seed) synthesises all 21 sounds into `assets/audio/`:
+- **Seamless by construction.** Loops hold a whole number of cycles, and their noise is built by
+  giving a shaped spectrum random phases and inverse-FFT-ing it, which is periodic by definition.
+  Measured discontinuity at the wrap: 0.003-0.006 on the engine layers.
+- **CC0 by construction** — nothing is downloaded, so there is no licence to track.
+- **Reproducible**: the script is the source, the WAVs are the build. Same seed, same bank.
+- It also suits the PS1 blockout better than a real car recording would. 22050 Hz mono 16-bit.
+**Decision 2 — the engine is three loops, crossfaded and pitched.** `engine_idle` / `engine_mid` /
+`engine_high`, blended by a `_revs` value that follows speed, can be lifted by the throttle alone
+at a standstill, and lags so the note never snaps. Pitch 0.72-1.65, with boost pushing it up and
+`limp` holding it down and flat. The classic arcade approach, and the reason the samples are
+generated at exact frequencies.
+**Decision 3 — `Audio` listens on the EventBus itself.** Fourteen sounds (guns, reload, dry click,
+impacts, the wreck, explosions, kills, hit confirm, cash, pickups, the drink, dossier open / close /
+choose, taking a hit) are wired by `Audio` connecting to signals that already existed. No gameplay
+script gained a line about audio — the Architecture rule. Two signals were added where none
+existed: `weapon_reloading` and `weapon_empty`.
+**Decision 4 — silent in headless.** `Audio.enabled` is false when `DisplayServer` is headless, so
+the autotests stay quiet and fast and the taxi skips building its engine players entirely.
+**Buses** (Master, Music, SFX, Engine, UI, Voice) are created idempotently by the autoload rather
+than shipped as a `.tres`, so there is one source of truth and nothing to keep in sync. Loop flags
+are **not** in the WAVs — they live in `edit/loop_mode=1` in the four `.import` files, which must be
+re-checked if the bank is regenerated.
+**What is NOT verified: how any of it sounds.** Checked by construction and by numbers — loop
+continuity, peak and RMS per file, every name resolving to a file, all four loops reporting
+`playing = true` in a windowed run, no warnings, the suite green. Whether it is pleasant, too loud
+or grating is the user's call.
+**Status:** accepted (auto-verified: import clean; map, ride, events, hostiles, enemy, enemy-city,
+weapon, dossier, pickup, curb, jump, vehicle PASS; `check_profiles` OK) — **needs the user's ears.**
+
+## DV-067 — Looping is forced on the resource, and enemy cars have engines (2026-11-14)
+**Context:** user, after the first listen: *"creo que todos funcionan salvo el del vehiculo en si
+mismo. Como que no escucho nada, ni el motor ni el rechinado de las gomas... Al igual que el de los
+vehiculos de los NPCs"*. Two separate things, one a bug and one a gap.
+**The bug.** The engine and tyre loops played **once** and stopped. Found by printing the players'
+state once a second in a windowed run: `playing=false`, `loop=0`, volume and bus both correct
+(-18.1 dB on bus Engine). Godot's WAV importer flag `edit/loop_mode=1` had been written into the
+four `.import` files **after** the bank had already been imported, and `--import` reused the cached
+`.sample` instead of rebuilding it, so the flag never reached the resource. My earlier check was
+worthless: it printed `playing = true` immediately after `play()`, which is true for a one-shot too.
+**Decision:** `Audio` forces looping **on the resource** in `_force_loop()`, called from
+`make_loop()` / `make_loop_3d()` — `loop_mode = LOOP_FORWARD`, `loop_end` computed from the data
+size and format. It is idempotent (streams are cached) and cannot be lost by regenerating the bank,
+which removes the footgun DV-066 had to warn about. The `.import` flags stay as belt and braces.
+**The gap: enemy cars had no engine.** Out of scope in Iteration 11, but trivial once the system
+existed, and the user expected it. One positional layer (`engine_mid`) per car via the new
+`Audio.make_loop_3d()`, pitched 0.78-1.45 by speed, 80 m range, -14 dB (there can be several at
+once), silenced when the car is destroyed. You can now hear them coming and roughly from where.
+**Also:** the taxi's idle was lifted (`ENGINE_DB` -9 → -6, idle floor 0.35 → 0.45) — at -18 dB a
+stationary engine was technically audible and practically not.
+**Lesson recorded:** "the player reports `playing = true`" is not evidence that a loop loops. Check
+it a second later, not in the same frame.
+**Status:** accepted (auto-verified: import clean; the 12 autotests PASS; windowed runs show the
+taxi's four loops still playing after several seconds with `loop=1`, and enemy cars starting their
+own) — **needs the user's ears again.**
+
+## DV-068 — The engine has a gearbox, and the tyres sound like rubber (2026-11-14)
+**Context:** user, second listen: *"El sonido del motor, sobre todo a maximas revoluciones, suena
+muy agudo"*, *"al no tener el efecto de 'cambios' y ser un ruido constante, es un poco irrealista y
+molesto"*, and the slide *"no suena como un rechinado de las gomas para con la calle. Al igual que
+cuando frena"*. Three separate faults, all fair.
+**Decision 1 — a gearbox.** The revs no longer map straight from standstill to top speed. Five
+gears topping out at 15 / 31 / 49 / 71 / 101 % of top speed — **18, 37, 58, 84 and 119 km/h** — and
+the revs run up inside the current gear and drop back when it changes, with a 0.16 s throttle-cut
+dip (-7 dB) on each shift and hysteresis so a boundary cannot flutter. Verified by driving the
+vehicle autotest windowed: upshifts logged at 18 / 37 / 58 / 84 km/h with revs at 0.82-0.98, and
+downshifts on the way back down at 81 / 55 / 33 / 14 km/h with revs falling to 0.04-0.13.
+**Decision 2 — pitch and timbre are separated.** Pitch follows the revs, so it cycles per gear;
+which of the three layers you hear follows road **speed**, so the engine keeps getting fuller as
+the car gets faster instead of dropping back to an idle note after every shift.
+**Decision 3 — it is no longer shrill.** The pitch range is 0.80-1.24 (was 0.72-**1.65**), and the
+samples themselves were regenerated an octave-ish down with fewer screaming partials: fundamentals
+42 / 78 / 132 Hz → **38 / 64 / 96 Hz**, harmonics 14 / 18 / 22 → **12 / 14 / 15**.
+**Decision 4 — a tyre squeal is not hiss.** The old screech was one band of noise (900-4200 Hz)
+with a 6 Hz warble, which is wind. The new one is **four sharp resonances** at 690 / 1180 / 1760 /
+2550 Hz, each wobbling at its own rate (7 / 11 / 17 / 23 Hz — the chaotic stick-slip of rubber on
+tarmac), over a quieter band of broadband scrub and a little contact-patch rumble. One second long,
+every modulation completing a whole number of cycles, so it still loops dead.
+**Decision 5 — braking makes a noise at all.** It never did: the screech was driven only by lateral
+slip, so a straight-line stop was silent. Braking hard above 6 m/s now scrubs, and because locked
+wheels sit lower than a drift squeal, the same sample is pitched **0.76** for braking against
+0.84-1.16 for a drift. The handbrake counts as a full brake.
+**Status:** accepted (auto-verified: import clean; the 9 vehicle scenarios and 11 other autotests
+PASS; gear changes and both tyre modes observed in a windowed run) — **needs the user's ears.**
+
+---
+
+# Iteration 12 — Heat, Fares & Game Over (2026-11-15, branch `temp/playtest-merge`)
+
+## D-069 — A throw-away branch merges both lines of work for playtesting (2026-11-15)
+**Context:** this repo's `feature/iterations-09-10` (menu, tutorial, street life, gun shop, hotbar) and Nico's `feat/visuals-and-audio` (textures, lights, audio) both branched off the initial commit and touched 16 of the same files. The user wanted one build with both, "without merging them permanently".
+**Decision:** branch `temp/playtest-merge` from `feature/iterations-09-10`, `git merge origin/feat/visuals-and-audio`. Code conflicts resolved keeping both sides (`enemy_car.gd`: the static `build_body` / `build_wheels` + Nico's engine audio; `main.gd`: header comment). Doc conflicts first resolved as "ours"; Nico's dropped docs were then restored: his decisions appended to this log as **DV-061…DV-068**, his three sessions appended to [[Session Log]], his iteration notes / [[Art Direction]] / Phase 11 renamed to DV ids. Both source branches stay untouched. Iteration 12's work is committed on top (`8e36cf3`).
+**Status:** accepted — all autotests PASS on the merge; push refused (403, KI-033). Decide later whether this becomes the real integration branch or is replayed onto `main`.
+
+## D-070 — Heat: police from 2 stars, a price on your head from 4 (2026-11-15)
+**Context:** user: heat "a little more aggressive" and "street gangs to appear as well when heat is high … somebody put a reward on our head"; later "really hard, make it in between".
+**Decision (final, "in between" numbers):** `EnemyDirector`: `police_heat` 3 → **2**, `police_interval` 20 → **19 s**, a second cruiser at 5★, `heat_decay_interval` 45 → **55 s**, `max_enemies` 5 (was briefly 6). **Bounty:** at `bounty_heat` **4**★ a wave of `gang_coupe` cars (`bounty_wave` 2 + 1 per star above) spawns as a pincer around the fare's destination (or a point ahead), HUD "THERE'S A PRICE ON YOUR HEAD! GANGS ARE HUNTING YOU", every `bounty_interval` **50 s** − 8 s per star above (min 30 s); the first wave comes 8 s after crossing the threshold. Gang cars still give no heat when killed.
+First pass (too hard per user): police every 16 s, pairs from 4★, decay 70 s, bounty at 3★ every 38 s, 6 enemies.
+**Status:** accepted (auto-verified: `heat_passengers_autotest` D) — feel needs the user
+
+## D-071 — In-game music loop and an OPTIONS menu with saved volumes (2026-11-15)
+**Context:** user added `assets/audio/Model & HLS - H Funck.mp3` "to loop while on the game" and wants "an options menu for the volume".
+**Decision:** `Audio.play_music()` / `stop_music()` (own `AudioStreamPlayer` on the Music bus, −6 dB, `PROCESS_MODE_ALWAYS` so it plays on in the pause menu; loop forced on the MP3/OGG resource). `main.gd` starts it in `_ready` and stops it in `_exit_tree` (menu / editor are silent). `OptionsMenu` (`src/ui/menu/options_menu.gd`, PanelContainer built in code): sliders **Master / Music / Effects / Engine & tyres** (`Audio.VOLUME_SLIDERS`; Effects also drives UI + Voice) + fullscreen toggle + BACK; Esc / B closes. In the main menu (OPTIONS button) and the pause menu (OPTIONS hides the pause buttons). Saved on close to `user://settings.cfg` and applied at boot by `Audio.load_settings()` (default 80 %). Slider at 0 mutes the bus.
+**Status:** accepted (auto-verified: volume round-trip in `heat_passengers_autotest` E; options open / save checked headless) — nobody has heard the music in game yet
+
+## D-072 — Smaller ammo reserves (2026-11-15)
+**Context:** user: "a little bit less bullets so we need to go to the armory a bit more frequently".
+**Decision:** `reserve_max` (spare rounds; mags unchanged): revolver 42 → **30**, SMG 180 → **120**, sawed-off 30 → **20**, rifle 30 → **20** (first pass 24 / 90 / 14 / 15 was "really hard"). Refill prices unchanged.
+**Status:** accepted (weapon / shop tests updated) — needs the user
+
+## D-073 — Procedurally generated passengers next to the archetypes (2026-11-15)
+**Context:** user: passengers "become way too repetitive with fixed spawns".
+**Decision:** `PassengerGenerator.generate(rng, level)` builds a one-off `PassengerProfile` at runtime: name (46 × 43 pool), one of 18 occupations (fare tier 0-2, look, age range, colour), one of 6 moods (time / tip multipliers), ride length band (short / across town / far), 1-2 file details from 12 (examinables; some reveal a trait). Traits add file actions and ride events built from existing blocks: rich → charge double; sick → rush (×1.5 fare, ×0.75 time); armed → 35 % `PassengerAttackEvent`; followed → 50 % `SpawnPursuersEvent` (tail / pincer) + hazard pay; cop → favour (half fare, −2 heat); suspicious → turn in (+$50, kick) + 30 % `StealCashEvent`; late → less time, bigger tip; generous → `RewardEvent` on arrival. 35 % get a bark. Duplicate traits are merged. `PassengerSpawner.procedural_share` = **0.6**; the tutorial and automated tests (`MapData.override`) only use the hand-made profiles. First-pass chances (75 % / 50 % / 40 %) lowered with D-070.
+**Status:** accepted (auto-verified: 400 profiles well-formed, a generated fare rides end to end — `heat_passengers_autotest` A / B) — fun needs the user
+
+## D-074 — Curbside drop-off points and no repeated destinations (2026-11-15)
+**Context:** user: "add more variety to the drop off zones, they are always the same". `TEST1` has 13 stops.
+**Decision:** `City._build_curbside_stops()` adds `TaxiStop`s (`curbside = true`) on plain street cells next to a sidewalk, plaza or building, in the drivable region of the map's first stop, at least **44 m** from every stop / repair / gun shop pad and from each other, max 90, named by `_next_name()`. Random every run (seed 1234 in tests). Built-in city: +0 (128 stops already dense); `TEST1`: +25-28. They are pick-ups too. `RideManager` remembers the last **8** destinations and skips them while any other in-range stop exists. `map_autotest` C ignores curbside stops.
+**Status:** accepted (auto-verified: 8 drop-offs in a row all different — `heat_passengers_autotest` C)
+
+## D-075 — Civilian cars can be destroyed; crimes against civilians bring heat (2026-11-15)
+**Context:** user: "you can kill pedestrian cars but it gives you heat with the police, as well as running over pedestrians". Resolves the first half of KI-030.
+**Decision:** `TrafficCar` gets a `HealthComponent` (90 HP), body + driver hitboxes (like `EnemyCar`), smoke under 50 %, ram damage above 7 m/s, and explodes at 0. `hurt_by_player` is set when a hit comes from within 4 m of the player's taxi (shots start at the driver's eye) or the taxi was within 7 m of a hard crash — enemy stray bullets do not blame you. Only then `EventBus.civilian_killed(pos, &"car")`. `EnemyDirector`: `pedestrian_hit` → +`pedestrian_heat` (1), `civilian_killed` → +`civilian_car_heat` (1), HUD line, heat-decay timer reset, police within `crime_response_time` **8 s** (first pass 4 s). Not during the tutorial. No bounty for civilians.
+**Status:** accepted (auto-verified: `heat_passengers_autotest` F incl. the stray-bullet case)
+
+## D-076 — Red marker over every hostile car (2026-11-15)
+**Context:** user: hostile vehicles "can be confused with the civil ones".
+**Decision:** `HostileMarker` (`src/enemies/hostile_marker.gd`), added by `EnemyCar._ready`: unshaded red 4-sided cone pointing down, 2.5 m above the car, bobbing and spinning, kept upright, scaled with camera distance (×1 to 12 m, up to ×4) so it survives 240p. Never on `TrafficCar`. Ambushers waiting ahead show it too (they are hostile).
+**Status:** accepted (screenshot checked before the size bump; `heat_passengers_autotest` G)
+
+## D-077 — Either bar at 0 = the cab explodes and the run is over (2026-11-15)
+**Context:** user: "when your life runs out you explode and have to start again from the main menu"; after 0.10.4: "im still getting the wrecked message and still able to drive" (the TAXI bar still meant limp mode). **Supersedes D-056** (limp to a repair shop) in every world with repair shops.
+**Decision:** `TaxiDamage._wreck`: driver killed, or taxi destroyed in a world with repair shops → `_die()`: `is_dead`, player input off, fire, explosion + impulse, "YOU'RE DEAD", `EventBus.player_died`. `repair()` does nothing once dead. `main.gd` waits 2.5 s, pauses, shows **GAME OVER** (red overlay, run stats, MAIN MENU → `reset_run()` + menu, QUIT); the pause key is ignored. `RideManager.get_guide_target()` / the HUD hint go blank when dead. Worlds without repair shops (shooting range) keep the old self-repair. Repair shops still sell repairs before that. `ride_autotest` now checks paid repair → destroyed taxi = game over.
+**Status:** accepted (auto-verified: ride test + `heat_passengers_autotest` H; game-over screenshot checked)

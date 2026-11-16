@@ -35,4 +35,8 @@ First-person arcade taxi game: drive fast, screen your passengers, shoot your wa
 - 🟨 [[Iteration 08 - Open-World Base & Map Editor]] — awaiting re-test
 - 🟨 [[Iteration 09 - Menu, Tutorial & Build]] — built, awaiting playtest of the build
 - 🟨 [[Iteration 10 - Street Life, Gun Shop & Weapon Bar]] — built, awaiting playtest (build 0.10.0)
+- ✅ [[Iteration 09 - Texture Pass]] (Nico, branch `feat/visuals-and-audio`)
+- ✅ [[Iteration 10 - Lights & Night]] (Nico)
+- 🟨 [[Iteration 11 - Audio]] (Nico)
+- 🟨 [[Iteration 12 - Heat, Fares & Game Over]] — active, on `temp/playtest-merge`, build 0.10.5
 - Template: [[Iteration Template]]

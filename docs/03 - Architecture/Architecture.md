@@ -44,7 +44,7 @@ Rule: **scene + its script live together** in the feature folder (`src/vehicle/t
 | `SaveManager` | `src/autoload/save_manager.gd` | Save/load `GameState` to `user://save.json`. |
 | `SceneLoader` | `src/autoload/scene_loader.gd` | Requests world-scene swaps inside Main's viewport (`goto_world(path)`); fades later. |
 | `InputDevice` | `src/autoload/input_device.gd` | Last-used device (KB+M/pad) + mouse-look accumulator (`consume_mouse_delta()`), see D-013. |
-| `Audio` | `src/autoload/audio.gd` | Bus layout, pooled one-shot players (`play` / `play_at`), looping sources (`make_loop`), volume API. **Listens on the EventBus itself**, so no gameplay script knows about audio. Silent in headless runs. (D-066) |
+| `Audio` | `src/autoload/audio.gd` | Bus layout, pooled one-shot players (`play` / `play_at`), looping sources (`make_loop`), volume API. **Listens on the EventBus itself**, so no gameplay script knows about audio. Silent in headless runs. (DV-066; music + options sliders D-071) |
 
 Add autoloads only when a phase needs them.
 
@@ -235,3 +235,11 @@ Main/UI/HUD → WeaponBar (src/ui/hud/weapon_bar.gd; static draw_gun() shared wi
 - `WeaponData.slot` = number key / hotbar position; `WeaponController.catalogue()` lists every weapon file; `add_weapon()`, `refill_ammo()`, `index_of_slot()`, `select()`.
 - `EnemyCar.build_body()` / `build_wheels()` are static (shared with `TrafficCar`). `City.is_plain_street()`; `TrafficAI.lane_point()` = right-hand lane at a street point.
 - EventBus: `pedestrian_hit(position)`.
+
+## Heat, fares, game over (Iteration 12, D-070…D-077)
+- `EnemyDirector` also owns the **bounty** (gang waves at `bounty_heat`) and **civilian crimes** (`EventBus.pedestrian_hit` / `civilian_killed` → heat + quick police).
+- `PassengerGenerator` (static, `src/passengers/`) builds one-off `PassengerProfile`s from parts; `PassengerSpawner.procedural_share` mixes them with `data/passengers/`.
+- `City._build_curbside_stops()` adds `TaxiStop`s with `curbside = true`; `RideManager` skips the last 8 destinations.
+- `TrafficCar` has health + hitboxes; `HostileMarker` is a child of every `EnemyCar`.
+- Death: `TaxiDamage._die()` → `EventBus.player_died` → `main.gd` game-over overlay → main menu.
+- `OptionsMenu` (`src/ui/menu/`) is shared by the main menu and the pause menu; volumes live in `user://settings.cfg` via `Audio.load_settings / save_settings`; music via `Audio.play_music / stop_music`.

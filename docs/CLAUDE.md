@@ -9,7 +9,7 @@ tags: [meta, claude]
 ## 1. Project at a glance
 - **Game:** **TaxiDriver** (final title) — proof-of-concept demo, **open world with no shift clock** (D-051; direction: neighbourhoods with storylines + shops, see [[Development Plan]]), KB+M **and controller**, PS1-style look ([[Art Direction]]). First-person arcade taxi game. *Crazy Taxi* driving × *Papers, Please* passenger screening × *Half Grip*-style first-person shooting from the cab.
 - **Engine:** Godot **4.6.1** (stable), **GDScript**, Forward+ renderer, **Jolt Physics** (3D), D3D12 on Windows.
-- **Repo = Godot project:** `C:\Users\DLain\Documents\Godot proyects\Txi Driver Repo\taxi-driver-game\` — `project.godot` sits at the repo root (= `res://`). Git repo, branch `main`.
+- **Repo = Godot project:** `C:\Users\DLain\Documents\Godot proyects\Txi Driver Repo\taxi-driver-game\` — `project.godot` sits at the repo root (= `res://`). Git repo: `main` (initial commit only), `feature/iterations-09-10`, Nico's `feat/visuals-and-audio`, and the playtest merge of both `temp/playtest-merge` (D-069, where work happens now).
 - **Docs vault (Obsidian):** `docs/` inside the repo — everything design/plan/progress lives here (Godot ignores it: no resources inside).
 - **Builds:** `build/windows/TaxiDriver.exe` (export preset "Windows Desktop", git-ignored) — see §5.
 - **Godot executable:** `C:\Users\DLain\Downloads\Godot_v4.6.1-stable_win64.exe\Godot_v4.6.1-stable_win64.exe`
@@ -75,6 +75,7 @@ tags: [meta, claude]
 - **Screenshot check** (visuals; opens a window briefly; add `--world=res://src/combat/shooting_range.tscn` / `--hold=aim,fire` for combat states): `<console exe> --path <project> -- --screenshot=<scratchpad>/shot.png --screenshot-frame=90 [--no-ps1]`, then view the PNG.
 - **Shop test** (must PASS after any gun shop / weapon economy / weapon-controller change): `res://tests/shop_autotest.tscn` (headless, `--fixed-fps 60`; `-- --shot-dir=<dir>` windowed: shop + hotbar screenshots).
 - **Street-life test** (must PASS after any pedestrian / traffic / StreetLife change): `res://tests/streetlife_autotest.tscn` (headless, `--fixed-fps 60`; `-- --shot-dir=<dir>` windowed: a street screenshot). Street life is OFF in every other test (`MapData.override`), like street encounters.
+- **Heat / passengers test** (must PASS after any heat, bounty, generated passenger, drop-off, civilian-crime, hostile-marker or death change): `res://tests/heat_passengers_autotest.tscn` (headless, `--fixed-fps 60`; parts A-H).
 - **Tutorial test** (must PASS after any tutorial / spawner / main-menu → game change): `res://tests/tutorial_autotest.tscn` (headless, `--fixed-fps 60`).
 - **Menu screenshots**: `<console exe> --path <project> res://tests/ui_shots.tscn -- --shot-dir=<scratchpad>` (main menu, controls panel, tutorial prompt, pause menu).
 - **The game starts on the main menu** (`src/ui/menu/main_menu.tscn` = main scene). Args `--screenshot=`, `--world=`, `--hold=`, `--map=` skip it straight to `main.tscn`.
@@ -102,5 +103,5 @@ The project is a git repo since 2026-11-15 (before that there was none — that 
 - `02 - Development Plan/` — [[Development Plan]] + one note per phase
 - `03 - Architecture/` — [[Architecture]], [[Conventions]]
 - `04 - Progress/` — [[Status]], [[Session Log]], [[Decisions Log]], [[Known Issues]]
-- `05 - Iterations/` — user-scoped iterations (active: [[Iteration 10 - Street Life, Gun Shop & Weapon Bar]]; 08 and 09 await playtests)
+- `05 - Iterations/` — user-scoped iterations (active: [[Iteration 12 - Heat, Fares & Game Over]]; 08-11 await playtests. Nico's Iterations 09-11 share numbers with ours — see D-069)
 - `Templates/` — note templates

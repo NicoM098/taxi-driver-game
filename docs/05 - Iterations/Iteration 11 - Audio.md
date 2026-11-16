@@ -70,22 +70,22 @@ friend is testing (editor, piece kit, map data, wreck → repair).
 
 ## Feedback from user
 - **2026-11-14, first listen:** everything worked **except the car itself** — no engine, no tyre
-  screech — and the NPC cars had no engine either. Both fixed in D-067: the loops were playing once
+  screech — and the NPC cars had no engine either. Both fixed in DV-067: the loops were playing once
   and stopping (the importer's loop flag never reached the resource), and enemy engines simply did
   not exist, having been scoped out.
 - **2026-11-14, second listen:** the engine is "muy agudo" at high revs, a constant tone with no
   gear changes is "irrealista y molesto", and neither sliding nor braking sounds like rubber on
-  tarmac. All three addressed in D-068: a five-speed gearbox, a narrower and lower pitch range with
+  tarmac. All three addressed in DV-068: a five-speed gearbox, a narrower and lower pitch range with
   regenerated samples, a screech rebuilt from four rubber resonances instead of a band of hiss, and
   braking that makes a sound at all. Awaiting a third listen.
 
 ## Discovered / Deferred
 - **The buses are created by the autoload, not by `setup_project.gd`** as the checklist assumed:
   idempotent code in one place beats a `.tres` that has to be kept in sync.
-- ~~Loop flags live in the `.import` files~~ — **they did not take** (D-067): the flag was written
+- ~~Loop flags live in the `.import` files~~ — **they did not take** (DV-067): the flag was written
   after the first import and the cached `.sample` won. Looping is now forced on the resource in
   `Audio._force_loop()`, so regenerating the bank cannot break it.
-- **Enemy-car engines, deferred here, were added in D-067** after the playtest: the user expected
+- **Enemy-car engines, deferred here, were added in DV-067** after the playtest: the user expected
   them and they cost one call to the new `make_loop_3d()`.
 - Two EventBus signals were missing and were added: `weapon_reloading`, `weapon_empty`.
 - **Deferred on purpose:** music and radio stations, interior-vs-exterior reverb, Doppler,

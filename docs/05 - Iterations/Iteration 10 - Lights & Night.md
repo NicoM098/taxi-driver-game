@@ -27,7 +27,7 @@ Four pieces:
 3. **Taxi headlights.** Non-negotiable once it is dark: driving a night city with no headlights is
    not a style choice, it is a bug.
 4. **Per-pixel lighting in `ps1_world.gdshader`.** The shader is `vertex_lighting`; with the road
-   tessellated at 6 m (D-063) a lamp's pool of light would be computed at four corners 6 m apart
+   tessellated at 6 m (DV-063) a lamp's pool of light would be computed at four corners 6 m apart
    and look like a faceted blob. Everything else about the PS1 stack stays.
 
 **OUT of scope:** shadows (the look has none and never will), a running day/night *cycle* tied to
@@ -68,16 +68,16 @@ for free.
 - **2026-11-14, playtest of all three moods: "Muy bueno! Y lo ideal sería tener variedad. Probe
   todas y se ven y sienten bien."** → all three stay; variety is wanted rather than one fixed mood.
 - **Bug found by the user:** *"de día las luces del auto y de la calle se deberian apagar (de los
-  edificios me imagino que tambien)"* — correct on all three counts. Fixed in D-065.
+  edificios me imagino que tambien)"* — correct on all three counts. Fixed in DV-065.
 - **Request:** *"cuando tengamos un menú al iniciar una partida puedas elegir"* — the time of day
   should be a choice when starting a game; F6 is fine for now. Written into
   [[Phase 10 - Game Flow, UI & Save]], not built here.
 
 ## Discovered / Deferred
-- **Three lights had to be switched, not one** (D-065): the lamp's omni light, the lamp glass's own
+- **Three lights had to be switched, not one** (DV-065): the lamp's omni light, the lamp glass's own
   emission, and the lit windows each needed turning off separately — and the headlights needed a
   way to hear about it at all, which is what `EventBus.mood_changed` is for.
-- **Headlights are limited by physics, not by tuning** (D-064): a light 0.6 m above a flat road
+- **Headlights are limited by physics, not by tuning** (DV-064): a light 0.6 m above a flat road
   grazes it, so no sane energy makes a bright pool straight ahead. 45 is the compromise. If they
   ever need to read stronger, the PS1-era answer is a fake emissive "pool" quad on the ground
   rather than a brighter light.
@@ -91,9 +91,9 @@ for free.
 Three times of day as data (`src/world/lighting.gd`), dusk by default, F6 to cycle: sky, ambient,
 sun, fog, lamp energy and glow, window emission and headlights all move together. 311 shadowless
 street lamps along the kerbs, visual only. Taxi headlights, aimed and powered against the grazing
-angle a headlight actually has on a flat road (D-064). The PS1 shader moved to per-pixel lighting
+angle a headlight actually has on a flat road (DV-064). The PS1 shader moved to per-pixel lighting
 so lamp pools are not faceted at 6 m road quads. The user played all three and kept all three;
-D-065 then made every light follow the time of day after daylight was found still burning.
+DV-065 then made every light follow the time of day after daylight was found still burning.
 
 Left for later, on purpose: picking the time of day from the main menu (→ [[Phase 10 - Game Flow, UI & Save]]),
 enemy-car headlights, and the fact that performance is only known on one high-end GPU.

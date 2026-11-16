@@ -50,3 +50,8 @@ Common `HealthComponent` (node) used by: player taxi, driver, enemy cars, enemy 
 
 ## 7. As built (2026-11-15, D-064 / D-067)
 Revolver (free, slot 1) · SMG ($180, slot 2) · Sawed-off ($260, slot 3) · Rifle ($380, slot 4). Bought at **gun shops** in the world (stop on the green pad); ammo refills $15-40. A run starts with the revolver. HUD: weapon hotbar with silhouettes, lock + price on guns you do not own.
+
+## Ammo, death (2026-11-15, Iteration 12)
+- Spare rounds cut so the gun shop matters (D-072): revolver 6 | 30, SMG 30 | 120, sawed-off 2 | 20, rifle 5 | 20.
+- Civilian cars are destructible (90 HP) but cost heat (D-075).
+- **Either bar at 0 = the cab explodes, GAME OVER, back to the main menu** (D-077). Repair shops fix damage for cash before that; limp mode (D-056) is gone in real maps.

@@ -26,16 +26,22 @@ Bugs and tech debt not fixed yet. Remove (or move to "Resolved") when fixed.
 | KI-021 | ⚪ | tech-debt | Names left over from the timed shifts: `ShiftManager`, `GameState.shift_number` (now a difficulty level), `PassengerProfile.min_shift`, `EventBus.shift_started / shift_ended`. Rename when the open-world run flow is designed. | 2026-11-12 | — |
 | KI-023 | 🟡 | performance | Maps are built whole at load (no streaming / chunking). Untested on a real GPU with a full 160 x 160 map. | 2026-11-12 | `City._ready`; add chunked building + visibility ranges if it stutters. |
 | KI-024 | 🟡 | enemies | The AI road graph treats stairs, ramps and stepped plazas as ordinary (more expensive) ground: enemy cars may drive off ramps or struggle on tall stairs. Sheer platforms over 0.45 m are solid for the graph. | 2026-11-12 | `MapData.is_solid`, `City._build_road_graph`. |
-| KI-026 | 🟡 | balance | Untested numbers: limp mode (30 km/h, misfire, steering wander), repair prices ($60 wreck, $0.8 / HP). | 2026-11-12 | `Taxi` "Limp mode" exports, `RepairShop` exports. |
+| KI-026 | ⚪ | balance | Repair prices ($0.8 / taxi HP, $0.4 / driver HP) untested. Limp mode is no longer reachable in maps with repair shops (D-077). | 2026-11-12 | `RepairShop` exports. |
 | KI-027 | 🟡 | balance | Encounter frequency, the Bruiser / Street Gang cars and the three hostile passengers are untuned first guesses (D-059). Bruisers weigh 1.5 x the taxi: check they do not pin it against walls. | 2026-11-13 | `StreetEncounters` exports, `data/events/`, `data/enemies/`. |
 | KI-028 | ⚪ | editor | No warning about walled-in areas: taxi stops placed inside one still get passengers and destinations nobody can reach (enemies no longer spawn there, D-057). | 2026-11-13 | `City.count_cut_off_cells()` exists for it. |
 | KI-020 | ⚪ | enemies | An ambusher blocks only part of a 16 m wide intersection and is shown by the threat markers while out of view. | 2026-11-12 | Consider two cars nose to nose / hiding markers for AMBUSH mode. |
 | KI-029 | 🟡 | tests | `enemy_city_autotest` fails ~1 run in 4 ("not all hitmen reached the taxi"): one hitman piles up unstuck recoveries and is destroyed before arriving. Also on the code before Iteration 10 (clean worktree of the last commit: 2 of 8 failed). | 2026-11-15 | Random spawn spots; re-run, or seed the spawns. |
-| KI-030 | ⚪ | street life | No consequences for running pedestrians over (only a stat); traffic cars cannot be destroyed (bullets shove them); pedestrians cannot be shot; no traffic rules at intersections. | 2026-11-15 | D-065; decide with the user. |
+| KI-030 | ⚪ | street life | Pedestrians cannot be shot; no traffic rules at intersections. (Running people over and destroying traffic now give heat — D-075.) | 2026-11-15 | D-065 / D-075; decide with the user. |
+| KI-031 | 🟡 | tests | `events_autotest` fails intermittently (~7 %) — logged as KI-026 on Nico's branch, see the section at the bottom. | 2026-11-14 | Renumbered on merge (KI-026 was already taken here). |
+| KI-032 | 🟡 | tests | `hostiles_autotest` C fails ~1 run in 5: "gang_courier: 1 cars walled in". Also on a clean worktree of the merge commit (1 of 8), so not caused by Iteration 12. | 2026-11-15 | Probably a side-street ambush spot at a courtyard wall; seed the spawns or log the cell. |
+| KI-033 | 🟠 | git / docs | `temp/playtest-merge` cannot be pushed: account DLain47 is not a collaborator on `NicoM098/taxi-driver-game` (403). Both branches used D-061…D-068 and Iterations 09-11 for different work: in this vault Nico's are DV-061…DV-068; his code comments still say D-06x. | 2026-11-15 | Nico adds DLain47 as collaborator, or push to a fork. |
+| KI-034 | 🟡 | legal | `assets/audio/Model & HLS - H Funck.mp3` is a third-party track, committed (user's choice) to a public repo and shipped in builds. Fine for a private playtest; needs a license or a replacement before anything public. | 2026-11-15 | — |
+| KI-035 | 🟡 | balance | Iteration 12 numbers are first guesses: police / bounty timings (D-070), ammo reserves (D-072), generated fares' prices and trouble chances (D-073), 44 m curbside spacing (D-074), crime heat (D-075). | 2026-11-15 | Exports on `EnemyDirector`, `PassengerGenerator` constants, `data/weapons/`. |
 
 Severity: 🔴 blocker · 🟠 major · 🟡 minor · ⚪ cosmetic/tech-debt
 
 ## Resolved
+- KI-022 / D-056 superseded (2026-11-15) — a wreck is now death + game over (D-077).
 - KI-025 (2026-11-15) — the run stats are shown in the new pause menu (D-061).
 - KI-022 (2026-11-12) — a wreck now costs: limp mode until a repair shop, $60 (D-056).
 - KI-019 (2026-11-12) — accidental mid-ride kick: a normal fare can no longer be ended by the driver; Q only works while a ride event allows it (D-052).
@@ -47,7 +53,7 @@ Severity: 🔴 blocker · 🟠 major · 🟡 minor · ⚪ cosmetic/tech-debt
 - KI-003 (2026-11-11) — handbrake too aggressive at low speed → effect now speed-scaled (D-019). 35 km/h handbrake turn: 178° spin → 98° controlled turn.
 - KI-004 (2026-11-11) — steering wheel direction confirmed correct by user.
 
-## KI-026 — `events_autotest` fails intermittently (2026-11-14)
+## KI-031 — `events_autotest` fails intermittently (2026-11-14; KI-026 on Nico's branch)
 **Two failures in ~30 runs during session 13** (~7 %), both inside a batch that ran the whole
 suite; never reproduced when run on its own (18 consecutive passes across two attempts, including
 2 forced immediately after a re-import to test whether a cold first run was to blame — it is not). The only changes in that session were a shader and material edit, which cannot affect

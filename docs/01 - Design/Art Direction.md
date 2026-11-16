@@ -9,7 +9,7 @@ status: accepted
 ## Texture roadmap
 1. **Phase 00–01:** flat-colour `ShaderMaterial` presets (`road`, `sidewalk`, `building_a/b/c`, `taxi_yellow`, `enemy_red`, `glass`, `interior`, `prop`) in `res://assets/materials/`. Optional engine-generated `NoiseTexture2D` (64 px, nearest) for subtle grime — no asset files.
 2. **Phase 02+ / Iteration 09:** add textures only where they help readability (lane lines, crosswalks, signs).
-   **Building windows are generated, not textured** (D-061): a world-space grid in `ps1_world.gdshader`
+   **Building windows are generated, not textured** (DV-061): a world-space grid in `ps1_world.gdshader`
    with randomly lit ones, so it fits buildings of any height with no UV layout.
    Chosen pack (CC0 only): [PSX Textures Vol. 1](https://fcidade.itch.io/psx-textures-vol-1) — see
    `assets/textures/README.md`. Surfaces are on world-space UVs so one material tiles correctly on
@@ -69,22 +69,22 @@ look off and on. Added 2026-11-14 at the user's request, so the dials are findab
 ### Per material — in the `.tres`
 | Parameter | Typical | Notes |
 |---|---|---|
-| `affine_multiplier` | 1.0 | **0.25 on `road` / `ground`, 0.5 on `sidewalk` (D-063).** Big surfaces seen edge-on warp hardest; this is the dial for "the road is swimming". `0.0` kills it on that surface alone. |
+| `affine_multiplier` | 1.0 | **0.25 on `road` / `ground`, 0.5 on `sidewalk` (DV-063).** Big surfaces seen edge-on warp hardest; this is the dial for "the road is swimming". `0.0` kills it on that surface alone. |
 | `snap_multiplier` | 1.0 | **0.0 on the cab interior** — it sits centimetres from the camera, where wobble is nauseating. |
 | `world_uv_metres` | 2.5-8 | Metres covered by one texture tile (`uv_mode = 1`). Smaller = finer detail, more repetition. |
-| `albedo` | — | **Must be rebalanced when a texture changes** (D-062): old flat colour ÷ the texture's mean RGB. |
+| `albedo` | — | **Must be rebalanced when a texture changes** (DV-062): old flat colour ÷ the texture's mean RGB. |
 
-### Facade windows (D-061, on `building_a/b/c`)
+### Facade windows (DV-061, on `building_a/b/c`)
 `window_cell` metres between centres · `window_fill` how much of the cell is glass ·
 `window_ground_floor` blank wall at street level · `window_lit_chance` how many are lit ·
 `window_lit_emission` how brightly · `window_dark_mix` how much of the wall an unlit window
 replaces (1.0 = black holes) · `window_fade_near/far` the distance where they dissolve back into
 the wall, which is what stops the grid turning into moire.
 
-### Time of day (D-064) — `src/world/lighting.gd`
+### Time of day (DV-064) — `src/world/lighting.gd`
 Three moods, **dusk is the default**; **F6** cycles them in play. Each one is a dictionary: sky,
 ambient colour + energy, sun colour / energy / angle, fog colour + range, `lamp_energy` (0 switches
-the street lamps off) and `window_emission` (how hard a lit window burns, since D-061's windows were
+the street lamps off) and `window_emission` (how hard a lit window burns, since DV-061's windows were
 tuned against a bright sky). Changing a mood is editing numbers in one file — no scene, no code.
 
 | | day | dusk | night |
@@ -96,20 +96,20 @@ tuned against a bright sky). Changing a mood is editing numbers in one file — 
 | lit windows | off | 1.2 | 1.8 |
 | headlights | off | on | on |
 
-Everything that emits light follows the mood (D-065): the lamp's omni light **and** its glass, the
+Everything that emits light follows the mood (DV-065): the lamp's omni light **and** its glass, the
 lit windows (`window_lit_amount` = 0 makes them identical to unlit ones) and the taxi's headlights,
 which hear about it through `EventBus.mood_changed`. Add a new light to the game and it has to
 listen there too, or it will be burning at midday.
 
 **Street lamps:** `City.LAMP_SPACING` (cells between lamps on a kerb), `LAMP_RANGE`, `LAMP_MAX`,
 and `Lighting.LAMP_COLOR`. They have no collision — purely visual, like the lane dashes.
-**Headlights:** `taxi.gd > _add_headlights()`. Energy is high (45) on purpose: see D-064, a light
+**Headlights:** `taxi.gd > _add_headlights()`. Energy is high (45) on purpose: see DV-064, a light
 0.6 m above a flat road hits it at a grazing angle and lambert gives it almost nothing.
 
 ### If someone complains about...
 - **"The road stretches / swims"** → `affine_multiplier` on `road` and `ground`; then tessellation
   in `city.gd` (`_build_ground_and_walls`, ~6 m quads); then whether that texture has a direction
-  to it (a streaky one smears, an isotropic grain does not) — all three, in that order (D-063).
+  to it (a streaky one smears, an isotropic grain does not) — all three, in that order (DV-063).
 - **"It's too wobbly / I feel sick"** → `ps1_snap_strength`, or `snap_multiplier` on whatever is
   closest to the camera.
 - **"It's too dark / washed out"** → `albedo` per material, never the texture.
@@ -117,6 +117,6 @@ and `Lighting.LAMP_COLOR`. They have no collision — purely visual, like the la
   material; the three building materials are deliberately different so facades do not rhyme.
 - **"I can't see where I'm going"** → the mood's `ambient_energy` first, then `lamp_energy`, then
   `LAMP_SPACING`; the headlights are the last thing to touch, because their angle against the road
-  limits what they can ever do (D-064).
+  limits what they can ever do (DV-064).
 - **"It doesn't feel like night / like evening"** → the whole mood lives in one dictionary in
   `lighting.gd`; change the sky, fog and sun together or it reads as "a dark day" instead.

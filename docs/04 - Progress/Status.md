@@ -6,7 +6,15 @@ updated: 2026-11-15
 
 > **Read this first every session.** Claude updates it at the end of every session.
 
-## Where we left off (2026-11-15, session 14)
+## Where we left off (2026-11-15, session 16)
+- **Branch:** `temp/playtest-merge` = `feature/iterations-09-10` (yours) + Nico's `feat/visuals-and-audio` (textures, lights, audio) + Iteration 12 (commit `8e36cf3`). **Not pushed** — 403, DLain47 is not a collaborator on Nico's repo (KI-033). `main` still has only the initial commit.
+- **Active:** [[Iteration 12 - Heat, Fares & Game Over]] — built & auto-verified: heat from 2★ + gang bounty from 4★ (D-070), music + OPTIONS menu (D-071), smaller ammo reserves (D-072), procedural passengers (D-073), curbside drop-offs (D-074), destructible traffic + civilian crimes = heat (D-075), red marker over hostiles (D-076), death = explosion + GAME OVER (D-077). Difficulty re-tuned "in between".
+- **Build 0.10.5** (`build/windows/TaxiDriver.exe`, `build/TaxiDriver-0.10.5-windows.7z`) sent to the user for a friend. The user played 0.10.4 once (wreck bug → fixed in 0.10.5).
+- **Docs:** Nico's decisions are DV-061…DV-068 in [[Decisions Log]]; his sessions are in [[Session Log]]; his iteration notes are Iterations 09 Texture Pass / 10 Lights & Night / 11 Audio.
+- **Flaky tests:** `hostiles` ~1/5 (KI-032), `enemy_city` ~1/4 (KI-029) — both pre-existing.
+- **First thing next session:** playtest feedback on 0.10.5 (Iteration 12 checklist, also covers 08-11); repo access with Nico; decide the fate of `temp/playtest-merge`.
+
+### Previous: 2026-11-15, session 14
 - **Active:** [[Iteration 10 - Street Life, Gun Shop & Weapon Bar]] — built & auto-verified, build **0.10.0** at `build/windows/TaxiDriver.exe`. Gun shops + Rifle, run starts with the revolver (D-064); pedestrians + traffic (D-065); 4 new passengers (D-066); weapon hotbar (D-067). 7-point checklist in the note.
 - **The user's `TEST1` map has no gun shop** — they need to place one in the editor to buy guns there.
 - **Three iterations await the user:** 08 (re-test), 09 (menu / tutorial / build), 10 (this). One playtest of the 0.10.0 build covers all three.
@@ -36,7 +44,7 @@ updated: 2026-11-15
 | Phase | Status | Notes |
 |---|---|---|
 | 00 Project Setup | ✅ | settings via `tools/setup_project.gd`; PS1 pipeline |
-| 01 Taxi Driving & Cab Camera | ✅ | arcade raycast taxi; **limp mode when wrecked (D-056)** |
+| 01 Taxi Driving & Cab Camera | ✅ | arcade raycast taxi; wreck = death + game over (D-077, replaces limp mode D-056) |
 | 02 City Graybox & Navigation | ✅ → rebuilt | the city is now built from a `MapData` (D-055); cell road graph; starter city generated from pieces |
 | 03 Core Ride Loop | ✅ | rides, drift chain; shift clock removed (D-051) |
 | 04 Dossier & Decisions | ✅ | passenger file; examine costs ride time (D-051) |
@@ -47,6 +55,8 @@ updated: 2026-11-15
 | Open world: map editor | 🟨 built, awaiting playtest | Iteration 08: editor, piece kit, zones, repair shops |
 | Menu / tutorial / build | 🟨 built, awaiting playtest | Iteration 09: title screen, tutorial, pause menu, Windows export |
 | Street life / gun shop / hotbar | 🟨 built, awaiting playtest | Iteration 10: pedestrians, traffic, 4 passengers, gun shops + rifle, weapon hotbar |
+| Textures / lights / audio (Nico) | ✅ on his branch, merged for playtest | Nico's Iterations 09-11 (DV-061…DV-068) |
+| Heat, fares, game over | 🟨 built, awaiting playtest | Iteration 12: bounty, music + options, procedural fares, curbside stops, civilian crimes, hostile marker, death |
 | 09–12 | ⬜ | to be re-planned around the open world (neighbourhoods, shops in the world, save) |
 
 ## ✅ Done (built, tested, approved)
@@ -60,7 +70,10 @@ Iterations 01–05 — closed 2026-11-11. Iterations 06 and 07 — closed 2026-1
 ## ❌ Missing
 - Neighbourhood content + storylines, shops / upgrades (next iterations). Map streaming for huge maps (KI-023), decoration props, traffic, a home for the run summary (KI-025). Phase 07 leftovers: screen effects, mystery courier, real item drops. Smaller: GPS line, projectile weapons, windshield holes, multi-page files, aim assist, `VehicleStats` (KI-006).
 
-## 🧪 Automated checks — 2026-11-15 (session 14)
+## 🧪 Automated checks — 2026-11-15 (session 16)
+All 16 PASS on the final code: **heat_passengers** (new, A-H), ride (now repair → destroyed = game over), weapon / shop (new ammo), map (ignores curbside stops), hostiles, enemy, enemy-city, events, dossier, pickup, jump, curb, vehicle, streetlife, tutorial; profiles OK; import clean; build 0.10.5 smoke-tested on `TEST1`. Flaky: hostiles (KI-032), enemy-city (KI-029). Screenshots: hostile marker, game over.
+
+### Session 14
 **shop** (new), **streetlife** (new), weapon, tutorial, ride, dossier, events, map, hostiles, enemy, pickup, jump, curb, vehicle PASS; profile check OK (15 files); import clean; build 0.10.0 smoke-tested. **enemy-city flaky** (KI-029, also before this iteration); **editor switch** (windowed) 2 / 5 passes — inconclusive (real mouse).
 
 ### Session 13
@@ -70,9 +83,11 @@ Iterations 01–05 — closed 2026-11-11. Iterations 06 and 07 — closed 2026-1
 **hostiles** (new), **jump** (new), editor switch (windowed), map, 9 vehicle scenarios, ride (now incl. wreck → limp → repair), dossier, events, weapon, enemy, enemy-city, pickup tests, profile data check; import clean. Session 12, after D-060: **curb** (new), 9 vehicle scenarios, jump, map, ride, enemy, enemy-city, hostiles, events PASS (the rest not re-run). Commands in [[CLAUDE]] §5.
 
 ## 📌 Decisions in force
-TaxiDriver · git repo (since 2026-11-15) · controller supported · open world, no shift clock (D-051) · **maps are data made in the in-game editor (D-055)** · **wreck = limp until a repair shop (D-056)** · blockout + PS1 look · Claude decides tech choices (D-011). **enemies spawn only where they can drive out (D-057)** · **3 m kickers clear one level of containers (D-058)** · **street encounters (D-059)** · **chassis clears curbs (D-060)** · **title screen is the main scene (D-061)** · **tutorial inside the real game (D-062)** · **Windows build in `build/`, builds save maps to `user://maps/` (D-063)** · git repo, user commits · **gun shops in the world, start with the revolver (D-064)** · **street life (D-065)** · **weapon hotbar (D-067)** · See [[Decisions Log]] D-001…D-067.
+TaxiDriver · git repo (since 2026-11-15) · controller supported · open world, no shift clock (D-051) · **maps are data made in the in-game editor (D-055)** · **wreck = death + game over (D-077; D-056 superseded)** · blockout + PS1 look · Claude decides tech choices (D-011). **enemies spawn only where they can drive out (D-057)** · **3 m kickers clear one level of containers (D-058)** · **street encounters (D-059)** · **chassis clears curbs (D-060)** · **title screen is the main scene (D-061)** · **tutorial inside the real game (D-062)** · **Windows build in `build/`, builds save maps to `user://maps/` (D-063)** · git repo, user commits · **gun shops in the world, start with the revolver (D-064)** · **street life (D-065)** · **weapon hotbar (D-067)** · **heat + bounty (D-070)** · **procedural fares (D-073)** · **curbside stops (D-074)** · **civilian crimes = heat (D-075)** · See [[Decisions Log]] D-001…D-077 + DV-061…DV-068 (Nico).
 
 ## 🚧 Waiting on user
+- Playtest of build 0.10.5 (Iteration 12 note, 8 points) — it also contains everything from 08-11.
+- Repo access: Nico must add DLain47 as a collaborator (or use a fork) so `temp/playtest-merge` can be pushed.
 - Playtest of build 0.10.0 (Iteration 10 note, 7 points) — add a gun shop to `TEST1` first.
 - Playtest of the build `build/windows/TaxiDriver.exe` (Iteration 09 note, 7 points).
 - Re-test of the 2026-11-13 changes (7 points in the Iteration 08 note); wreck / repair feel and stairs / plazas were not mentioned in the playtest.
