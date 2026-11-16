@@ -1,9 +1,9 @@
 ---
 tags: [iteration]
 iteration: 11
-status: awaiting playtest
+status: closed
 started: 2026-11-14
-finished:
+finished: 2026-11-15
 ---
 # Iteration 11 — Audio
 
@@ -77,7 +77,9 @@ friend is testing (editor, piece kit, map data, wreck → repair).
   gear changes is "irrealista y molesto", and neither sliding nor braking sounds like rubber on
   tarmac. All three addressed in D-068: a five-speed gearbox, a narrower and lower pitch range with
   regenerated samples, a screech rebuilt from four rubber resonances instead of a band of hiss, and
-  braking that makes a sound at all. Awaiting a third listen.
+  braking that makes a sound at all.
+- **2026-11-15, third listen: accepted.** "el sonido quedo mejor pero seguramente lo cambiemos a
+  futuro, por ahora está bien." Good enough to move on; the bank is expected to be revisited.
 
 ## Discovered / Deferred
 - **The buses are created by the autoload, not by `setup_project.gd`** as the checklist assumed:
@@ -104,4 +106,7 @@ engine layers plus tyre screech from state it already tracked (`forward_speed`, 
 `is_boosting`, `limp`, `rear_slip_signed`). Silent in headless, so the suite stays green and fast.
 
 **Unverified by Claude: how it sounds.** Every objective check passed; the aesthetic ones cannot be
-made from here.
+made from here — they took three rounds of the user listening (D-067 the loops not looping, D-068
+the gearbox and the tyres) and ended at "better, we will probably change it in future, fine for
+now". The bank is explicitly expected to be revisited: `tools/gen_sfx.py` is the place, and
+[[Art Direction]] has no audio section yet — worth writing one when it is.

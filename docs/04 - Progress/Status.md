@@ -6,7 +6,18 @@ updated: 2026-11-14
 
 > **Read this first every session.** Claude updates it at the end of every session.
 
-## Where we left off (2026-11-14, session 15)
+## Where we left off (2026-11-15, session 15)
+- **Iteration 11 (audio) is CLOSED**, accepted on the third listen: "por ahora está bien", with the
+  bank expected to be revisited later (`tools/gen_sfx.py`).
+- **Everything is committed and pushed**: branch `feat/visuals-and-audio`, commit `5789037`,
+  270 files, covering iterations 09, 10 and 11. `main` is still at the initial commit and **no pull
+  request has been opened**.
+- **No iteration is active.** Iteration 08 is still out with the user's friend.
+- **What is left of [[Phase 11 - Audio, VFX & Juice]] is the juice**: skid marks, speed lines /
+  FOV kick on boost, hit-stop on kills, style-point popups, glass shatter, and music / radio.
+  Camera shake, muzzle flash, tracers, impacts, explosions and damage smoke already exist.
+
+## Previously (2026-11-14, session 15)
 - **Active iteration:** [[Iteration 11 - Audio]] — built, **nobody has heard it**. The game had no
   sound at all; it now has 21 generated sounds (D-066), an `Audio` autoload owning six buses and
   pooled players, a three-layer engine pitched by revs, tyre screech, per-weapon gunfire with
@@ -100,7 +111,7 @@ updated: 2026-11-14
 | 07 Passenger Archetypes & Ride Events | ✅ closed 2026-11-12 | 8 archetypes, strategic spawns; deferred: screen effects, courier, item drops |
 | 08 Items & Inventory | 🟨 started early | Monstrous Energy heal pickup (D-042) |
 | Open world: map editor | 🟨 built, awaiting playtest | Iteration 08: editor, piece kit, zones, repair shops |
-| Audio | 🟨 built, awaiting the user's ears | Iteration 11: D-066 generated bank, Audio autoload, engine by revs |
+| Audio | ✅ closed 2026-11-15 | Iteration 11: D-066 generated bank, Audio autoload, engine by revs |
 | Art: lights & night | ✅ closed 2026-11-14 | Iteration 10: D-064 moods, lamps, headlights, per-pixel lighting; D-065 day switches them off |
 | Art: texture pass | ✅ closed 2026-11-14 | Iteration 09: D-061 world UVs + windows, D-062 pack wired, D-063 affine tuned |
 | 09–12 | ⬜ | to be re-planned around the open world (neighbourhoods, shops in the world, save) |
@@ -123,8 +134,6 @@ Iterations 01–05 — closed 2026-11-11. Iterations 06 and 07 — closed 2026-1
 TaxiDriver · no git (backups in `new-game-project/_backup/`) · controller supported · open world, no shift clock (D-051) · **maps are data made in the in-game editor (D-055)** · **wreck = limp until a repair shop (D-056)** · blockout + PS1 look · Claude decides tech choices (D-011). **enemies spawn only where they can drive out (D-057)** · **3 m kickers clear one level of containers (D-058)** · **street encounters (D-059)** · **chassis clears curbs (D-060)** · **world-space UVs + procedural facade windows (D-061)** · **textures: CC0 only, PSX Textures Vol. 1 — A_classic, albedo rebalanced, no mipmaps (D-062)** · See [[Decisions Log]] D-001…D-068.
 
 ## 🚧 Waiting on user
-- **Listen to the game** and say what is wrong: engine convincing? anything too loud, harsh or
-  grating? Checklist in the Iteration 11 note.
 - Re-test of the 2026-11-13 changes (7 points in the Iteration 08 note); wreck / repair feel and stairs / plazas were not mentioned in the playtest.
 - **The Iteration 08 re-test is with a friend of the user** (7 of its 10 points): editor pieces,
   playing a user map, stairs / plazas / kicker ramps, and the wreck → limp → repair loop including

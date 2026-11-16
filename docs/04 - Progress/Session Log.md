@@ -559,3 +559,16 @@ unrealistic and annoying; sliding and braking do not sound like rubber on a road
 **Tested:** import clean; the 9 vehicle scenarios + map, ride, events, hostiles, enemy, enemy-city,
 weapon, dossier, pickup, curb, jump PASS.
 **Next session should:** the user's third listen; then the friend's Iteration 08 feedback.
+
+### Session 15 (cont. 3) — audio accepted, everything pushed
+**User, third listen:** "el sonido quedo mejor pero seguramente lo cambiemos a futuro, por ahora
+está bien." **Iteration 11 closed.** The bank is expected to be revisited; `tools/gen_sfx.py` is
+where it lives.
+**Git:** branch `feat/visuals-and-audio`, one commit (`5789037`, 270 files, +6309 / -70) covering
+iterations 09, 10 and 11 plus the root `CLAUDE.md` and the doc path fixes, pushed to
+`origin/feat/visuals-and-audio`. `main` is untouched at the initial commit. Working tree clean.
+No pull request opened yet.
+**Next session should:** 1) what is left of Phase 11 is the juice — skid marks, speed lines on
+boost, hit-stop on kills, style-point popups (the user's own Crazy Taxi reference has them), plus
+glass shatter and music/radio; 2) the friend's Iteration 08 feedback whenever it lands;
+3) then the user's roadmap: neighbourhoods, then shops.
