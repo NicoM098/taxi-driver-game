@@ -40,7 +40,7 @@ Follow-ups the same day:
 - [x] Difficulty re-tuned "in between" — D-070 / D-072 / D-073 numbers are the final ones
 - [x] New test `tests/heat_passengers_autotest` (A-H); ride / weapon / shop / map tests updated
 - [x] Build 0.10.5 exported (`build/TaxiDriver-0.10.5-windows.7z`, 28.7 MB, sent to the user)
-- [ ] Push `temp/playtest-merge` — refused (403: account DLain47 is not a collaborator on `NicoM098/taxi-driver-game`)
+- [x] Push `temp/playtest-merge` — pushed 2026-11-16 after DLain47 accepted the collaborator invite
 
 ## User test checklist
 - [ ] Get 2★: police show up; 4★: "THERE'S A PRICE ON YOUR HEAD!" and gang cars come in waves. Too much / too little?
@@ -60,6 +60,6 @@ Follow-ups the same day:
 - Pedestrians cannot be shot (only run over). KI-030.
 - The song is a third-party track in a **public** repo (user chose to include it). KI-034.
 - `hostiles_autotest` "gang_courier: 1 cars walled in" ~1 in 5, pre-existing. KI-032.
-- Nico's code comments still say D-061…D-068 for what this log calls DV-061…DV-068. KI-033.
+- Nico's code comments still say D-061…D-068 for what this log calls DV-061…DV-068.
 
 ## Result summary (fill when done)

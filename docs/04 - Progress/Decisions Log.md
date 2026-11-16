@@ -667,7 +667,7 @@ PASS; gear changes and both tyre modes observed in a windowed run) — **needs t
 ## D-069 — A throw-away branch merges both lines of work for playtesting (2026-11-15)
 **Context:** this repo's `feature/iterations-09-10` (menu, tutorial, street life, gun shop, hotbar) and Nico's `feat/visuals-and-audio` (textures, lights, audio) both branched off the initial commit and touched 16 of the same files. The user wanted one build with both, "without merging them permanently".
 **Decision:** branch `temp/playtest-merge` from `feature/iterations-09-10`, `git merge origin/feat/visuals-and-audio`. Code conflicts resolved keeping both sides (`enemy_car.gd`: the static `build_body` / `build_wheels` + Nico's engine audio; `main.gd`: header comment). Doc conflicts first resolved as "ours"; Nico's dropped docs were then restored: his decisions appended to this log as **DV-061…DV-068**, his three sessions appended to [[Session Log]], his iteration notes / [[Art Direction]] / Phase 11 renamed to DV ids. Both source branches stay untouched. Iteration 12's work is committed on top (`8e36cf3`).
-**Status:** accepted — all autotests PASS on the merge; push refused (403, KI-033). Decide later whether this becomes the real integration branch or is replayed onto `main`.
+**Status:** accepted — all autotests PASS on the merge; pushed to `origin/temp/playtest-merge` on 2026-11-16 (DLain47 is now a collaborator). Decide later whether this becomes the real integration branch or is replayed onto `main`.
 
 ## D-070 — Heat: police from 2 stars, a price on your head from 4 (2026-11-15)
 **Context:** user: heat "a little more aggressive" and "street gangs to appear as well when heat is high … somebody put a reward on our head"; later "really hard, make it in between".

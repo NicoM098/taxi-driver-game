@@ -606,12 +606,23 @@ weapon, dossier, pickup, curb, jump PASS.
 **Iteration:** [[Iteration 12 - Heat, Fares & Game Over]] (new) · **Phases touched:** 03, 05, 06, 07, 10, 11
 **Goal:** read the project, put the uncommitted Iterations 09-10 work on a branch, try Nico's branch, merge both for a friend's playtest, then a batch of user requests (heat, ammo, music + options, procedural passengers, drop-offs, destructible traffic, hostile markers, death).
 **Done:**
-- Git: `feature/iterations-09-10` created, Iterations 09-10 committed (`ac1b810`). Fetched Nico's `feat/visuals-and-audio` (one commit `5789037`: textures, lights, audio). Throw-away `temp/playtest-merge` with both (D-069, `aa8be56`); Iteration 12 committed on it (`8e36cf3`). Push refused: 403 (KI-033).
+- Git: `feature/iterations-09-10` created, Iterations 09-10 committed (`ac1b810`). Fetched Nico's `feat/visuals-and-audio` (one commit `5789037`: textures, lights, audio). Throw-away `temp/playtest-merge` with both (D-069, `aa8be56`); Iteration 12 committed on it (`8e36cf3`). Push refused: 403 (solved 2026-11-16, session 17).
 - Answered license questions: Sonniss GDC bundle (commercial OK, no attribution, no redistribution of raw files — careful in a public repo) and CC0 (fully free).
 - D-070 heat + price on your head; D-071 music + OPTIONS; D-072 ammo; D-073 procedural passengers; D-074 curbside drop-offs; D-075 destructible traffic + civilian crimes; D-076 hostile marker; D-077 death = game over. Difficulty pulled back "in between" after the user found the first pass really hard.
 - Docs: Nico's dropped notes restored (DV-061…DV-068), this entry, [[Status]], [[Known Issues]], new iteration note.
 - Builds: 0.10.0 (yours only), then 0.10.1 … 0.10.5 full; 0.10.5 also as `build/TaxiDriver-0.10.5-windows.7z` (28.7 MB; the zip was 42.6 MB, over the 30 MB upload limit) sent to the user for a friend.
 **Files changed:** `src/enemies/{enemy_director,enemy_car,hostile_marker}.gd`, `src/autoload/{audio,event_bus}.gd`, `src/main/main.gd`, `src/ui/menu/{main_menu,options_menu}.gd`, `src/ui/hud/hud.gd`, `src/passengers/{passenger_generator,passenger_spawner}.gd`, `src/ride/ride_manager.gd`, `src/world/{city,taxi_stop,traffic_car}.gd`, `src/vehicle/taxi_damage.gd`, `data/weapons/*.tres`, `assets/audio/Model & HLS - H Funck.mp3`, tests `heat_passengers_autotest` (new), `ride`, `weapon`, `shop`, `map`. User map `test1.json` committed as-is in `ac1b810`, never edited.
 **Tested:** all 16 autotests PASS on the final code (new `heat_passengers` A-H); `hostiles` flaky ~1/5 — also on a clean worktree of the merge (1/8), KI-032; `enemy_city` flaky as before (KI-029); `weapon` failed once on shotgun pellets, then 4/4. Screenshots: hostile marker vs civilian, game-over screen. Build smoke-tested on `TEST1`. The user played 0.10.4 (reported the wreck bug → fixed). NOT tested by a human: music, options, generated passengers, curbside stops, bounty waves, final difficulty.
-**Problems / notes:** both branches numbered decisions D-061…D-068 and iterations 09-11 independently — reconciled in docs only (KI-033). The song is a third-party track; the user chose to push it to a public repo (KI-034). Script export mode 2 hides strings in the exe, so build contents can't be grepped.
+**Problems / notes:** both branches numbered decisions D-061…D-068 and iterations 09-11 independently — reconciled in docs only (D-069). The song is a third-party track; the user chose to push it to a public repo (KI-034). Script export mode 2 hides strings in the exe, so build contents can't be grepped.
 **Next session should:** 1) get the playtest of 0.10.5 (user + friend + Nico) against the Iteration 12 checklist; 2) sort out repo access with Nico and push; 3) decide whether `temp/playtest-merge` becomes the integration branch.
+
+## 2026-11-16 — Session 17 — Push the playtest branch
+**Iteration:** [[Iteration 12 - Heat, Fares & Game Over]] · **Phases touched:** —
+**Goal:** push `temp/playtest-merge` now that DLain47 is a collaborator on Nico's repo.
+**Done:**
+- First push still 403: the collaborator invite was pending. The user accepted it; `temp/playtest-merge` pushed to `origin` with upstream tracking.
+- KI-033 removed from [[Known Issues]] (user request); references updated in [[Status]], D-069, Iteration 12 note.
+**Files changed:** docs only.
+**Tested:** n/a (git / docs)
+**Problems / notes:** `feature/iterations-09-10` is still local only.
+**Next session should:** get the playtest of 0.10.5 against the Iteration 12 checklist; decide whether `temp/playtest-merge` becomes the integration branch.

@@ -7,12 +7,12 @@ updated: 2026-11-15
 > **Read this first every session.** Claude updates it at the end of every session.
 
 ## Where we left off (2026-11-15, session 16)
-- **Branch:** `temp/playtest-merge` = `feature/iterations-09-10` (yours) + Nico's `feat/visuals-and-audio` (textures, lights, audio) + Iteration 12 (commit `8e36cf3`). **Not pushed** — 403, DLain47 is not a collaborator on Nico's repo (KI-033). `main` still has only the initial commit.
+- **Branch:** `temp/playtest-merge` = `feature/iterations-09-10` (yours) + Nico's `feat/visuals-and-audio` (textures, lights, audio) + Iteration 12 (commit `8e36cf3`). **Pushed 2026-11-16** to `origin/temp/playtest-merge` (DLain47 is now a collaborator); `feature/iterations-09-10` is still local only. `main` still has only the initial commit.
 - **Active:** [[Iteration 12 - Heat, Fares & Game Over]] — built & auto-verified: heat from 2★ + gang bounty from 4★ (D-070), music + OPTIONS menu (D-071), smaller ammo reserves (D-072), procedural passengers (D-073), curbside drop-offs (D-074), destructible traffic + civilian crimes = heat (D-075), red marker over hostiles (D-076), death = explosion + GAME OVER (D-077). Difficulty re-tuned "in between".
 - **Build 0.10.5** (`build/windows/TaxiDriver.exe`, `build/TaxiDriver-0.10.5-windows.7z`) sent to the user for a friend. The user played 0.10.4 once (wreck bug → fixed in 0.10.5).
 - **Docs:** Nico's decisions are DV-061…DV-068 in [[Decisions Log]]; his sessions are in [[Session Log]]; his iteration notes are Iterations 09 Texture Pass / 10 Lights & Night / 11 Audio.
 - **Flaky tests:** `hostiles` ~1/5 (KI-032), `enemy_city` ~1/4 (KI-029) — both pre-existing.
-- **First thing next session:** playtest feedback on 0.10.5 (Iteration 12 checklist, also covers 08-11); repo access with Nico; decide the fate of `temp/playtest-merge`.
+- **First thing next session:** playtest feedback on 0.10.5 (Iteration 12 checklist, also covers 08-11); decide the fate of `temp/playtest-merge`.
 
 ### Previous: 2026-11-15, session 14
 - **Active:** [[Iteration 10 - Street Life, Gun Shop & Weapon Bar]] — built & auto-verified, build **0.10.0** at `build/windows/TaxiDriver.exe`. Gun shops + Rifle, run starts with the revolver (D-064); pedestrians + traffic (D-065); 4 new passengers (D-066); weapon hotbar (D-067). 7-point checklist in the note.
@@ -87,7 +87,6 @@ TaxiDriver · git repo (since 2026-11-15) · controller supported · open world,
 
 ## 🚧 Waiting on user
 - Playtest of build 0.10.5 (Iteration 12 note, 8 points) — it also contains everything from 08-11.
-- Repo access: Nico must add DLain47 as a collaborator (or use a fork) so `temp/playtest-merge` can be pushed.
 - Playtest of build 0.10.0 (Iteration 10 note, 7 points) — add a gun shop to `TEST1` first.
 - Playtest of the build `build/windows/TaxiDriver.exe` (Iteration 09 note, 7 points).
 - Re-test of the 2026-11-13 changes (7 points in the Iteration 08 note); wreck / repair feel and stairs / plazas were not mentioned in the playtest.
