@@ -6,7 +6,17 @@ updated: 2026-11-15
 
 > **Read this first every session.** Claude updates it at the end of every session.
 
-## Where we left off (2026-11-16, session 18)
+## Where we left off (2026-11-16, session 19)
+- **Active:** [[Iteration 15 - Minimap]] — built & auto-verified, **not seen in motion**. Square,
+  rotating with the car, a radius around the player, flat. **Drawn from `MapData.flags()` baked to
+  a one-pixel-per-cell texture, not from a second camera** (D-083), which is why it works on any
+  map including one made in the editor. Blips from registries that already existed.
+- **New test:** `tests/minimap_autotest` (18th) — the bake against the flags on a non-square map,
+  and the world→minimap mapping at three yaws.
+- **First thing next session:** the user drives it. Whether the rotating blocks read or shimmer is
+  the open question.
+
+### Previous: 2026-11-16, session 18
 - **New convention (D-082): [[Changelog]].** Every push adds an entry there first — date, who,
   branch, commit range, what changed, and anything that touches the other person's systems. It
   exists so DLain47's Claude session (and mine) can catch up without reading a diff. It is now step

@@ -17,6 +17,7 @@ var _cash_label: Label
 var _ride_label: Label
 var _speed_label: Label
 var _hint_label: Label
+var _minimap: Minimap
 var _style_label: Label
 var _style_tween: Tween
 var _drift_label: Label
@@ -36,6 +37,8 @@ var _bold: FontVariation
 ## guide arrow at the top centre.
 const TIMER_ANCHOR_Y := 0.39
 const TIMER_RED := Color(1.0, 0.16, 0.12)
+## Square side in pixels (native resolution, outside the PS1 viewport).
+const MINIMAP_SIZE := 164.0
 
 
 func _ready() -> void:
@@ -55,6 +58,11 @@ func _ready() -> void:
 	_place(_ride_label, 0, 0.185, 1, 0.185, 0, 0, 0, 28)
 	_cash_label = _label(32, HORIZONTAL_ALIGNMENT_RIGHT)
 	_place(_cash_label, 1, 0, 1, 0, -320, 10, -18, 50)
+	# Minimap above the speed, in the one corner the HUD was not already using (D-083).
+	_minimap = Minimap.new()
+	_minimap.name = "Minimap"
+	add_child(_minimap)
+	_place(_minimap, 1, 1, 1, 1, -MINIMAP_SIZE - 18, -MINIMAP_SIZE - 76, -18, -76)
 	_speed_label = _label(34, HORIZONTAL_ALIGNMENT_RIGHT)
 	_place(_speed_label, 1, 1, 1, 1, -320, -62, -18, -14)
 	_hint_label = _label(18, HORIZONTAL_ALIGNMENT_CENTER)

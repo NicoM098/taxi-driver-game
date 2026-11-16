@@ -835,3 +835,42 @@ it on the way in and writes it on the way out.
 **Back-filled** on creation with every push on this branch from both lines of work, plus a "Known
 gaps between the branches" section — which is how the missing `dbbd221` was spotted.
 **Status:** accepted
+
+## D-083 — The minimap is drawn from the map's data, not from a second camera (2026-11-16)
+**Context:** user wants a GTA-style minimap marking enemies, police, fares you can pick up, repair
+shops and gun shops, and said the hard part out loud: *"se debería adaptar a cualquier mapa no solo
+a este"*, guessing it might be a top-down camera with a filter and worrying it would wreck
+performance.
+**Decision — no second camera.** It would render the city (335 pieces, 311 lamps, traffic,
+pedestrians) a second time every frame, and worse, it would not give what a minimap needs: at
+150 px across a building is a smudge and a repair shop is indistinguishable from a gun shop, so
+markers have to be drawn over it anyway — at which point the 3D pass only supplies a background.
+**That background is already data.** `MapData.flags()` is one byte per cell with `F_SOLID` /
+`F_COVERED` — a bitmap of the map. It is baked once per map load into an `ImageTexture`, **one
+pixel per cell**, nearest filtering, and drawn rotated. Three tones: street, covered (sidewalk /
+plaza / ramp), solid. This is *why* it works on any map, the editor's included: it comes from the
+same data the world is built from, so there is nothing to keep in sync.
+- **One pixel per cell, not supersampled.** A cell is 8 m, so the map is blocky — which matches
+  the PS1 look and keeps the bake at 2,500 pixels for the starter city and 25,600 for the largest
+  map the editor allows. Supersampling would have cost 16× for a smoothness the game's art does
+  not have.
+- **Rotates with the car, square, radius only, flat** — all four the user's calls.
+- **The square rotates, so the cull radius is the half-diagonal**, not the half-side, or blips pop
+  out of the corners at 45°.
+- The taxi's forward is -Z, which is already "up" on the texture at yaw 0, so the world offset is
+  rotated by the yaw and nothing else is needed.
+- **Blips come from registries that already existed**: `EnemyDirector.enemies` (police told apart
+  by their `EnemyCarData`, as the gunfire is in D-080), `City.stops` where `occupied`,
+  `City.repair_shops`, `City.gun_shops`, and `RideManager.ride.destination` — the one blip clamped
+  to the border when it is out of range, since it is the one you actually need.
+**Where:** `src/ui/hud/minimap.gd`, a `Control` the HUD owns, bottom-right above the speed — the
+one corner the HUD was not already using.
+**Tested:** `tests/minimap_autotest` (the 18th) checks the bake against the cell flags **on a
+non-square 40×24 map**, so a swapped width/depth cannot pass, and checks that the taxi sits at the
+centre, that 40 m ahead draws above it and 40 m to the right draws right of it — **at three
+different yaws**, which is the real test of the rotation. First run failed on the colour check:
+`Color.is_equal_approx` is far too strict for a round trip through an RGBA8 texture, which
+quantises to 1/255. The test compares with a 0.01 tolerance now.
+**Status:** accepted (auto-verified: import clean, all 18 autotests PASS, screenshot taken in the
+running game) — **needs the user's eyes in motion**, above all whether the rotation feels readable
+or sickening.

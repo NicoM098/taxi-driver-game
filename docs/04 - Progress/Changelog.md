@@ -21,6 +21,23 @@ updated: 2026-11-16
 
 ---
 
+## 2026-11-16 · Nico · `temp/playtest-merge` · `1b38641`
+**Iteration 15 — Minimap** (D-083). Square, rotates with the car, shows a radius, flat.
+- **Drawn from `MapData.flags()`, not from a second camera.** The flags grid is already one byte
+  per cell (`F_SOLID` / `F_COVERED`), so it bakes into a one-pixel-per-cell `ImageTexture` on map
+  load and the minimap draws a rotated slice of it. **A second `Camera3D` would have rendered the
+  whole city again every frame** and still not told you a repair shop from a gun shop at 150 px.
+- **It works on any map for free**, the editor's included, because it comes from the same data the
+  world is built from.
+- Blips reuse registries that already exist: `EnemyDirector.enemies` (police told apart by their
+  `EnemyCarData`, like the gunfire in D-080), `City.stops` where `occupied`, `City.repair_shops`,
+  `City.gun_shops`, and the ride destination, clamped to the border when out of range.
+- **Touches your code only in `hud.gd`**: the minimap is a `Control` the HUD builds, bottom-right
+  above the speed — the one corner that was free. It inherits the HUD's visibility, so the file and
+  the menus hide it with no extra wiring.
+- New `tests/minimap_autotest` (the 18th): checks the bake against the flags on a **non-square**
+  40×24 map so a swapped width/depth cannot pass, and the world→minimap mapping at three yaws.
+
 ## 2026-11-16 · Nico · `temp/playtest-merge` · `d9be080`
 **This file** (D-082), plus the rule that fills it: reading it is step 2 of the session protocol
 ([[CLAUDE]] §2), writing it is a rule in §6. Back-filled with every push on this branch from both

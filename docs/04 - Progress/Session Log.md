@@ -713,3 +713,26 @@ step 2 of the session protocol in §2.
 approved — is on `feat/visuals-and-audio` only; the playtest merge was taken at `5789037`, one
 commit earlier, so this branch still had the note as "awaiting playtest". Re-applied by hand and
 recorded under "Known gaps between the branches".
+
+
+## 2026-11-16 — Session 19 — Iteration 15: minimap
+**Iteration:** [[Iteration 15 - Minimap]] (new, planned first at the user's request)
+**Goal:** a GTA-style minimap that **adapts to any map**, marking enemies, police, fares, the
+repair shop and the gun shop. User's calls: rotates with the car, square, radius only, flat.
+**The design decision (D-083):** no second camera. It would render the city again every frame and
+still not distinguish a repair shop from a gun shop at 150 px — markers are needed over it either
+way, at which point the 3D pass only supplies a background. **And that background is already
+data**: `MapData.flags()` is one byte per cell (`F_SOLID` / `F_COVERED`), baked once per map load
+into a one-pixel-per-cell `ImageTexture` and drawn rotated. One cell is 8 m, so it is blocky, which
+suits the PS1 look and keeps the bake at 2.5k-25.6k pixels.
+**Done:** `src/ui/hud/minimap.gd` (bake, rotated draw, blips, clamped destination, centre arrow);
+the HUD builds it bottom-right above the speed — the only free corner.
+**Tested:** import clean, **all 18 autotests PASS**, screenshot taken in the running game (city
+grid, fares, gun shop and the arrow all read). New `tests/minimap_autotest` checks the bake against
+the flags on a **non-square 40×24** map so a swapped width/depth cannot pass, and the world→minimap
+mapping at **three yaws** — the rotation is the part that would be silently wrong.
+**Notes:** the rotation needed no correction factor (the taxi's forward is -Z, already "up" on the
+texture). The test's first run failed on its own colour comparison: `Color.is_equal_approx` cannot
+survive an RGBA8 round trip, so it compares with a 0.01 tolerance now.
+**Next session should:** the user drives it; whether the rotating blocks read or shimmer is the
+open question.
