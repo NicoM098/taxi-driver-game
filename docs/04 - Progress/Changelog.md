@@ -21,6 +21,18 @@ updated: 2026-11-17
 
 ---
 
+## 2026-11-17 · DLain47 · `feat/no-papers` · after `fe4fbf0`
+**Exports ship the map in use (D-097).**
+- New `data/default_map.txt` names the map a build starts on (now `TEST1`) and is packed into
+  exports (`export_presets.cfg` include filter). `MapData.active_name()` reads the player's own
+  `user://active_map.txt` first, then this file, then the generated city; `--map=` still wins.
+- Pressing PLAY in the map editor **while running from the Godot editor** also rewrites
+  `data/default_map.txt`, so the next build ships the map you last played. Exported builds never
+  write it. Heads-up for Nico: playing a map in the editor changes this tracked file.
+- `editor_switch_autotest` restores the shipped file after playing its throw-away map.
+
+---
+
 ## 2026-11-17 · DLain47 · `feat/no-papers` · after `4762617`
 **Still not on the shared branch** (§6). Played twice by DLain47 for balance only.
 

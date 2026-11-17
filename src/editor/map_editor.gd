@@ -77,10 +77,7 @@ func _ready() -> void:
 	RenderingServer.global_shader_parameter_set(&"ps1_affine_strength", 0.0)
 	_build_scene()
 	_build_ui()
-	var start := ""
-	if FileAccess.file_exists("user://active_map.txt"):
-		start = FileAccess.get_file_as_string("user://active_map.txt").strip_edges()
-	var loaded := MapData.load_map(start if start != "" else MapData.DEFAULT_NAME)
+	var loaded := MapData.load_map(MapData.active_name())
 	_set_map(loaded if loaded != null else MapData.make_default())
 	if loaded == null:
 		_say("Starter city loaded (not saved yet). Edit it, or use New for an empty map.")

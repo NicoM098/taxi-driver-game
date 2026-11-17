@@ -22,10 +22,14 @@ class Driver:
 	var _failed: bool = false
 	## The user's map choice before the test (restored at the end).
 	var _active_before: String = ""
+	## The map the next export ships with (MapData.SHIPPED_ACTIVE, D-097), restored byte for byte.
+	var _shipped_before: String = ""
 
 	func _ready() -> void:
 		if FileAccess.file_exists("user://active_map.txt"):
 			_active_before = FileAccess.get_file_as_string("user://active_map.txt").strip_edges()
+		if FileAccess.file_exists(MapData.SHIPPED_ACTIVE):
+			_shipped_before = FileAccess.get_file_as_string(MapData.SHIPPED_ACTIVE)
 		_run.call_deferred()
 
 	func _frames(n: int) -> void:
@@ -169,6 +173,11 @@ class Driver:
 					MapData.set_active(_active_before)
 				else:
 					DirAccess.remove_absolute(ProjectSettings.globalize_path("user://active_map.txt"))
+		if _shipped_before != "":
+			var f := FileAccess.open(MapData.SHIPPED_ACTIVE, FileAccess.WRITE)
+			if f != null:
+				f.store_string(_shipped_before)
+				f.close()
 		var throwaway := MapData.path_for("_autotest_map")
 		if FileAccess.file_exists(throwaway):
 			DirAccess.remove_absolute(ProjectSettings.globalize_path(throwaway))

@@ -23,6 +23,11 @@ const MAPS_DIR := "res://data/maps/"
 ## maps are looked up here first.
 const USER_MAPS_DIR := "user://maps/"
 const DEFAULT_NAME := "city"
+## The map an exported build starts on (D-097): the last map PLAYed from the map editor while
+## running in the Godot editor is written here and shipped with every export, so a fresh install
+## plays the developer's map instead of the generated starter city.
+const SHIPPED_ACTIVE := "res://data/default_map.txt"
+const USER_ACTIVE := "user://active_map.txt"
 const FORMAT := 2
 const MIN_SIZE := 16
 const MAX_SIZE := 160
@@ -356,8 +361,9 @@ static func list_maps() -> PackedStringArray:
 	return out
 
 
-## The map the game plays: `--map=<name>` (command line) > the one picked in the editor
-## (user://active_map.txt) > "city" > the built-in generated city.
+## The map the game plays: `--map=<name>` (command line) > the one picked in the editor on this
+## machine (user://active_map.txt) > the one shipped with the build (SHIPPED_ACTIVE) > "city" >
+## the built-in generated city.
 static func load_active() -> MapData:
 	if override != null:
 		return override
@@ -365,10 +371,8 @@ static func load_active() -> MapData:
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--map="):
 			wanted = arg.get_slice("=", 1)
-	if wanted == "" and FileAccess.file_exists("user://active_map.txt"):
-		wanted = FileAccess.get_file_as_string("user://active_map.txt").strip_edges()
 	if wanted == "":
-		wanted = DEFAULT_NAME
+		wanted = active_name()
 	if wanted != "builtin":
 		var map := load_map(wanted)
 		if map != null and not map.has_errors():
@@ -381,11 +385,27 @@ static func use_builtin() -> void:
 	override = make_default()
 
 
+## The map picked last (this machine first, then the one the build shipped with), or DEFAULT_NAME.
+static func active_name() -> String:
+	for path in [USER_ACTIVE, SHIPPED_ACTIVE]:
+		if FileAccess.file_exists(path):
+			var n := FileAccess.get_file_as_string(path).strip_edges()
+			if n != "":
+				return n
+	return DEFAULT_NAME
+
+
+## Remembers the map to play. Run from the Godot editor it also becomes the map the next exported
+## build starts on (SHIPPED_ACTIVE, D-097); an exported build only remembers it for this machine.
 static func set_active(map_name: String) -> void:
-	var file := FileAccess.open("user://active_map.txt", FileAccess.WRITE)
-	if file != null:
-		file.store_string(map_name)
-		file.close()
+	var paths: Array[String] = [USER_ACTIVE]
+	if OS.has_feature("editor"):
+		paths.append(SHIPPED_ACTIVE)
+	for path in paths:
+		var file := FileAccess.open(path, FileAccess.WRITE)
+		if file != null:
+			file.store_string(map_name)
+			file.close()
 
 
 static func make_empty(map_name: String, w: int, d: int) -> MapData:
