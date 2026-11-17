@@ -805,7 +805,7 @@ open question.
 - the enemies in corners.
 
 ## 2026-11-17 — Session 23 (DLain47) — Endless weapon upgrades, enemy health curve, cheaper unlocks
-**Iteration:** [[Iteration 21 - Endless Weapon Upgrades]] (new) · **Branch:** `feat/no-papers` (uncommitted)
+**Iteration:** [[Iteration 21 - Endless Weapon Upgrades]] (new) · **Branch:** `feat/no-papers` (pushed as `36bd670` at the end of the session, Changelog entry + §0 note for Nico)
 **Goal:** infinite, exponential gun upgrades (mag, ammo, damage, fire rate; then damage / rate with bigger steps every 3 levels) where an all-in gun keeps up with enemy health and a split budget falls off; unlocks 10-15 % sooner.
 **Asked:** separate tracks vs one track → separate; enemy health growing vs stage steps only → growing; specials → kept as a milestone.
 **Done:**

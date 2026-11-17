@@ -7,7 +7,7 @@ updated: 2026-11-17
 > **Read this first every session.** Claude updates it at the end of every session.
 
 ## Where we left off (2026-11-17, session 23 — DLain47)
-- **Branch `feat/no-papers`**, **uncommitted** (the user commits / pushes): [[Iteration 21 - Endless
+- **Branch `feat/no-papers`**, **committed and pushed** (`36bd670`, with a Changelog entry and a §0 note for Nico): [[Iteration 21 - Endless
   Weapon Upgrades]] (D-093), built & auto-verified, **not played**.
   - Guns upgrade on **four tracks** from their shop card: Mag and Ammo (3 levels each), Damage and
     Fire rate **endless**, with steps growing every 3 levels (+10/15/20 %… and +6/9/12 %…),
