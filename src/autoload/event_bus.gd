@@ -38,6 +38,10 @@ signal ride_alert(text: String, seconds: float)
 ## A passenger gave the driver something. kind: &"heal" / &"cash" / &"ammo".
 @warning_ignore("unused_signal")
 signal ride_reward(kind: StringName, amount: float)
+## Gang-rides mode (D-088): the ride card that replaces the passenger file. `lines` may hold
+## BBCode; `stripe` is the card's colour (the passenger's gang, or yellow).
+@warning_ignore("unused_signal")
+signal ride_announced(title: String, lines: PackedStringArray, stripe: Color)
 ## Thrown out by the player (from the file or mid-ride).
 @warning_ignore("unused_signal")
 signal passenger_kicked_out(passenger: RefCounted)

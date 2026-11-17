@@ -99,6 +99,12 @@ func _physics_process(delta: float) -> void:
 				print("[TutorialTest] file open -> FILE; choosing DRIVE")
 				_dossier.choose(&"drive")
 				_next()
+			elif GangRides.enabled and _tutorial.step == Tutorial.Step.DELIVER:
+				# Gang-rides mode (D-088): no file, the fare gets in and the ride starts.
+				if _dossier.is_open:
+					_errors.append("the file opened in gang-rides mode")
+				print("[TutorialTest] boarded -> DELIVER (no file, gang-rides mode)")
+				_next()
 			elif _step_t > 12.0:
 				_fail("passenger never boarded / file never opened")
 		6:

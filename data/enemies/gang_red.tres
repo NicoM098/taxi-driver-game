@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="EnemyCarData" format=3]
+
+[ext_resource type="Script" path="res://src/core/resources/enemy_car_data.gd" id="1_e"]
+
+[resource]
+script = ExtResource("1_e")
+id = &"gang_red"
+display_name = "Red Fangs"
+body_material = "res://assets/materials/enemy_gang_red.tres"
+hp = 85.0
+max_speed = 34.0
+engine_force = 10000.0
+mass = 850.0
+aggression = 0.6
+bounty = 30
+heat_on_kill = 0
+shoots = true
+damage = 2.0
+fire_rate = 7.0
+burst = 4
+burst_pause = 1.2
+spread_deg = 6.0
+gun_range = 34.0

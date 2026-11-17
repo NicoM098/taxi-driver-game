@@ -28,6 +28,7 @@ var _cash_before: int = 0
 
 
 func _ready() -> void:
+	GangRides.enabled = false   # the passenger-file game (D-088 keeps it, switched off)
 	MapData.use_builtin()
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	GameState.reset_run()

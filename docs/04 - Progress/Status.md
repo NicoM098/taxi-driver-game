@@ -6,7 +6,23 @@ updated: 2026-11-16
 
 > **Read this first every session.** Claude updates it at the end of every session.
 
-## Where we left off (2026-11-16, session 20 — DLain47)
+## Where we left off (2026-11-16, session 21 — DLain47)
+- **Active:** [[Iteration 17 - Gang Rides]] — built & auto-verified, **not played**. A trial of the
+  game **without the passenger file**: one switch, `GangRides.enabled` (`src/gang_rides/`), default
+  on; off = the old game, nothing deleted (D-088).
+  - Fares get in and go; a **ride card** (top left) announces who they are, their gang, the ride's
+    **random difficulty** (EASY / NORMAL / HARD / DEADLY: clock, pay, gang pressure) and what their
+    ride events may do.
+  - **Driving into the green ring delivers**, no stopping.
+  - **Three gangs** — Red Fangs (downtown), Purple Hounds (suburbs), Orange Jackals (docks) — with
+    their own cars and colours. Members wait in their zone; carrying one makes the rival gangs roll
+    to come for you. The granny still gives her gift.
+- **New test:** `gang_rides_autotest` (21st). Legacy file tests run with the flag off.
+- **Iteration 16 still awaits its playtest.** Nothing committed or pushed this session.
+- **First thing next session:** the user plays without the file; collect feedback, then polish
+  (gang beams / turf on the minimap are listed as deferred in the note).
+
+### Previous: 2026-11-16, session 20 — DLain47
 - **[[Iteration 15 - Minimap]] closed** (user approved). On top of Nico's version: shop blips were
   drawn at the world origin (bug, fixed), all markers made big and outlined; shops got a ring and a
   beam on the pad and are used with **E** instead of waiting (D-084).

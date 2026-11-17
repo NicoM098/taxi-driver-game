@@ -31,6 +31,7 @@ var _open_t: float = 0.0
 
 
 func _ready() -> void:
+	GangRides.enabled = false   # the passenger-file game (D-088 keeps it, switched off)
 	MapData.use_builtin()   # never the user's edited map
 	process_mode = Node.PROCESS_MODE_ALWAYS   # keep testing while the file pauses the world
 	for arg in OS.get_cmdline_user_args():

@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="EnemyCarData" format=3]
+
+[ext_resource type="Script" path="res://src/core/resources/enemy_car_data.gd" id="1_e"]
+
+[resource]
+script = ExtResource("1_e")
+id = &"gang_purple"
+display_name = "Purple Hounds"
+body_material = "res://assets/materials/enemy_gang_purple.tres"
+hp = 70.0
+max_speed = 33.0
+engine_force = 9000.0
+mass = 750.0
+aggression = 0.15
+bounty = 30
+heat_on_kill = 0
+shoots = true
+damage = 3.0
+fire_rate = 8.0
+burst = 6
+burst_pause = 0.9
+spread_deg = 4.5
+gun_range = 44.0

@@ -757,3 +757,13 @@ open question.
 **Tested (loadout):** upgrades (new part G), arsenal, shop, weapon, ride, events, tutorial, heat_passengers, enemy, enemy_city, hostiles, pickup, dossier, streetlife PASS.
 - Pulled Nico's branch rule (`023c105`, [[CLAUDE]] §6). Asked which branch: the user chose `temp/playtest-merge` for everything, Iteration 16 included. Changelog entry written, committed and pushed.
 **Next session should:** playtest Iteration 16 (unlock pace, prices, specials, the heavy weapons) (`audio.gd` and the shop rewrite flagged for Nico in the Changelog).
+
+## 2026-11-16 — Session 21 (DLain47) — Gang rides: the game without the passenger file
+**Iteration:** [[Iteration 17 - Gang Rides]] (new) · **Phases touched:** 03, 04, 06, 07
+**Goal:** try the game without the "Papers, Please" file (kept, switched off), events announced in text, auto-delivery, three gangs with zones and rival pursuit, random ride difficulty — all in its own module.
+**Done:**
+- `src/gang_rides/`: `GangRides` (the switch, zones, member spawning, difficulty, rival crews, ride-card text), `GangData`, `RideCard`. Data: `data/gangs/{red,purple,orange}.tres`, `data/enemies/gang_{red,purple,orange}.tres`, `assets/materials/enemy_gang_{red,purple,orange}.tres` (D-088).
+- Hooks: `RideManager` (skip the file, deliver at any speed — both gated), `EventBus.ride_announced`, HUD adds the card + hint text, tutorial skips the FILE step in this mode, `game.tscn` gets a `GangRides` node.
+**Files changed:** `src/ride/ride_manager.gd`, `src/autoload/event_bus.gd`, `src/ui/hud/hud.gd`, `src/ui/tutorial/tutorial.gd`, `src/main/game.tscn`; new files above; tests `gang_rides` (new), `tutorial`, and `dossier` / `events` / `heat_passengers` / `hostiles` (flag off).
+**Tested:** import clean; gang_rides A-G PASS (zones per district, a red member waits in the red zone in red, no file, clock/pay match the difficulty, a DEADLY plan never includes his own gang, a crew fires by itself with its own cars + alert, delivered at 14 m/s, the granny's card and gift, all four difficulties roll). Screenshots of the card and a rival crew checked (the card first stretched to full screen height and covered the health bars — fixed). Full suite: gang_rides, dossier, ride, events, heat_passengers, hostiles, tutorial, pickup, enemy, map, minimap, shop, upgrades, arsenal, weapon, streetlife, style, jump, curb PASS; enemy_city failed once (KI-029) then 3/3.
+**Next session should:** the user plays the mode; polish from their feedback.

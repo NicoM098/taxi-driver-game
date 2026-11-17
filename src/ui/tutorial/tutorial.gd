@@ -79,6 +79,8 @@ func _process(delta: float) -> void:
 		Step.PICKUP:
 			if file_open or (rides != null and rides.state == RideManager.State.DOSSIER):
 				_go(Step.FILE)
+			elif rides != null and rides.state == RideManager.State.RIDING:
+				_go(Step.DELIVER)   # gang-rides mode: no file (D-088)
 		Step.FILE:
 			if not file_open and rides != null:
 				if rides.state == RideManager.State.RIDING:
@@ -161,9 +163,12 @@ func _refresh_text() -> void:
 		Step.FILE:
 			_body.text = "Their file. Underlined details can be examined (costs ride time).\nChoose what to do — DRIVE accepts the fare."
 		Step.DELIVER:
-			_body.text = "Follow the arrow to the green ring and stop inside it before the red clock runs out."
+			_body.text = ("Follow the arrow and drive into the green ring before the red clock runs out." if GangRides.enabled
+					else "Follow the arrow to the green ring and stop inside it before the red clock runs out.")
 		Step.DONE:
-			_body.text = "Fare paid — you're a cabbie.\nRead every file: some fares bring hitmen, thieves or worse.\n%s pauses (main menu, run stats)." % ("Start" if pad else "Esc")
+			var warn := "Read the card of every fare: gang members bring their rivals." if GangRides.enabled \
+					else "Read every file: some fares bring hitmen, thieves or worse."
+			_body.text = "Fare paid — you're a cabbie.\n%s\n%s pauses (main menu, run stats)." % [warn, "Start" if pad else "Esc"]
 		_:
 			_body.text = ""
 

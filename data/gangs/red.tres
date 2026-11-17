@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="GangData" format=3]
+
+[ext_resource type="Script" path="res://src/gang_rides/gang_data.gd" id="1_g"]
+
+[resource]
+script = ExtResource("1_g")
+id = &"red"
+display_name = "Red Fangs"
+color = Color(0.8, 0.12, 0.12, 1)
+car = "res://data/enemies/gang_red.tres"
+nicknames = PackedStringArray("Fang", "Molar", "Bite", "Canine", "Ripper", "Gums")
+panic_lines = PackedStringArray("Those are our enemies! Floor it!", "They saw my colours. DRIVE!", "Ha! Let them try. Just keep moving.")
+greeting_lines = PackedStringArray("Drive. And keep the red side of town behind us.", "Fangs ride for free. Kidding. Mostly.")

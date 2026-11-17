@@ -26,6 +26,7 @@ var _done: bool = false
 
 
 func _ready() -> void:
+	GangRides.enabled = false   # the passenger-file game (D-088 keeps it, switched off)
 	MapData.override = _courtyard_map()
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(MAIN.instantiate())

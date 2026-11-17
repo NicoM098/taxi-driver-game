@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="GangData" format=3]
+
+[ext_resource type="Script" path="res://src/gang_rides/gang_data.gd" id="1_g"]
+
+[resource]
+script = ExtResource("1_g")
+id = &"purple"
+display_name = "Purple Hounds"
+color = Color(0.55, 0.2, 0.8, 1)
+car = "res://data/enemies/gang_purple.tres"
+nicknames = PackedStringArray("Howl", "Muzzle", "Leash", "Pup", "Collar", "Scent")
+panic_lines = PackedStringArray("They sniffed me out. MOVE!", "Hounds never run... except right now. GO!", "Get us out of their sights!")
+greeting_lines = PackedStringArray("Smooth ride, smooth tip. Rough ride, rough night.", "The Hounds remember good drivers.")

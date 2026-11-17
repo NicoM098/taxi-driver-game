@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="GangData" format=3]
+
+[ext_resource type="Script" path="res://src/gang_rides/gang_data.gd" id="1_g"]
+
+[resource]
+script = ExtResource("1_g")
+id = &"orange"
+display_name = "Orange Jackals"
+color = Color(1.0, 0.5, 0.1, 1)
+car = "res://data/enemies/gang_orange.tres"
+nicknames = PackedStringArray("Scrap", "Rust", "Dusty", "Snatch", "Skinny", "Grin")
+panic_lines = PackedStringArray("Rival crew! Lose them, lose them!", "They want what is in my pocket. Faster!", "I knew this cab looked too slow.")
+greeting_lines = PackedStringArray("Quick ride, no questions. Jackal rules.", "Nobody saw me get in. Right?")

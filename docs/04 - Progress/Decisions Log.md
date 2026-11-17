@@ -909,3 +909,13 @@ or sickening.
 - The hotbar shows only the equipped guns, numbered by key, plus the next gun on sale while there is room.
 **Status:** accepted (auto-verified: upgrades G (10 checks), shop equip / unequip, arsenal, weapon, ride, events, tutorial, heat_passengers, enemy, enemy_city, hostiles, pickup, dossier, streetlife PASS; screenshots of the shop list and the 4-card hotbar).
 
+## D-088 — Gang rides: the file switched off, gangs and random difficulty in one module (2026-11-16)
+**Context:** user: try the game without the "Papers, Please" passenger file, announce passenger events in text, deliver by entering the ring, three gangs (red, purple, orange) with spawn zones whose rivals come for you when you carry a member, the granny keeps her gift, random ride difficulty; "lets not permanently delete the previous feature ... implement the new feature as its own script so we have it locallized". See [[Iteration 17 - Gang Rides]].
+**Decision (Claude's calls, the user can overrule):**
+- One switch, `GangRides.enabled` (static, default **true**), in the new `src/gang_rides/gang_rides.gd`. `false` = the old game exactly. Outside the module only two gated lines in `RideManager` (skip the file by choosing a plain `drive` action; deliver in the ring at any speed), a hint / tutorial text, `EventBus.ride_announced`, and the HUD adding `RideCard`. The Dossier and its tests are untouched; the legacy tests set the flag to false.
+- Gangs are data (`GangData`, `data/gangs/*.tres`), each with its own `EnemyCarData` (`data/enemies/gang_<id>.tres`) and colour. Zones: one district per gang when the map has enough districts (both sorted by name), otherwise pie slices around the centre of the stops — works on any user map.
+- Gang members are generated one-off profiles tagged with `set_meta(&"gang")`, placed by `GangRides` at stops of their zone through `PassengerSpawner.spawn_at` (max 3 waiting).
+- Difficulty is applied on `EventBus.ride_started` by scaling `ride.time_limit` and `ride.fare_mult`; rival crews are planned at the same time and fired by `GangRides` itself at a ride progress (read from the ride's `RideContext`), through `EnemyDirector.spawn_on_route` — not by adding RideEvents to the shared profile resources.
+- The ride card describes ride events by class (pursuers, armed, thief, gift, detour, police, timer), skipping events that need a file action.
+**Status:** accepted (auto-verified: new `gang_rides_autotest` A-G; screenshots of the card and a rival crew).
+

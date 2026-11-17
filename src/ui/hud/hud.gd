@@ -133,6 +133,8 @@ func _ready() -> void:
 	_place(_summary_label, 0, 0, 1, 1, 10, 10, -10, -10)
 	_summary_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 
+	add_child(RideCard.new())   # gang-rides mode: announces each fare (D-088)
+
 	EventBus.hud_message.connect(show_message)
 	EventBus.style_earned.connect(_on_style_earned)
 	EventBus.passenger_bark.connect(show_bark)
@@ -168,7 +170,7 @@ func _process(delta: float) -> void:
 				var hurry := ride.time_ratio() < 0.25
 				_timer_label.modulate.a = 0.45 if hurry and fmod(ride.time_left, 0.5) < 0.2 else 1.0
 				_ride_label.text = "→ %s   %d m" % [ride.destination.stop_name, roundi(dist)]
-				_hint_label.text = "Stop inside the green ring"
+				_hint_label.text = "Drive into the green ring" if GangRides.enabled else "Stop inside the green ring"
 				if rides.can_kick_mid_ride():
 					_hint_label.text += "   ·   %s: throw the passenger out" % _kick_key()
 			RideManager.State.ENTERING:

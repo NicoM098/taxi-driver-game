@@ -21,6 +21,26 @@ updated: 2026-11-16
 
 ---
 
+## 2026-11-16 · DLain47 · `feat/no-papers` (new branch) · after `900fc32`
+**Not on the shared branch:** an unplayed trial, on its own branch per §6. Merges into
+`temp/playtest-merge` only once DLain47 has played it.
+
+**Iteration 17 — Gang Rides: the game without the passenger file (D-088)**
+- **The Dossier is switched off, not deleted:** one flag, `GangRides.enabled` (static, default
+  `true`, `src/gang_rides/gang_rides.gd`). `false` = the old game exactly.
+- **With it on:** fares get in and the ride starts (no file); driving into the green ring delivers
+  at any speed; a **ride card** (top left, `RideCard`) announces the passenger, their gang, a
+  **random difficulty** (EASY / NORMAL / HARD / DEADLY: clock, pay, gang pressure) and what their
+  ride events may do.
+- **Three gangs** (`data/gangs/`): Red Fangs (downtown), Purple Hounds (suburbs), Orange Jackals
+  (docks), each with its own car (`data/enemies/gang_*.tres`) and material. Members wait in their
+  zone; carrying one makes the rival gangs roll to come for you (`EnemyDirector.spawn_on_route`).
+- **Shared code touched (small, gated):** `ride_manager.gd` (2 lines behind the flag),
+  `event_bus.gd` (new `ride_announced`), `hud.gd` (adds the card, hint text), `tutorial.gd` (no
+  FILE step in this mode), `game.tscn` (a `GangRides` node). Your visuals / audio are untouched.
+- **Tests:** new `gang_rides_autotest`; dossier / events / heat_passengers / hostiles set the flag
+  to `false` themselves; tutorial test covers both modes.
+
 ## 2026-11-16 · DLain47 · `temp/playtest-merge` · after `023c105`
 **On this branch by the user's choice:** asked under your new branch rule (§6), DLain47 chose to
 put all of it here, including **Iteration 16, which nobody has played yet**. Expect it in your

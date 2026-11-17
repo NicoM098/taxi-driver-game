@@ -10,6 +10,8 @@ extends Node
 ##             only while a ride event allows it (thief caught in the act, hijack): a normal
 ##             fare cannot be ended by the driver (user feedback 2026-11-12)
 ##   EXITING:  short pause while the passenger gets out
+## Gang-rides mode (GangRides.enabled, D-088): DOSSIER is skipped (the fare is driven as is)
+## and driving into the destination ring delivers without stopping.
 
 enum State { IDLE, ENTERING, DOSSIER, RIDING, EXITING }
 
@@ -91,7 +93,8 @@ func _physics_process(delta: float) -> void:
 				return
 			ride.time_left -= delta
 			var d := _flat_distance(_taxi.global_position, ride.destination.global_position)
-			if d < arrival_radius and _taxi.linear_velocity.length() < arrival_max_speed:
+			# Gang-rides mode (D-088): driving into the ring is enough, no need to stop.
+			if d < arrival_radius and (GangRides.enabled or _taxi.linear_velocity.length() < arrival_max_speed):
 				_complete_ride()
 			elif ride.time_left <= 0.0:
 				_fail_ride(&"too_slow", "TOO SLOW! The passenger stormed out")
@@ -170,6 +173,11 @@ func _open_file() -> void:
 	(seat if seat != null else _taxi as Node3D).add_child(_seated_visual)
 	_set_state(State.DOSSIER)
 	EventBus.passenger_entered.emit(_passenger.profile)
+	if GangRides.enabled:
+		# Gang-rides mode (D-088): no file, the fare is accepted as it is. GangRides announces
+		# the passenger on a ride card instead.
+		_on_action_chosen(_passenger, PassengerAction.make(&"drive", "Drive", PassengerAction.Outcome.DRIVE))
+		return
 	EventBus.dossier_opened.emit(_passenger)
 
 
