@@ -957,3 +957,41 @@ or sickening.
 - `EnemyDirector._cleanup` no longer `erase()`s freed cars from its typed list (it errored every frame and kept them).
 **Measured** (new `enemy_corners_autotest`: 5 hunters, a taxi jumping streets every 12 s, 90 s): old AI 146 s stuck, 70 reversals, 590 HP lost away from the taxi → new 26-46 s stuck over four runs (mostly sub-second stops), 21-31 reversals, 0 crash damage from walls.
 **Status:** accepted (auto-verified).
+
+## D-093 — Endless weapon upgrades on four tracks; enemy health follows an all-in gun (2026-11-17)
+**Context:** user on `feat/no-papers`: upgrades "infinite but exponential" — mag, ammo capacity, damage, fire rate, then only damage and fire rate with bigger steps every 3 levels; "mathematically the weapon should hold on to the current health of the enemies, but it would require spending only on that weapon"; unlocks 10-15 % sooner (stage 2's boss reached with only the mines). Asked and answered: separate stat tracks; enemy health keeps growing; specials kept as a milestone. See [[Iteration 21 - Endless Weapon Upgrades]]. Replaces the Mk I-IV track of D-085.
+**Decision (Claude's calls, the user can overrule):**
+- Four tracks per gun in `GameState.weapon_levels[id][track]`: mag (+25 % of base, 3 levels), reserve/"Ammo" (+40 %, 3 levels), damage (+10/15/20/25 %… stepping up every 3 levels, endless), fire rate (+6/9/12/15 %…, endless). Steps compound. `WeaponUpgrades.apply(base)` builds the carried copy from the levels.
+- Prices `upgrade_cost × share × growth^level`: damage share 1.0, rate 1.1, mag 0.6, ammo 0.5; growth ×1.35 endless, ×1.6 capped. Rising price per % means a gun's DPS per dollar keeps falling: power grows only with money poured in.
+- **Every gun has `upgrade_cost` 250** (= `REFERENCE_COST`). Tried per-gun costs ($150 revolver … $360 laser) first: with exponential prices a cheaper gun pulls ahead without limit (at $25k earned an all-in revolver ×12 vs laser ×5, so the revolver out-damages the laser). With one price scale every gun keeps its base-DPS ranking, and the enemy curve matches any all-in gun exactly.
+- **Fire-rate cap:** min(3 × base, max(30, base)) shots/s (physics runs at 60 Hz, and a 3-shot/s rocket launcher is already a lot); rate levels past the cap multiply damage instead, so DPS is identical.
+- **Special after 8 upgrades** on a gun, any tracks (`SPECIAL_AT`). Dragon's breath burn scales with the gun's damage multiplier.
+- **Enemy health scales with earnings, not time:** `GameState.earned` (every positive `add_cash`, spending not subtracted). An enemy spawns with `hp × dedicated_power(earned × 0.75)`, the DPS multiplier of a reference gun that got 75 % of all earnings in damage / rate, cheapest level first, the level in progress counted in part. Earnings rather than clock time because then "keeps pace if you spend only on that gun" holds by construction at any income rate, and the endless war after stage 3 keeps climbing as long as you keep earning. 25 % slack covers ammo and a cheap extra. `WeaponUpgrades.scale_enemies` switches it off.
+- Unlocks −15 % (rounded): SMG 4, sawed-off 10, mines 13, rifle 17, minigun 19, rocket 24, laser 30.
+- Shop cards: BUY → AMMO once owned, EQUIP, and a row of four track buttons (level, next step, price); pips count to the special. Old in-city gun shop gets the same four buttons; hotbar shows `+N`.
+**Status:** accepted (auto-verified: `upgrades_autotest` A-I, arsenal, shop, shop_menu and the related suite PASS). Not played.
+
+## D-094 — Ammo drops from enemies, not the shop (2026-11-17)
+**Context:** user: ammo dropped by enemies instead of bought, for a specific weapon, floating like the Monstrous Energy can, with a circle under it (and under the can). See [[Iteration 22 - Ammo Drops]].
+**Decision (Claude's calls, the user can overrule):**
+- Ammo is not sold: shop card shows OWNED, the old gun shop has no REFILL, `WeaponData.ammo_price` and `WeaponController.refill_ammo` removed. Upgrades stop refilling (otherwise buying a cheap Ammo level would be ammo for sale again); an Ammo level / the drum adds its new spare room.
+- Every `EnemyCar` death calls `AmmoPickup.drop_for_kill`: 1 box + 1 per 400 base HP (max 5). Each box is for ONE equipped gun, picked at random weighted by how empty it is (+0.08 so full guns still show up). A box holds 30 % of the gun's upgraded reserve, at least a magazine, so it scales with Ammo upgrades and is fair across guns.
+- A box for a full gun is not consumed (stays until there is room); boxes go after 30 s. Placed on the ground by a ray down (layer 1).
+- `PickupRing` (unshaded ring + faint disc, pulsing) under the ammo boxes and the energy can.
+- `AmmoPickup.enabled` switches drops off.
+**Status:** accepted (auto-verified: `ammo_drop_autotest` + the suite). Not played.
+
+## D-095 — Easier by 10-15 %: fares x1.5, prices -10 %, enemies -10 % (2026-11-17)
+**Context:** user's first test run of Iterations 21-22: "game is kinda hard, not because the bullets but the dmg is too low ... lowering the prices a little bit and making the fares give you substantially more, lowering the difficulty by 10 to 15%".
+**Decision (Claude's calls, the user can overrule):**
+- Fares (base + distance, not tips) x1.5: `RideManager.FARE_SCALE` (the dossier estimate uses it too).
+- Prices -10 %: guns (SMG 360, sawed-off 540, rifle 750, mines 1600, minigun 2250, rocket 3150, laser 4500), every car upgrade, and the gun upgrade tracks (`upgrade_cost` 250 -> 225).
+- The enemy-health curve grows with earnings, so x1.5 fares alone would just make enemies x1.5 money tougher. Re-tuned: `SCALING_SHARE` 0.75 -> 0.8, the curve still priced at `REFERENCE_COST` 250 (the guns now pay 225), and a flat `ENEMY_HP_SCALE` 0.9. Modelled (python port of `dedicated_power`): enemy HP / an all-in gun's DPS vs before = 0.90 at the start, 0.88 at $1k old-earnings, 0.88 at $3-6k, 0.86 at $10k, 0.85 at $25k+ -> 10 % easier early, 15 % late. Enemies' absolute health still rises (more money comes in): ~x1.0-1.1 of before at equal progress. Spread spending gains the same 10-15 % plus the bigger fares.
+**Status:** accepted (auto-verified: upgrades test checks the curve and that an all-in gun at shop prices is ahead). Not played.
+
+## D-096 — Richer runs, guns ahead of the enemies: fares x2.5, bounties x2, enemy curve 0.35 (2026-11-17)
+**Context:** user's second run (after D-095), at the third boss of stage 2: revolver +14, mines with no levels, $440 left (~$6.5k earned). "at this stage i would like to have at least 4 guns and some upgrades, not even mention the car upgrades ... it would feel more rewarding if i felt like my guns were over powered."
+**Decision (Claude's calls, the user can overrule):**
+- Income about x1.8: `RideManager.FARE_SCALE` 1.5 -> 2.5, kill bounties x2 (`EnemyDirector.BOUNTY_SCALE`). Same point in the run ~ $11-12k earned: 4 guns (~$2.5k), the main gun +14 (~$4.4k), a few levels elsewhere and ~$2k of cab upgrades.
+- Enemy health no longer keeps pace with an all-in gun: `SCALING_SHARE` 0.8 -> 0.35, `ENEMY_HP_SCALE` 0.9 -> 0.85. Because the curve follows earnings, more income alone would have made enemies tougher too. Modelled (in old-economy earnings $1k / 3k / 6.5k / 12k / 25k): a gun with 40 % of the money is 1.23 / 1.28 / 1.33 / 1.46 / 1.46x the enemies, all in 1.41 / 1.79 / 2.09 / 2.57 / 2.99x; enemy health x1.0 / 1.3 / 1.9 / 2.7 / 5.0. Still endless (enemies keep rising), and a gun that gets nothing still falls behind; it is the player who out-scales now, not a tie.
+**Status:** accepted (auto-verified: upgrades test). Not played.

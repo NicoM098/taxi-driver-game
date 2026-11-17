@@ -49,7 +49,7 @@ func _run() -> void:
 	var rifle := load("res://data/weapons/rifle.tres") as WeaponData
 	for id: String in ["mines", "minigun", "rocket", "laser"]:
 		var w := load("res://data/weapons/%s.tres" % id) as WeaponData
-		_check(w.price >= 1500 and w.unlock_rides >= 15 and w.price > rifle.price,
+		_check(w.price >= 1500 and w.unlock_rides >= 12 and w.price > rifle.price,
 				"%s: $%d after %d fares" % [w.display_name, w.price, w.unlock_rides])
 
 	# --- B. minigun ---------------------------------------------------------------------
@@ -65,8 +65,8 @@ func _run() -> void:
 	var stream := _wc.shots_fired - before
 	Input.action_release(&"fire")
 	_check(during_spin == 0 and stream >= 12, "minigun: %d shots while spinning up, %d after 1.5 s" % [during_spin, stream])
-	GameState.weapon_levels[&"minigun"] = 3
-	_wc.upgrade(&"minigun")
+	GameState.weapon_levels[&"minigun"] = {&"damage": WeaponUpgrades.SPECIAL_AT - 1}
+	_wc.upgrade(&"minigun", &"rate")
 	await _wait(1.0)
 	before = _wc.shots_fired
 	Input.action_press(&"fire")
@@ -97,6 +97,14 @@ func _run() -> void:
 	_clear(boards)
 
 	# --- D. rocket -----------------------------------------------------------------------
+	# Part of every shot's recoil stays in the aim (CabCamera.recoil_permanent): after the
+	# minigun burst the view points ~2 deg up and the rocket can sail over the boards. Level it.
+	var cab: Node = _cam
+	while cab != null and not cab is CabCamera:
+		cab = cab.get_parent()
+	if cab != null:
+		cab.set(&"_pitch", 0.0)
+		cab.set(&"_yaw", 0.0)
 	# A cluster 22 m ahead: one in the line of fire, two beside it.
 	boards = _boards([Vector3(0, 0, 22), Vector3(2.5, 0, 22.5), Vector3(-2.5, 0, 22.5)])
 	_wc.select(_wc.index_of_slot(7))
@@ -113,8 +121,9 @@ func _run() -> void:
 	_check(flying == 1 and hurt_now == 0, "a rocket is in the air, nothing hurt yet (%d rockets, %d hurt)" % [flying, hurt_now])
 	_check(_hurt(boards) == 3, "the explosion hurt all %d boards of the cluster (%d)" % [boards.size(), _hurt(boards)])
 	_clear(boards)
-	GameState.weapon_levels[&"rocket"] = 3
-	_wc.upgrade(&"rocket")
+	GameState.weapon_levels[&"rocket"] = {&"damage": WeaponUpgrades.SPECIAL_AT - 1}
+	_wc.upgrade(&"rocket", &"rate")
+	_wc.ammo[&"rocket"]["mag"] = 1   # upgrades no longer reload (D-094): load the tube by hand
 	await _wait(0.4)
 	Input.action_press(&"fire")
 	await get_tree().physics_frame

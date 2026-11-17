@@ -11,5 +11,5 @@ slot = 6
 section = &"cans"
 stat = &"can_size"
 per_level = 0.35
-prices = PackedInt32Array(250, 600, 1200)
+prices = PackedInt32Array(225, 540, 1080)
 level_text = "+%d %% healing per can"

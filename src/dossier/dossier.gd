@@ -305,7 +305,7 @@ func _refresh(focus_examine: bool) -> void:
 	var taxi := get_tree().get_first_node_in_group(&"player_vehicle") as Node3D
 	if dest != null and taxi != null:
 		dist = Vector2(dest.global_position.x - taxi.global_position.x, dest.global_position.z - taxi.global_position.z).length()
-	var fare := roundi(prof.fare_base + prof.fare_per_100m * dist / 100.0)
+	var fare := roundi((prof.fare_base + prof.fare_per_100m * dist / 100.0) * RideManager.FARE_SCALE)
 	_v_name.text = p.display_name
 	_v_age.text = str(p.age)
 	_v_job.text = prof.occupation

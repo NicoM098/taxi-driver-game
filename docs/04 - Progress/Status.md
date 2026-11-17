@@ -6,7 +6,31 @@ updated: 2026-11-17
 
 > **Read this first every session.** Claude updates it at the end of every session.
 
-## Where we left off (2026-11-17, session 22 — DLain47)
+## Where we left off (2026-11-17, session 23 — DLain47)
+- **Branch `feat/no-papers`**, **uncommitted** (the user commits / pushes): [[Iteration 21 - Endless
+  Weapon Upgrades]] (D-093), built & auto-verified, **not played**.
+  - Guns upgrade on **four tracks** from their shop card: Mag and Ammo (3 levels each), Damage and
+    Fire rate **endless**, with steps growing every 3 levels (+10/15/20 %… and +6/9/12 %…),
+    prices ×1.35 a level. Fire rate past 3× base (max 30/s) turns into damage.
+  - The gun's **special** comes after **8 upgrades** (any tracks).
+  - **Enemy health grows with what the run has earned**: exactly as fast as one gun with 75 %
+    of the money in it. All in on a gun → it keeps pace; spread the money → it falls off.
+  - **Unlocks −15 %:** SMG 4, sawed-off 10, mines 13, rifle 17, minigun 19, rocket 24, laser 30.
+- **Then [[Iteration 22 - Ammo Drops]] (D-094):** ammo is no longer bought (and upgrades no
+  longer refill). Every destroyed enemy drops a floating ammo box for one equipped gun (weighted
+  to the emptiest; bosses drop up to 5), with a glowing circle on the road; the Monstrous Energy
+  can has the circle too. New test `ammo_drop_autotest`.
+- **User played it once: "too hard, damage too low"** → D-095: fares ×1.5, all prices −10 %
+  (guns, car upgrades, upgrade tracks), enemy health ×0.9 with the curve re-tuned: 10 % easier at
+  the start, ~15 % late. **Second run: still too poor** (stage-2 third boss: revolver +14,
+  mines, $440) → D-096: fares ×2.5, bounties ×2, enemy health curve cut (`SCALING_SHARE` 0.35,
+  ×0.85) so guns out-scale enemies. Not played since.
+- Iterations 17-20 are still unplayed too.
+- **First thing next session:** the user plays `feat/no-papers` (5 test points in the Iteration
+  21 note: does an all-in gun keep pace, does a split budget fall off, late-run enemy health;
+  and the Iteration 22 note: running dry, seeing the boxes).
+
+### Previous: 2026-11-17, session 22 — DLain47
 - **Branch `feat/no-papers`** — everything from sessions 21-22 is **committed and pushed**
   (end of session 22). Nico has a note at the top of [[CLAUDE]] (§0) and a Changelog entry. Holds [[Iteration 17 - Gang Rides]] and the new
   [[Iteration 18 - Shop Menu & Car Upgrades]] — both built & auto-verified, **not played**.

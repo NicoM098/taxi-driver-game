@@ -11,6 +11,7 @@ extends Area3D
 
 var _visual: Node3D
 var _light: OmniLight3D
+var _ring: PickupRing
 var _respawn_left: float = 0.0
 var _time: float = 0.0
 
@@ -29,6 +30,7 @@ func _ready() -> void:
 	_visual.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	add_child(_visual)
 	build_can(_visual, 1.0, false)
+	_ring = PickupRing.build(self, Color(0.6, 0.9, 1.0), 2.0)
 	_light = OmniLight3D.new()
 	_light.light_color = Color(0.6, 0.9, 1.0)
 	_light.light_energy = 1.2
@@ -69,6 +71,7 @@ func _on_body_entered(body: Node) -> void:
 func _set_available(on: bool) -> void:
 	_visual.visible = on
 	_light.visible = on
+	_ring.visible = on
 	set_deferred(&"monitoring", on)
 
 

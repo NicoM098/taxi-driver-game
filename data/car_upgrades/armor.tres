@@ -11,5 +11,5 @@ slot = 1
 section = &"car"
 stat = &"armor"
 per_level = 0.25
-prices = PackedInt32Array(350, 800, 1600)
+prices = PackedInt32Array(315, 720, 1440)
 level_text = "+%d %% taxi health"

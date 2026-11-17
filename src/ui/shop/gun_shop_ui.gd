@@ -6,7 +6,7 @@ extends Control
 ## List + detail (D-086, eight guns no longer fit as cards): on the left every gun in slot order
 ## with its state (OWNED · Mk, price, or LOCKED x / N fares); on the right the selected one —
 ## silhouette, blurb, stat bars, BUY / REFILL AMMO, EQUIP / UNEQUIP, its Mk level and the next
-## UPGRADE (D-085). Only four guns ride in the cab (D-087): the rest are stored here.
+## upgrade tracks (D-085, D-093). Only four guns ride in the cab (D-087): the rest are stored here.
 
 ## Every feedback line (bought, not enough cash...): the shop menu shows them (D-090).
 signal said(text: String, colour: Color)
@@ -36,11 +36,10 @@ var _blurb: Label
 var _stats: VBoxContainer
 var _ammo_label: Label
 var _buy: Button
-var _refill: Button
 var _equip_b: Button
 var _level: Label
 var _up_note: Label
-var _upgrade: Button
+var _track_buttons: Dictionary = {}   # track -> Button (D-093)
 
 
 func _ready() -> void:
@@ -145,45 +144,31 @@ func toggle_equip(id: StringName) -> bool:
 	return true
 
 
-## Buys the next Mk level of an owned weapon (also used by tests). Returns true on success.
-func upgrade(id: StringName) -> bool:
+## Buys the next level of one upgrade track (WeaponUpgrades.TRACKS) of an owned weapon (also
+## used by tests). Returns true on success.
+func upgrade(id: StringName, track: StringName) -> bool:
 	var wc := _controller()
 	var w := _weapon(id)
-	if wc == null or w == null or not wc.owns(id):
+	if wc == null or w == null or not wc.owns(id) or not track in WeaponUpgrades.TRACKS:
 		return false
-	var level := GameState.weapon_level(id)
-	var price := WeaponUpgrades.next_price(w, level)
+	var track_name: String = WeaponUpgrades.TRACK_NAME[track]
+	var price := WeaponUpgrades.next_price(w, track)
 	if price < 0:
+		_say("%s %s is maxed." % [w.display_name, track_name], Color.WHITE)
 		return false
 	if GameState.cash < price:
 		_say("Not enough cash for %s %s — you need $%d more." % [
-				w.display_name, WeaponUpgrades.level_name(level + 1), price - GameState.cash], RED)
+				w.display_name, track_name, price - GameState.cash], RED)
 		return false
+	var had_special := WeaponUpgrades.special_in(id) == 0
+	var gives := WeaponUpgrades.describe_next(w, track)
 	GameState.add_cash(-price)
-	wc.upgrade(id)
-	var label := "%s %s" % [w.display_name, WeaponUpgrades.level_name(level + 1)]
-	if level + 1 >= WeaponUpgrades.MAX_LEVEL:
+	wc.upgrade(id, track)
+	var label := "%s %s %d (%s)" % [w.display_name, track_name, WeaponUpgrades.level(id, track), gives]
+	if not had_special and WeaponUpgrades.special_in(id) == 0 and w.special != &"":
 		label += " — %s!" % w.special_name.to_upper()
-	_say("%s. Ammo filled." % label, GREEN)
+	_say("%s." % label, GREEN)
 	EventBus.hud_message.emit("UPGRADED: %s  -$%d" % [label.to_upper(), price], &"good")
-	_refresh()
-	return true
-
-
-## Refills an owned weapon's ammo (also used by tests). Returns true on success.
-func refill(id: StringName) -> bool:
-	var wc := _controller()
-	var w := _weapon(id)
-	if wc == null or w == null or not wc.owns(id):
-		return false
-	if GameState.cash < w.ammo_price:
-		_say("Not enough cash for %s ammo ($%d)." % [w.display_name, w.ammo_price], RED)
-		return false
-	if not wc.refill_ammo(id):
-		_say("Your %s is already full." % w.display_name, Color.WHITE)
-		return false
-	GameState.add_cash(-w.ammo_price)
-	_say("%s reloaded to the max." % w.display_name, GREEN)
 	_refresh()
 	return true
 
@@ -206,11 +191,10 @@ func _refresh() -> void:
 		var state := ""
 		var colour := Color.WHITE
 		if owned and wc.is_equipped(w.id):
-			state = "EQUIPPED · key %d · %s" % [wc.index_of_weapon(w.id) + 1,
-					WeaponUpgrades.level_name(GameState.weapon_level(w.id))]
+			state = "EQUIPPED · key %d  %s" % [wc.index_of_weapon(w.id) + 1, WeaponUpgrades.level_name(w.id)]
 			colour = GREEN
 		elif owned:
-			state = "STORED · %s" % WeaponUpgrades.level_name(GameState.weapon_level(w.id))
+			state = "STORED  %s" % WeaponUpgrades.level_name(w.id)
 			colour = Color(0.6, 0.85, 1.0)
 		elif rides >= w.unlock_rides:
 			state = "$%d" % w.price
@@ -259,8 +243,6 @@ func _refresh_detail(wc: WeaponController, rides: int) -> void:
 		_buy.text = "LOCKED — %d more fares" % (w.unlock_rides - rides)
 	_buy.disabled = owned or not unlocked
 	_buy.modulate = Color.WHITE if _buy.disabled or GameState.cash >= w.price else Color(1, 1, 1, 0.55)
-	_refill.text = "REFILL AMMO  $%d" % w.ammo_price
-	_refill.disabled = not owned
 	var equipped := owned and wc.is_equipped(w.id)
 	if equipped:
 		_equip_b.text = "UNEQUIP"
@@ -270,15 +252,19 @@ func _refresh_detail(wc: WeaponController, rides: int) -> void:
 		_equip_b.text = carrying if owned and wc.loadout_full() else "EQUIP"
 		_equip_b.disabled = not owned or wc.loadout_full()
 
-	var level := GameState.weapon_level(w.id)
-	var up_price := WeaponUpgrades.next_price(w, level)
-	_level.text = "%s   %s" % [WeaponUpgrades.level_name(level),
-			"■".repeat(level) + "□".repeat(WeaponUpgrades.MAX_LEVEL - level)]
+	var left := WeaponUpgrades.special_in(w.id)
+	_level.text = "UPGRADES  %s" % (WeaponUpgrades.level_name(w.id) if WeaponUpgrades.total(w.id) > 0 else "none")
 	_level.modulate = Color.WHITE if owned else Color(1, 1, 1, 0.4)
-	_up_note.text = WeaponUpgrades.describe_next(w, level)
-	_upgrade.text = "UPGRADE  $%d" % up_price if up_price >= 0 else "MAXED"
-	_upgrade.disabled = not owned or up_price < 0
-	_upgrade.modulate = Color.WHITE if _upgrade.disabled or GameState.cash >= up_price else Color(1, 1, 1, 0.55)
+	_up_note.text = ("%s: %s" % [w.special_name, w.special_text]) + (
+			"  (active)" if left == 0 else "  — after %d more upgrades." % left)
+	for t: StringName in WeaponUpgrades.TRACKS:
+		var b: Button = _track_buttons[t]
+		var price := WeaponUpgrades.next_price(w, t)
+		b.text = "%s  %d
+%s" % [(WeaponUpgrades.TRACK_NAME[t] as String).to_upper(), WeaponUpgrades.level(w.id, t),
+				"MAXED" if price < 0 else "%s  $%d" % [WeaponUpgrades.describe_next(w, t), price]]
+		b.disabled = not owned or price < 0
+		b.modulate = Color.WHITE if b.disabled or GameState.cash >= price else Color(1, 1, 1, 0.55)
 	_icon.queue_redraw()
 
 
@@ -396,9 +382,6 @@ func _build_detail() -> Control:
 	_buy = _button("BUY", func() -> void: buy(_selected))
 	_buy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	buttons.add_child(_buy)
-	_refill = _button("REFILL AMMO", func() -> void: refill(_selected))
-	_refill.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	buttons.add_child(_refill)
 	_equip_b = _button("EQUIP", func() -> void: toggle_equip(_selected))
 	_equip_b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	buttons.add_child(_equip_b)
@@ -413,8 +396,16 @@ func _build_detail() -> Control:
 	_up_note.add_theme_font_size_override("font_size", 15)
 	_up_note.add_theme_color_override("font_color", Color(0.8, 0.95, 0.8))
 	col.add_child(_up_note)
-	_upgrade = _button("UPGRADE", func() -> void: upgrade(_selected))
-	col.add_child(_upgrade)
+	var tracks := HBoxContainer.new()
+	tracks.add_theme_constant_override("separation", 6)
+	col.add_child(tracks)
+	for t: StringName in WeaponUpgrades.TRACKS:
+		var b := _button("", func() -> void: upgrade(_selected, t))
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		b.custom_minimum_size.y = 48
+		b.add_theme_font_size_override("font_size", 13)
+		tracks.add_child(b)
+		_track_buttons[t] = b
 	return card
 
 

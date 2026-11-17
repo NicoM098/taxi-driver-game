@@ -22,6 +22,9 @@ extends Node3D
 @export var civilian_car_heat: int = 1
 ## Seconds until the police react once the heat is high enough (instead of police_interval).
 @export var crime_response_time: float = 8.0
+## Every kill bounty (EnemyCarData.bounty) is paid x this (D-096: more money for guns and upgrades).
+const BOUNTY_SCALE := 2.0
+
 @export_group("Price on your head")
 ## From this heat on, somebody has put a reward on the driver: street gangs come hunting too
 ## (user request 2026-11-15), on top of the police.
@@ -418,6 +421,7 @@ func _on_enemy_destroyed(enemy: Node, bounty: int) -> void:
 		return
 	_heat_timer = 0.0
 	GameState.set_heat(GameState.heat + car.data.heat_on_kill)
+	bounty = roundi(bounty * BOUNTY_SCALE)
 	if bounty > 0:
 		GameState.add_cash(bounty)
 		var shift := get_tree().get_first_node_in_group(&"shift_manager") as ShiftManager

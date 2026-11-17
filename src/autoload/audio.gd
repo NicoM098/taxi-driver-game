@@ -283,6 +283,7 @@ func _connect_events() -> void:
 		play(&"player_hit", BUS_VOICE, -5.0))
 	EventBus.cash_changed.connect(_on_cash_changed)
 	EventBus.item_acquired.connect(func(_item: Resource) -> void: play(&"pickup", BUS_UI, -5.0))
+	EventBus.ammo_picked_up.connect(func(_id: StringName, _n: int) -> void: play(&"pickup", BUS_UI, -6.0, 1.15))
 	EventBus.energy_drink_consumed.connect(func() -> void: play(&"pickup", BUS_UI, -3.0, 0.85))
 	EventBus.dossier_opened.connect(func(_p: RefCounted) -> void: play(&"ui_open", BUS_UI, -6.0))
 	EventBus.dossier_closed.connect(func() -> void: play(&"ui_close", BUS_UI, -6.0))

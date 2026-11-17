@@ -5,7 +5,7 @@ extends Node
 ##  - the SMG is locked below its fares (D-085); then buy it -> owned, equipped, cash down;
 ##    the rifle stays locked whatever the cash
 ##  - upgrade the SMG: refused without cash or for a gun you do not own; Mk II for its price
-##  - empty the SMG reserve -> refill ammo -> full, cash down; already full -> refused
+##  - no ammo for sale (D-094); a damage upgrade keeps the rounds carried (no refill)
 ##  - leave -> world unpaused; the shop does not reopen until the taxi left the pad
 ## Run: Godot_console.exe --headless --path <project> --fixed-fps 60 res://tests/shop_autotest.tscn
 ## (-- --shot-dir=<dir> windowed: screenshot of the open shop and of the hotbar)
@@ -100,26 +100,25 @@ func _physics_process(delta: float) -> void:
 			GameState.cash = 100
 			if _ui.buy(&"smg"):
 				_errors.append("bought the SMG twice")
+			# Ammo is not sold any more (D-094): an upgrade keeps the rounds carried, it does not refill.
 			_wc.ammo[&"smg"]["reserve"] = 0
 			_wc.ammo[&"smg"]["mag"] = 3
 			GameState.cash = 100
-			if not _ui.refill(&"smg"):
-				_errors.append("refill refused")
-			var a := _wc.get_ammo(_wc.weapons[_wc.index_of_slot(2)])
-			print("[ShopTest] refill: ammo %d | %d, cash %d" % [a["mag"], a["reserve"], GameState.cash])
-			if a["reserve"] != 120 or a["mag"] != 30 or GameState.cash != 65:
-				_errors.append("refill wrong")
-			if _ui.refill(&"smg"):
-				_errors.append("refilled a full weapon")
+			if _ui.has_method(&"refill"):
+				_errors.append("the gun shop still sells ammo")
 			# Upgrades (D-085): refused without the cash, then Mk II for its price.
-			if _ui.upgrade(&"smg"):
+			if _ui.upgrade(&"smg", &"damage"):
 				_errors.append("upgraded the SMG with only $%d" % GameState.cash)
-			if _ui.upgrade(&"rifle"):
+			if _ui.upgrade(&"rifle", &"damage"):
 				_errors.append("upgraded a weapon that is not owned")
 			GameState.cash = 1000
-			var up_price := WeaponUpgrades.next_price(load("res://data/weapons/smg.tres") as WeaponData, 1)
-			if not _ui.upgrade(&"smg") or GameState.weapon_level(&"smg") != 2 or GameState.cash != 1000 - up_price:
-				_errors.append("SMG Mk II purchase wrong (level %d, cash %d)" % [GameState.weapon_level(&"smg"), GameState.cash])
+			var up_price := WeaponUpgrades.next_price(load("res://data/weapons/smg.tres") as WeaponData, &"damage")
+			if not _ui.upgrade(&"smg", &"damage") or WeaponUpgrades.level(&"smg", &"damage") != 1 or GameState.cash != 1000 - up_price:
+				_errors.append("SMG damage 1 purchase wrong (level %d, cash %d)" % [WeaponUpgrades.level(&"smg", &"damage"), GameState.cash])
+			var a := _wc.get_ammo(_wc.get_weapon(&"smg"))
+			print("[ShopTest] after the upgrade: ammo %d | %d" % [a["mag"], a["reserve"]])
+			if int(a["mag"]) != 3 or int(a["reserve"]) != 0:
+				_errors.append("the damage upgrade refilled the SMG (%d | %d)" % [a["mag"], a["reserve"]])
 			# Loadout (D-087): store the SMG here and take it back.
 			if not _ui.toggle_equip(&"smg") or _wc.is_equipped(&"smg") or not _wc.owns(&"smg"):
 				_errors.append("could not store the SMG at the shop")
@@ -129,7 +128,7 @@ func _physics_process(delta: float) -> void:
 				_errors.append("unequipped the last gun in the cab")
 			_ui.toggle_equip(&"revolver")
 			print("[ShopTest] upgraded SMG to %s for $%d, damage %.1f" % [
-					WeaponUpgrades.level_name(GameState.weapon_level(&"smg")), up_price, _wc.get_weapon(&"smg").damage])
+					WeaponUpgrades.level_name(&"smg"), up_price, _wc.get_weapon(&"smg").damage])
 			if not _shot_dir.is_empty():
 				_ui.close()
 				_next()

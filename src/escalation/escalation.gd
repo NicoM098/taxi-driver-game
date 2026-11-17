@@ -199,9 +199,11 @@ func boss_health() -> Array[Dictionary]:
 	for entry in bosses:
 		var data: EnemyCarData = entry["data"]
 		var hp := 0.0
+		var top := data.hp * WeaponUpgrades.enemy_hp_mult()   # until the car exists (D-093)
 		if not entry["down"] and _alive(entry) and (entry["car"] as EnemyCar).health != null:
 			hp = (entry["car"] as EnemyCar).health.hp
-		out.append({"name": data.display_name, "hp": hp, "max_hp": data.hp})
+			top = (entry["car"] as EnemyCar).health.max_hp
+		out.append({"name": data.display_name, "hp": hp, "max_hp": top})
 	return out
 
 

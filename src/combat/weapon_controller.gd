@@ -5,10 +5,10 @@ extends Node3D
 ## FIRE (LMB / RB) also raises it (hip fire, wider spread). Hitscan rays from the screen
 ## centre; spread grows with taxi speed, turning and sustained fire. Driving is never blocked.
 ## Weapons = WeaponData resources for every id in GameState.owned_weapons, kept in slot order
-## Gun shops add weapons / refill ammo / upgrade / equip at runtime.
+## Gun shops add weapons / upgrade / equip at runtime; ammo comes from enemy drops (AmmoPickup, D-094).
 ## Loadout (D-087): every gun bought is OWNED (`_arsenal`, ammo kept), but only up to
 ## LOADOUT_SIZE are EQUIPPED (`weapons`, GameState.loadout) on keys 1-4, in catalogue order.
-## The rest wait at the gun shop. All of them are the UPGRADED copies (WeaponUpgrades.apply, D-085).
+## The rest wait at the gun shop. All of them are the UPGRADED copies (WeaponUpgrades.apply, D-085, D-093).
 
 signal weapon_changed(weapon: WeaponData)
 
@@ -163,19 +163,6 @@ func index_of_weapon(id: StringName) -> int:
 	return -1
 
 
-## Fills the reserve (and the magazine) of an owned weapon. Returns false if already full.
-func refill_ammo(id: StringName) -> bool:
-	if not owns(id):
-		return false
-	var w := _find(id)
-	var a: Dictionary = ammo[id]
-	if int(a["reserve"]) >= w.reserve_max and int(a["mag"]) >= w.mag_size:
-		return false
-	a["mag"] = w.mag_size
-	a["reserve"] = w.reserve_max
-	return true
-
-
 ## Index of the equipped weapon whose WeaponData.slot (catalogue order) is `slot`, or -1.
 func index_of_slot(slot: int) -> int:
 	for i in weapons.size():
@@ -184,17 +171,22 @@ func index_of_slot(slot: int) -> int:
 	return -1
 
 
-## Raises an owned weapon one Mk level (the gun shop charges for it) and fills its ammo to the
-## new maximum. Returns false if not owned or already maxed.
-func upgrade(id: StringName) -> bool:
+## Raises one track (WeaponUpgrades.TRACKS) of an owned weapon by a level (the shop charges
+## for it). Ammo is not refilled (it comes from kills, D-094): the rounds carried stay, plus
+## the spare room an Ammo level adds. False if not owned or the track is maxed.
+func upgrade(id: StringName, track: StringName) -> bool:
 	var old := _find(id)
-	var level := GameState.weapon_level(id)
-	if old == null or level >= WeaponUpgrades.MAX_LEVEL:
+	var lv := WeaponUpgrades.level(id, track)
+	if old == null or not track in WeaponUpgrades.TRACKS or WeaponUpgrades.is_capped(track, lv):
 		return false
-	GameState.weapon_levels[id] = level + 1
-	var w := WeaponUpgrades.apply(_base(id), level + 1)
+	var levels: Dictionary = GameState.weapon_levels.get(id, {})
+	levels[track] = lv + 1
+	GameState.weapon_levels[id] = levels
+	var w := WeaponUpgrades.apply(_base(id))
 	_arsenal[id] = w
-	ammo[id] = {"mag": w.mag_size, "reserve": w.reserve_max}
+	var a: Dictionary = ammo[id]
+	a["mag"] = mini(int(a["mag"]), w.mag_size)
+	a["reserve"] = mini(int(a["reserve"]) + maxi(w.reserve_max - old.reserve_max, 0), w.reserve_max)
 	var i := weapons.find(old)
 	if i >= 0:
 		weapons[i] = w
@@ -212,7 +204,7 @@ func _add(id: StringName) -> bool:
 	var base := _base(id)
 	if base == null:
 		return false
-	var data := WeaponUpgrades.apply(base, GameState.weapon_level(id))
+	var data := WeaponUpgrades.apply(base)
 	_arsenal[data.id] = data
 	ammo[data.id] = {"mag": data.mag_size, "reserve": data.reserve_max}
 	return true
@@ -412,7 +404,8 @@ func _fire_hitscan(w: WeaponData) -> void:
 				if box.take_hit(damage, origin):
 					killed_any = true
 				if burns and box.health != null:
-					Burning.ignite(box.health, WeaponUpgrades.BURN_DPS, WeaponUpgrades.BURN_TIME)
+					Burning.ignite(box.health, WeaponUpgrades.BURN_DPS
+							* WeaponUpgrades.damage_scale(w, _base(w.id)), WeaponUpgrades.BURN_TIME)
 				hits_left -= 1
 				went_through = hits_left > 0
 				if went_through:

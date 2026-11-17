@@ -160,10 +160,9 @@ func _draw_card(wc: WeaponController, w: WeaponData, r: Rect2, owned: bool, sele
 	var low := int(a["mag"]) == 0 and int(a["reserve"]) == 0
 	_text(_font, r.position + Vector2(8, r.size.y - 4), "EMPTY" if low else "%d | %d" % [a["mag"], a["reserve"]],
 		RED if low else Color(1, 1, 1, 0.85 if selected else 0.6), 13, 0)
-	var level := GameState.weapon_level(w.id)
-	if level > 1:
-		_text(_font, r.position + Vector2(r.size.x - 40, 19), WeaponUpgrades.level_name(level),
-			YELLOW if level >= WeaponUpgrades.MAX_LEVEL else Color(1, 1, 1, 0.7), 12, 0)
+	if WeaponUpgrades.total(w.id) > 0:   # "+N" upgrades, yellow once the special is on (D-093)
+		_text(_font, r.position + Vector2(r.size.x - 40, 19), WeaponUpgrades.level_name(w.id),
+			YELLOW if WeaponUpgrades.special_in(w.id) == 0 else Color(1, 1, 1, 0.7), 12, 0)
 
 
 ## The equipped guns in key order, then — if the loadout has room — the next one on sale.

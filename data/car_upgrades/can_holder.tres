@@ -11,5 +11,5 @@ slot = 7
 section = &"cans"
 stat = &"can_holder"
 per_level = 2.0
-prices = PackedInt32Array(200, 450, 900)
+prices = PackedInt32Array(180, 405, 810)
 level_text = "+%d cans carried"

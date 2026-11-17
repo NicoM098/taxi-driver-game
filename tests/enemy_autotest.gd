@@ -79,7 +79,7 @@ func _physics_process(delta: float) -> void:
 			if hurt:
 				print("[EnemyTest] taxi shot: body %.0f, driver %.0f after %.1f s" % [_dmg.taxi_health.hp, _dmg.driver_health.hp, _step_t])
 				_cash_before = GameState.cash
-				_bounty = _enemy.data.bounty
+				_bounty = roundi(_enemy.data.bounty * EnemyDirector.BOUNTY_SCALE)   # D-096
 				_enemy.health.apply_damage(9999.0)
 				_next()
 			elif _step_t > 20.0:

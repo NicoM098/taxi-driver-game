@@ -15,6 +15,11 @@ extends Node
 
 enum State { IDLE, ENTERING, DOSSIER, RIDING, EXITING }
 
+## Every fare (base + distance; not tips) is multiplied by this. User 2026-11-17: "the fares
+## give you substantially more" (D-095, 1.5), then "at least 4 guns and some upgrades" by the
+## stage-2 bosses (D-096, 2.5). The enemy-health curve is tuned for it (WeaponUpgrades).
+const FARE_SCALE := 2.5
+
 @export_group("Pickup / arrival")
 @export var pickup_radius: float = 7.0
 @export var pickup_max_speed: float = 2.5     # m/s (~9 km/h)
@@ -320,7 +325,7 @@ func _complete_ride() -> void:
 	elif ratio >= good_ratio:
 		mult = good_mult
 		rating = "GOOD"
-	var fare := roundi((ride.profile.fare_base + ride.profile.fare_per_100m * ride.distance / 100.0) * mult * ride.fare_mult)
+	var fare := roundi((ride.profile.fare_base + ride.profile.fare_per_100m * ride.distance / 100.0) * mult * ride.fare_mult * FARE_SCALE)
 	var tip := roundi(ride.tip * ride.profile.tip_multiplier)
 	var payout := fare + tip
 	GameState.add_cash(payout)

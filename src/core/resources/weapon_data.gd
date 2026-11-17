@@ -54,15 +54,18 @@ extends Resource
 @export_group("Economy")
 ## Gun shop price (0 = you start with it).
 @export var price: int = 0
-## Price of refilling the reserve to the max at the gun shop.
-@export var ammo_price: int = 0
-## Rides delivered in this run before the gun shop will sell it (0 = always on sale). D-085.
+## Rides delivered in this run before the gun shop will sell it (0 = always on sale). D-085;
+## cut ~15 % in D-093.
 @export var unlock_rides: int = 0
 
 @export_group("Upgrades")
-## Prices of Mk II, Mk III and Mk IV at the gun shop (WeaponUpgrades). Mk I is the gun as bought.
-@export var upgrade_prices: PackedInt32Array = PackedInt32Array([150, 300, 600])
-## What Mk IV adds on top of the stats: &"deadeye" / &"drum" / &"incendiary" / &"piercing"
+## Price scale of the upgrade tracks (WeaponUpgrades.price_at, D-093): the first Damage level
+## costs this, every level after it x1.35. Every gun uses the same 225 (D-095: 10 % under the
+## WeaponUpgrades.REFERENCE_COST the enemy health curve assumes): a cheaper gun would outgrow the
+## enemies (and the heavy guns) without limit, a dearer one could never keep up.
+@export var upgrade_cost: int = 225
+## What the gun gains after WeaponUpgrades.SPECIAL_AT upgrades: &"deadeye" / &"drum" /
+## &"incendiary" / &"piercing" / &"big_blast" / &"no_spinup" / &"twin"
 ## (handled in WeaponUpgrades.apply and WeaponController._fire).
 @export var special: StringName = &""
 @export var special_name: String = ""

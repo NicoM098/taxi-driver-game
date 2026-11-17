@@ -21,6 +21,36 @@ updated: 2026-11-17
 
 ---
 
+## 2026-11-17 · DLain47 · `feat/no-papers` · after `4762617`
+**Still not on the shared branch** (§6). Played twice by DLain47 for balance only.
+
+**Iteration 21 — Endless weapon upgrades (D-093)**
+- Mk I-IV is gone. Each gun has four tracks bought from its shop card: Mag and Ammo (3 levels),
+  Damage and Fire rate **endless** (bigger steps every 3 levels, prices ×1.35 a level). Fire rate
+  past 3× base (max 30/s) turns into damage. The special switches on after 8 upgrades.
+- **Enemy health grows with what the run has earned** (`GameState.earned`,
+  `WeaponUpgrades.enemy_hp_mult()`), boss bars included. `WeaponUpgrades.scale_enemies` turns it off.
+- `GameState.weapon_levels` is now `id → {track: level}`; `WeaponData.upgrade_prices` became
+  `upgrade_cost`. Unlocks need ~15 % fewer fares.
+
+**Iteration 22 — Ammo drops (D-094)**
+- **Ammo is not sold any more** and upgrades do not refill (`WeaponData.ammo_price` and
+  `WeaponController.refill_ammo` removed). Every destroyed enemy drops a floating ammo box for one
+  equipped gun (`src/items/ammo_pickup.gd`; bosses drop up to 5). Drive through it.
+- **New visuals / sound that touch Nico's side:** the ammo box (placeholder crate, slot-coloured
+  stripe, Label3D, light), a glowing ground circle `PickupRing` under it **and under the Monstrous
+  Energy can**, and a new signal `EventBus.ammo_picked_up` that plays the `pickup` sound.
+
+**Balance from DLain47's playtests (D-095, D-096)**
+- Fares ×2.5 (`RideManager.FARE_SCALE`), kill bounties ×2 (`EnemyDirector.BOUNTY_SCALE`),
+  every price −10 % (guns, car upgrades, upgrade tracks $225).
+- Enemy health ×0.85 and a slower curve (`SCALING_SHARE` 0.35): guns out-scale enemies now.
+
+**Tests:** new `ammo_drop_autotest`; `upgrades` rewritten; `arsenal`, `shop`, `shop_menu`,
+`enemy` updated. The suite passes.
+
+---
+
 ## 2026-11-17 · DLain47 · `feat/no-papers` · after `2c137cc`
 **Still not on the shared branch:** unplayed, on its own branch per §6. Merges into
 `temp/playtest-merge` only once DLain47 has played it.

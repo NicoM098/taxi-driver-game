@@ -11,5 +11,5 @@ slot = 3
 section = &"car"
 stat = &"glass"
 per_level = 0.2
-prices = PackedInt32Array(450, 1000, 2000)
+prices = PackedInt32Array(405, 900, 1800)
 level_text = "-%d %% damage to the driver"

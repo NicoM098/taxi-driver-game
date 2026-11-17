@@ -14,9 +14,12 @@ var owned_weapons: Array[StringName] = STARTING_WEAPONS.duplicate()
 ## The guns on the hotbar (keys 1-4, at most WeaponController.LOADOUT_SIZE): owned guns not in
 ## here wait at the gun shop (D-087). WeaponController keeps it in step.
 var loadout: Array[StringName] = STARTING_WEAPONS.duplicate()
-## Weapon id -> upgrade level (1 = Mk I as bought .. WeaponUpgrades.MAX_LEVEL). Lost with the run
-## like everything else (D-085). Missing id = level 1.
+## Weapon id -> {track: levels bought} (tracks: WeaponUpgrades.TRACKS; missing = 0). Lost with
+## the run like everything else (D-085, D-093). Read it through WeaponUpgrades.level().
 var weapon_levels: Dictionary = {}
+## Every dollar earned this run (fares, bounties, rewards), spending not taken off. Enemy health
+## scales with it (WeaponUpgrades.enemy_hp_mult, D-093).
+var earned: int = 0
 ## Shop menu (D-089): upgrade id (data/car_upgrades/) -> level bought (missing = 0), and the
 ## Monstrous Energy cans carried. Lost with the run.
 var car_levels: Dictionary = {}
@@ -32,17 +35,16 @@ func reset_run() -> void:
 	heat = 0
 	owned_weapons = STARTING_WEAPONS.duplicate()
 	weapon_levels = {}
+	earned = 0
 	loadout = STARTING_WEAPONS.duplicate()
 	car_levels = {}
 	cans = 0
 
 
-func weapon_level(id: StringName) -> int:
-	return int(weapon_levels.get(id, 1))
-
-
 func add_cash(amount: int) -> void:
 	cash = maxi(cash + amount, 0)
+	if amount > 0:
+		earned += amount
 	EventBus.cash_changed.emit(cash, amount)
 
 

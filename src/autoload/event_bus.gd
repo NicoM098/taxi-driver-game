@@ -112,6 +112,9 @@ signal interact_prompt(source: Node, text: String)
 ## The player drove through a Monstrous Energy can (first-person drink animation, heal flash).
 @warning_ignore("unused_signal")
 signal energy_drink_consumed
+## The taxi drove through an enemy's ammo drop (AmmoPickup, D-094).
+@warning_ignore("unused_signal")
+signal ammo_picked_up(weapon_id: StringName, rounds: int)
 
 # Style (Phase 11, D-081). Air time, near misses and anything else stunt-like announce themselves
 # here with raw points; RideManager turns them into money the same way it does a drift chain, and

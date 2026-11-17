@@ -2,9 +2,11 @@ class_name ShopMenu
 extends Control
 ## Shop menu (Iteration 18 D-089, redone in Iteration 19 D-090): every shop in one screen you
 ## open anywhere with `shop_menu` (Tab / Back), instead of driving to a gun shop or a garage.
-## Three tabs of cards, and every card carries its own buttons: one click buys, upgrades,
-## refills or equips, nothing to "enter" first.
-##   GUNS             one card per gun: BUY / UPGRADE, AMMO, EQUIP (the GunShopUI's rules)
+## Three tabs of cards, and every card carries its own buttons: one click buys, upgrades
+## or equips, nothing to "enter" first.
+##   GUNS             one card per gun: BUY (then OWNED: ammo drops from enemies, D-094), EQUIP,
+##                    and a row of four upgrade tracks (mag, ammo, damage, fire rate; the last
+##                    two endless, D-093)
 ##   THE CAB          taxi upgrades (data/car_upgrades/, section &"car")
 ##   MONSTROUS ENERGY cans to carry (drink with F / Y, CanHolder) and the can upgrades
 ##   REPAIR           always in the header: fixes the cab and the driver for the quoted price
@@ -54,7 +56,7 @@ var _repair: Button
 var _note: Label
 var _tab_buttons: Dictionary = {}    # tab -> Button
 var _pages: Dictionary = {}          # tab -> ScrollContainer
-var _cards: Dictionary = {}          # card id -> {card, style, icon, title, state, pips, level, note, main, alt, alt2, tab}
+var _cards: Dictionary = {}          # card id -> {card, style, icon, title, state, pips, level, note, main, alt, alt2, tab, tracks}
 var _icon_state: Dictionary = {}     # card id -> {col, badge, locked}
 var _guns_ui: GunShopUI
 var _last_cash: int = -1
@@ -192,8 +194,9 @@ func activate(id: StringName) -> bool:
 			CarUpgrades.effect_text(u, lv + 1)])
 
 
-## A gun card's buttons (also used by tests): &"main" buys or upgrades, &"ammo" refills,
-## &"equip" equips / unequips. True if something changed.
+## A gun card's buttons (also used by tests): &"main" buys (ammo is not sold: it drops from
+## enemies, D-094), &"equip" equips / unequips, a track id (WeaponUpgrades.TRACKS) buys its next level.
+## True if something changed.
 func gun_action(id: StringName, what: StringName) -> bool:
 	var ui := _gun_ui()
 	var wc := _controller()
@@ -202,11 +205,11 @@ func gun_action(id: StringName, what: StringName) -> bool:
 	var ok := false
 	match what:
 		&"main":
-			ok = ui.upgrade(id) if wc.owns(id) else ui.buy(id)
-		&"ammo":
-			ok = ui.refill(id)
+			ok = false if wc.owns(id) else ui.buy(id)
 		&"equip":
 			ok = ui.toggle_equip(id)
+		_:
+			ok = ui.upgrade(id, what)
 	_after(id, ok)
 	return ok
 
@@ -273,8 +276,6 @@ func _refresh_gun(w: WeaponData, wc: WeaponController, rides: int) -> void:
 	var owned := wc != null and wc.owns(w.id)
 	var equipped := owned and wc.is_equipped(w.id)
 	var unlocked := rides >= w.unlock_rides
-	var lv := GameState.weapon_level(w.id)
-	var up := WeaponUpgrades.next_price(w, lv)
 	var accent := GREY
 	var state := ""
 	if equipped:
@@ -292,9 +293,13 @@ func _refresh_gun(w: WeaponData, wc: WeaponController, rides: int) -> void:
 		var a := wc.get_ammo(wc.get_weapon(w.id))
 		state += "  ·  AMMO %d | %d" % [a["mag"], a["reserve"]]
 	_set_card(c, w.display_name.to_upper(), state, accent)
-	_set_pips(c, lv if owned else 0, WeaponUpgrades.MAX_LEVEL, accent,
-			WeaponUpgrades.level_name(lv) if owned else "%d upgrades" % (WeaponUpgrades.MAX_LEVEL - 1))
-	(c["note"] as Label).text = WeaponUpgrades.describe_next(w, lv) if owned else w.blurb
+	# Pips: the way to the special (WeaponUpgrades.SPECIAL_AT upgrades, any tracks).
+	var total := WeaponUpgrades.total(w.id)
+	var left := WeaponUpgrades.special_in(w.id)
+	_set_pips(c, mini(total, WeaponUpgrades.SPECIAL_AT), WeaponUpgrades.SPECIAL_AT, YELLOW if left == 0 else accent,
+			(("%s  %s" % [WeaponUpgrades.level_name(w.id), w.special_name.to_upper()]) if left == 0
+			else "%s  %d to %s" % [WeaponUpgrades.level_name(w.id), left, w.special_name]).strip_edges())
+	(c["note"] as Label).text = w.special_text if owned else w.blurb
 
 	var main: Button = c["main"]
 	if not owned:
@@ -302,19 +307,26 @@ func _refresh_gun(w: WeaponData, wc: WeaponController, rides: int) -> void:
 		main.disabled = not unlocked
 		_paint(main, YELLOW if GameState.cash >= w.price else YELLOW.darkened(0.5), unlocked)
 	else:
-		main.text = "UPGRADE  $%d" % up if up >= 0 else "MAXED"
-		main.disabled = up < 0
-		_paint(main, GREEN if GameState.cash >= up else GREEN.darkened(0.5), up >= 0)
+		main.text = "OWNED"
+		main.disabled = true
+		_paint(main, BLUE.darkened(0.5), false)
 	var alt: Button = c["alt"]
-	alt.text = "AMMO  $%d" % w.ammo_price
-	alt.disabled = not owned
-	var alt2: Button = c["alt2"]
 	if equipped:
-		alt2.text = "UNEQUIP"
-		alt2.disabled = GameState.loadout.size() <= 1
+		alt.text = "UNEQUIP"
+		alt.disabled = GameState.loadout.size() <= 1
 	else:
-		alt2.text = "CAB FULL (%d)" % WeaponController.LOADOUT_SIZE if owned and wc.loadout_full() else "EQUIP"
-		alt2.disabled = not owned or wc.loadout_full()
+		alt.text = "CAB FULL (%d)" % WeaponController.LOADOUT_SIZE if owned and wc.loadout_full() else "EQUIP"
+		alt.disabled = not owned or wc.loadout_full()
+	for t: StringName in WeaponUpgrades.TRACKS:
+		var b: Button = c["tracks"][t]
+		var price := WeaponUpgrades.next_price(w, t)
+		var lv := WeaponUpgrades.level(w.id, t)
+		var head := "%s  %d" % [(WeaponUpgrades.TRACK_NAME[t] as String).to_upper(),  lv]
+		if WeaponUpgrades.CAP.has(t):
+			head += "/%d" % int(WeaponUpgrades.CAP[t])
+		b.text = "%s\n%s" % [head, "MAXED" if price < 0 else "%s  $%d" % [WeaponUpgrades.describe_next(w, t), price]]
+		b.disabled = not owned or price < 0
+		_paint(b, GREEN if GameState.cash >= price else GREEN.darkened(0.55), owned and price >= 0)
 	_icon_state[w.id] = {"col": Color.WHITE if owned else (Color(0.75, 0.76, 0.78) if unlocked else Color(0.4, 0.4, 0.43)),
 			"badge": wc.index_of_weapon(w.id) + 1 if equipped else 0, "locked": not unlocked and not owned}
 	(c["icon"] as Control).queue_redraw()
@@ -569,9 +581,12 @@ func _card(id: StringName, page: StringName, extra: bool) -> Control:
 	style.set_content_margin_all(8)
 	style.content_margin_left = 12
 	panel.add_theme_stylebox_override("panel", style)
+	var stack := VBoxContainer.new()
+	stack.add_theme_constant_override("separation", 6)
+	panel.add_child(stack)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
-	panel.add_child(row)
+	stack.add_child(row)
 
 	var icon := Control.new()
 	icon.custom_minimum_size = Vector2(ICON_W, 0)
@@ -628,13 +643,11 @@ func _card(id: StringName, page: StringName, extra: bool) -> Control:
 		small.add_theme_constant_override("separation", 4)
 		buttons.add_child(small)
 		if page == &"guns":
-			alt = _button("AMMO", func() -> void: gun_action(id, &"ammo"))
-			alt2 = _button("EQUIP", func() -> void: gun_action(id, &"equip"))
-			for b in [alt, alt2]:
-				b.custom_minimum_size.y = 30
-				b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-				b.add_theme_font_size_override("font_size", 12)
-				small.add_child(b)
+			alt = _button("EQUIP", func() -> void: gun_action(id, &"equip"))
+			alt.custom_minimum_size.y = 30
+			alt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			alt.add_theme_font_size_override("font_size", 12)
+			small.add_child(alt)
 		else:
 			alt = _button("FILL UP", func() -> void:
 				_result(CANS, CarUpgrades.buy_cans(99), "Cup holders full."))
@@ -642,13 +655,29 @@ func _card(id: StringName, page: StringName, extra: bool) -> Control:
 			alt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			alt.add_theme_font_size_override("font_size", 13)
 			small.add_child(alt)
+	# Guns: the four upgrade tracks along the bottom of the card (D-093).
+	var tracks := {}
+	if page == &"guns":
+		var track_row := HBoxContainer.new()
+		track_row.add_theme_constant_override("separation", 5)
+		stack.add_child(track_row)
+		for t: StringName in WeaponUpgrades.TRACKS:
+			var b := _button("", func() -> void: gun_action(id, t))
+			b.custom_minimum_size.y = 40
+			b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			b.add_theme_font_size_override("font_size", 12)
+			b.clip_text = true
+			track_row.add_child(b)
+			tracks[t] = b
 	# The card lights up while one of its buttons has focus (mouse hover or pad).
-	for b in [main, alt, alt2]:
+	var focusable: Array = [main, alt, alt2]
+	focusable.append_array(tracks.values())
+	for b in focusable:
 		if b != null:
 			(b as Button).focus_entered.connect(func() -> void: style.bg_color = CARD_BG_FOCUS)
 			(b as Button).focus_exited.connect(func() -> void: style.bg_color = CARD_BG)
 	_cards[id] = {"card": panel, "style": style, "icon": icon, "title": title, "state": state, "pips": pips,
-			"level": level, "note": note, "main": main, "alt": alt, "alt2": alt2, "tab": page}
+			"level": level, "note": note, "main": main, "alt": alt, "alt2": alt2, "tab": page, "tracks": tracks}
 	return panel
 
 

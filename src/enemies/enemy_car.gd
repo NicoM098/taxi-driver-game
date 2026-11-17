@@ -57,7 +57,8 @@ func _ready() -> void:
 	add_child(HostileMarker.new())   # tells it apart from civilian traffic
 
 	health = HealthComponent.new()
-	health.max_hp = data.hp
+	# Tougher the more the run has earned: an upgraded gun keeps its time-to-kill (D-093).
+	health.max_hp = data.hp * WeaponUpgrades.enemy_hp_mult()
 	add_child(health)
 	health.damaged.connect(_on_damaged)
 	health.died.connect(_on_died)
@@ -220,6 +221,7 @@ func _on_damaged(_amount: float, hp_left: float) -> void:
 func _on_died() -> void:
 	is_destroyed = true
 	EventBus.enemy_destroyed.emit(self, data.bounty)
+	AmmoPickup.drop_for_kill(get_parent(), global_position, data.hp)   # ammo comes from kills (D-094)
 	destroyed.emit(self)
 	CombatFx.explosion(get_parent(), global_position)
 	EventBus.explosion.emit(global_position, 1.0)

@@ -215,13 +215,16 @@ func _test_gun_cards() -> void:
 	else:
 		GameState.cash = 20000
 		var bought := _menu.gun_action(target.id, &"main")
-		var upgraded := _menu.gun_action(target.id, &"main")
+		var upgraded := _menu.gun_action(target.id, &"damage")
 		print("[ShopMenuTest] F %s bought=%s owned=%s, upgraded=%s level %d" % [target.id, bought, wc.owns(target.id),
-				upgraded, GameState.weapon_level(target.id)])
+				upgraded, WeaponUpgrades.level(target.id, &"damage")])
 		if not bought or not wc.owns(target.id):
 			_errors.append("F: the card's BUY did not buy the %s" % target.id)
-		if not upgraded or GameState.weapon_level(target.id) < 1:
+		if not upgraded or WeaponUpgrades.level(target.id, &"damage") != 1:
 			_errors.append("F: the card's UPGRADE did not upgrade the %s" % target.id)
+		var cash_before := GameState.cash
+		if _menu.gun_action(target.id, &"main") or GameState.cash != cash_before:
+			_errors.append("F: an owned gun's card sold ammo (ammo drops from enemies, D-094)")
 		if wc.is_equipped(target.id):
 			if not _menu.gun_action(target.id, &"equip") or wc.is_equipped(target.id):
 				_errors.append("F: UNEQUIP from the card failed")
