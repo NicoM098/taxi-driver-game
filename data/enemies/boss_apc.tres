@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="EnemyCarData" format=3]
+
+[ext_resource type="Script" path="res://src/core/resources/enemy_car_data.gd" id="1_e"]
+
+[resource]
+script = ExtResource("1_e")
+id = &"boss_apc"
+display_name = "Army APC"
+body_material = "res://assets/materials/enemy_military_olive.tres"
+is_boss = true
+hp = 1600
+max_speed = 32.0
+engine_force = 20000.0
+mass = 3000.0
+size = 1.5
+plow = true
+aggression = 0.9
+bounty = 2500
+heat_on_kill = 0
+damage = 8.0
+fire_rate = 6.0
+burst = 6
+burst_pause = 1.2
+spread_deg = 3.0
+gun_range = 60.0

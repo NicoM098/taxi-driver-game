@@ -15,6 +15,7 @@ var _errors: PackedStringArray = []
 
 
 func _ready() -> void:
+	ShopMenu.enabled = false   # shops in the city (D-089 keeps them, switched off)
 	MapData.use_builtin()
 	_run()
 

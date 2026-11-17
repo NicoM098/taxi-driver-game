@@ -114,6 +114,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	var shop := get_tree().get_first_node_in_group(&"gun_shop_ui") as GunShopUI
 	if shop != null and shop.is_open:
 		return   # so does the gun shop
+	var menu := get_tree().get_first_node_in_group(&"shop_menu") as ShopMenu
+	if menu != null and menu.is_open:
+		return   # and the shop menu (D-089)
 	if event.is_action_pressed(&"pause"):
 		_set_paused(not get_tree().paused)
 	elif get_tree().paused and _pause_overlay.visible and event.is_action_pressed(&"ui_cancel"):

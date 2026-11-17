@@ -1,6 +1,6 @@
 ---
 tags: [progress, changelog]
-updated: 2026-11-16
+updated: 2026-11-17
 ---
 # Changelog
 
@@ -20,6 +20,58 @@ updated: 2026-11-16
 > are Nico's, plain numbers are DLain47's, shared again from 13 on (D-079).
 
 ---
+
+## 2026-11-17 · DLain47 · `feat/no-papers` · after `2c137cc`
+**Still not on the shared branch:** unplayed, on its own branch per §6. Merges into
+`temp/playtest-merge` only once DLain47 has played it.
+
+**Iteration 17 tuned:** gang rides were "way too hard": more clock, rarer and smaller rival
+crews, ordinary fares safe below HARD (numbers in D-089).
+
+**Iteration 18 — Shop menu (D-089)**
+- **No shops in the city** while `ShopMenu.enabled` (static, default `true`): gun-shop and garage
+  lots become plain buildings (`ShopMenu.build_closed_lot`). Nothing deleted; `false` brings
+  them back. City-shop tests (shop, map, minimap, ride) turn it off themselves.
+- **Tab** (pad: Back) opens SHOP anywhere and pauses. Car upgrades are data
+  (`data/car_upgrades/`, `CarUpgrades`): armor, engine, bulletproof glass, ram bar, nitro tank,
+  Monstrous XL. `GameState` gained `car_levels` and `cans`.
+- **A wreck now always ends the run** when the menu is on (`taxi_damage.gd`).
+
+**Iteration 19 — Shop polish & nitro (D-090)**
+- The shop is three tabs of one-click cards (guns bought / upgraded / equipped from their card).
+  It reuses `GunShopUI`'s buy / upgrade / refill / equip, plus a new `said` signal.
+- **Input map changed** (`setup_project.gd` → `project.godot`): `shop_menu` = **Tab** / Back,
+  **Tab is no longer `interact`** (E / D-pad up still are), `drink` = F / **Y** (Y left
+  `weapon_next`), `debug_next_stage` = F11.
+- **The boost is a nitro tank now** (`taxi.gd`: `nitro_tank`, drain / refill / relight;
+  drift links refill it; `EnemyCar` keeps an endless boost). A new HUD gauge (`NitroGauge`)
+  sits left of the minimap. If you have boost sounds or VFX, `taxi.is_boosting` now goes false
+  when the tank runs dry.
+
+**Iteration 20 — Escalation stages (D-091)**
+- The shop sells **no Monstrous Energy cans and no repair** (`ShopMenu.sells_cans` /
+  `sells_repair` = false). Healing = street cans only.
+- **The run is three stages** (`src/escalation/`, `Escalation.enabled`, data in
+  `data/stages/`): cops + gangs → SWAT + roaming gang bosses → military + cartel. Each stage
+  ends in a **boss fight** once its fares, kills and survived time are all reached: the Precinct
+  Captain; the three gang bosses; the Army APC + the Kingpin. A stage panel and boss bars sit
+  under the cash, and a banner shows for each stage.
+- **10 new enemy cars + 4 materials** (`data/enemies/`, `assets/materials/enemy_*`): placeholder
+  blockout colours, worth a visual pass from you. `EnemyCarData` gained `size` / `plow` /
+  `is_boss`. `EnemyCar.build_body` / `build_wheels` take a size (traffic unchanged).
+
+**Enemy driving (D-092) — shared code, affects every hostile car**
+- Enemies take **no crash damage from buildings**, only from cars (`contact_monitor` is on in
+  `EnemyCar`).
+- `enemy_driver_ai.gd` changes:
+  - line of sight (they take the streets instead of driving into a building);
+  - tighter waypoints;
+  - three-point turns;
+  - longer, alternating unstuck reverses;
+  - a last-resort out-of-sight rescue (`EnemyDirector.rescue_stuck`).
+- Fixed `EnemyDirector._cleanup`: it could never remove a car freed elsewhere.
+
+**Tests:** new `shop_menu`, `escalation`, `enemy_corners` (24 in total, all PASS on this push).
 
 ## 2026-11-16 · DLain47 · `feat/no-papers` (new branch) · after `900fc32`
 **Not on the shared branch:** an unplayed trial, on its own branch per §6. Merges into

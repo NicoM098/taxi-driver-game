@@ -39,12 +39,20 @@ func _ready() -> void:
 	center_of_mass_mode = RigidBody3D.CENTER_OF_MASS_MODE_CUSTOM
 	center_of_mass = Vector3(0.0, -0.2, 0.0)
 	continuous_cd = true
+	# Crash damage only from other cars (D-092): contacts tell a wall from a car.
+	contact_monitor = true
+	max_contacts_reported = 4
 	angular_damp = 0.3
 	max_speed = data.max_speed
+	# Heavy cars (escalation bosses) get a stiffer suspension so they ride at the same height.
+	if data.mass > 1000.0:
+		spring_strength *= data.mass / 1000.0
+		spring_damping *= data.mass / 1000.0
+	nitro_tank = false   # the AI's boost is endless: they have no tank to manage
 	engine_force = data.engine_force
 	_body_mat = load(data.body_material)
-	_body = build_body(self, _body_mat, data.siren)
-	build_wheels(self)
+	_body = build_body(self, _body_mat, data.siren, data.size, data.plow)
+	build_wheels(self, data.size)
 	_add_engine_audio()
 	add_child(HostileMarker.new())   # tells it apart from civilian traffic
 
@@ -53,7 +61,7 @@ func _ready() -> void:
 	add_child(health)
 	health.damaged.connect(_on_damaged)
 	health.died.connect(_on_died)
-	_add_hitbox(Vector3(1.95, 1.35, 4.45), Vector3(0, 0.45, 0), 1.0)
+	_add_hitbox(Vector3(1.95 * data.size, 1.35, 4.45 * data.size), Vector3(0, 0.45, 0), 1.0)
 	_add_hitbox(Vector3(0.6, 0.55, 0.6), Vector3(-0.4, 1.0, -0.05), 2.5).name = "DriverHitbox"
 
 	_smoke = CombatFx.make_particles("res://assets/materials/fx_smoke.tres", 12, 1.2, 0.35, 2.0)
@@ -98,37 +106,59 @@ func _process(_delta: float) -> void:
 
 ## Collision boxes + blockout body of an AI car (also used by traffic). Returns the lower
 ## body mesh (flashes when hit).
-static func build_body(car: RigidBody3D, body_mat: Material, siren: bool = false) -> MeshInstance3D:
+## `size` scales width and length (escalation bosses, D-091); `plow` adds a steel nose plow
+## (with its own collision box: it is what hits you) and roof armour.
+static func build_body(car: RigidBody3D, body_mat: Material, siren: bool = false, size: float = 1.0,
+		plow: bool = false) -> MeshInstance3D:
 	var col := CollisionShape3D.new()
 	var shape := BoxShape3D.new()
 	# Underside 0.1 m below the wheel mounts: clears a 0.2 m curb even with the suspension
 	# fully compressed (a lower box hit sidewalk edges after landings, D-060).
-	shape.size = Vector3(1.7, 0.6, 4.2)
+	shape.size = Vector3(1.7 * size, 0.6, 4.2 * size)
 	col.shape = shape
 	col.position.y = 0.2
 	car.add_child(col)
 	var cabin_col := CollisionShape3D.new()
 	var cabin_shape := BoxShape3D.new()
-	cabin_shape.size = Vector3(1.5, 0.6, 2.0)
+	cabin_shape.size = Vector3(1.5 * size, 0.6, 2.0 * size)
 	cabin_col.shape = cabin_shape
-	cabin_col.position = Vector3(0, 0.8, 0.3)
+	cabin_col.position = Vector3(0, 0.8, 0.3 * size)
 	car.add_child(cabin_col)
 
 	var lower := BoxMesh.new()
-	lower.size = Vector3(1.8, 0.8, 4.3)
+	lower.size = Vector3(1.8 * size, 0.8, 4.3 * size)
 	var body := Blockout.add_mesh(car, lower, Vector3(0, 0.1, 0), body_mat)
 	var cabin := BoxMesh.new()
-	cabin.size = Vector3(1.6, 0.6, 2.0)
-	Blockout.add_mesh(car, cabin, Vector3(0, 0.8, 0.3), load("res://assets/materials/taxi_black.tres"))
+	cabin.size = Vector3(1.6 * size, 0.6, 2.0 * size)
+	var black: Material = load("res://assets/materials/taxi_black.tres")
+	Blockout.add_mesh(car, cabin, Vector3(0, 0.8, 0.3 * size), black)
 	if siren:
 		var light := BoxMesh.new()
 		light.size = Vector3(0.4, 0.15, 0.25)
-		Blockout.add_mesh(car, light, Vector3(-0.25, 1.18, 0.3), load("res://assets/materials/siren_red.tres"))
-		Blockout.add_mesh(car, light, Vector3(0.25, 1.18, 0.3), load("res://assets/materials/siren_blue.tres"))
+		Blockout.add_mesh(car, light, Vector3(-0.25, 1.18, 0.3 * size), load("res://assets/materials/siren_red.tres"))
+		Blockout.add_mesh(car, light, Vector3(0.25, 1.18, 0.3 * size), load("res://assets/materials/siren_blue.tres"))
+	if plow:
+		var nose_z := -4.3 * size * 0.5 - 0.25
+		var blade := BoxMesh.new()
+		blade.size = Vector3(2.0 * size, 0.55, 0.3)
+		Blockout.add_mesh(car, blade, Vector3(0, 0.05, nose_z), black)
+		var blade_col := CollisionShape3D.new()
+		var blade_shape := BoxShape3D.new()
+		blade_shape.size = Vector3(2.0 * size, 0.45, 0.3)
+		blade_col.shape = blade_shape
+		blade_col.position = Vector3(0, 0.12, nose_z)
+		car.add_child(blade_col)
+		for x: float in [-0.6, 0.0, 0.6]:
+			var rib := BoxMesh.new()
+			rib.size = Vector3(0.12, 0.6, 0.5)
+			Blockout.add_mesh(car, rib, Vector3(x * size, 0.05, nose_z + 0.2), body_mat)
+		var roof := BoxMesh.new()
+		roof.size = Vector3(1.3 * size, 0.18, 1.4 * size)
+		Blockout.add_mesh(car, roof, Vector3(0, 1.19, 0.3 * size), body_mat)
 	return body
 
 
-static func build_wheels(car: RigidBody3D) -> void:
+static func build_wheels(car: RigidBody3D, size: float = 1.0) -> void:
 	var tyre := CylinderMesh.new()
 	tyre.top_radius = 0.35
 	tyre.bottom_radius = 0.35
@@ -141,7 +171,7 @@ static func build_wheels(car: RigidBody3D) -> void:
 	car.add_child(wheels_root)
 	for w: Array in WHEELS:
 		var wheel := TaxiWheel.new()
-		wheel.position = Vector3(w[0], 0.0, w[1])
+		wheel.position = Vector3(w[0] * size, 0.0, w[1] * size)
 		wheel.is_front = w[2]
 		var visual := Node3D.new()
 		wheel.add_child(visual)
@@ -165,9 +195,15 @@ func _add_hitbox(size: Vector3, pos: Vector3, mult: float) -> Hitbox:
 	return hitbox
 
 
+## Hits from vehicles (the taxi ramming, other cars) hurt; buildings, walls and props do not
+## (user 2026-11-17: they wrecked themselves on corners over time, D-092).
 func _on_crash(impact: float) -> void:
-	if impact > 6.0:
-		health.apply_damage((impact - 6.0) * 4.0)
+	if impact <= 6.0:
+		return
+	for body in get_colliding_bodies():
+		if body is RigidBody3D:
+			health.apply_damage((impact - 6.0) * 4.0)
+			return
 
 
 func _on_damaged(_amount: float, hp_left: float) -> void:

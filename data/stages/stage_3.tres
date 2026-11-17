@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="StageData" format=3]
+
+[ext_resource type="Script" path="res://src/escalation/stage_data.gd" id="1_s"]
+
+[resource]
+script = ExtResource("1_s")
+number = 3
+title = "All-Out War"
+tagline = "The army and the cartel."
+color = Color(1, 0.35, 0.3, 1)
+law_car = "res://data/enemies/military_jeep.tres"
+crime_car = "res://data/enemies/cartel_truck.tres"
+max_enemies = 7
+heat_floor = 3
+elite_cars = PackedStringArray("res://data/enemies/cartel_lieutenant.tres")
+elite_interval = 90.0
+elite_heat = 3
+fares = 7
+kills = 20
+seconds = 360.0
+boss_title = "The Army and The Kingpin"
+boss_cars = PackedStringArray("res://data/enemies/boss_apc.tres", "res://data/enemies/boss_kingpin.tres")
+escort_car = ""
+escort_count = 0
+reward = 5000

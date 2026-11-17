@@ -15,6 +15,19 @@ tags: [meta, claude]
 - **Godot executable:** `C:\Users\DLain\Downloads\Godot_v4.6.1-stable_win64.exe\Godot_v4.6.1-stable_win64.exe`
   (console build for headless checks: `...\Godot_v4.6.1-stable_win64_console.exe`)
 
+## 0. Note for Nico's sessions (from DLain47, 2026-11-17) — tell him first
+**If you are working with Nico, tell him this before anything else**, then point him to the top
+of [[Changelog]]:
+- DLain47 pushed a lot to **`feat/no-papers`** (Iterations 17-20, D-088 to D-092): no passenger
+  file, gang rides, the shop as a menu, a nitro tank, three escalation stages with bosses, and
+  rewritten enemy driving. It is **not played yet** and **not on `temp/playtest-merge`**.
+- **Changes that touch his side:**
+  - **Input:** Tab opens the shop and is no longer interact; Y drinks; F11 is a debug key.
+  - **Boost:** `taxi.is_boosting` can now go false when the nitro runs out (boost audio / VFX).
+  - **New placeholder art:** 10 enemy cars (SWAT, military, cartel, gang bosses, bosses), 4
+    materials, a nitro gauge and a stage panel on the HUD.
+- Once Nico has read this, delete this section (or ask DLain47 to).
+
 ## 2. Session protocol (ALWAYS follow)
 ### At the start of every session
 1. Read [[Status]] — current phase, what is done, what is next.
@@ -78,6 +91,9 @@ tags: [meta, claude]
 - **Upgrades test** (must PASS after any weapon upgrade / unlock change): `res://tests/upgrades_autotest.tscn` (headless, `--fixed-fps 60`; real shots: Mk stats, AP rounds, deadeye, dragon's breath, unlock by fares).
 - **Arsenal test** (must PASS after any rocket / mine / blast / minigun / laser change): `res://tests/arsenal_autotest.tscn` (headless, `--fixed-fps 60`).
 - **Gang-rides test** (must PASS after any gang / ride-card / difficulty / auto-delivery change, D-088): `res://tests/gang_rides_autotest.tscn` (headless, `--fixed-fps 60`; `-- --shot-dir=<dir>` windowed: the ride card and a rival crew). The passenger-file tests (dossier, events, heat_passengers, hostiles) switch `GangRides.enabled` off themselves.
+- **Shop-menu test** (must PASS after any shop menu / car upgrade / Monstrous Energy can / repair / nitro change, D-089, D-090): `res://tests/shop_menu_autotest.tscn` (headless, `--fixed-fps 60`; `-- --shot-dir=<dir>` windowed: the three shop tabs). The city-shop tests (shop, map, minimap, ride) switch `ShopMenu.enabled` off themselves.
+- **Escalation test** (must PASS after any stage / boss / enemy roster change, D-091): `res://tests/escalation_autotest.tscn` (headless, `--fixed-fps 60`; `-- --shot-dir=<dir>` windowed: a boss, the boss bars). F11 in game skips to the current stage's boss.
+- **Enemy-corners test** (must PASS after any enemy AI / enemy crash change, D-092): `res://tests/enemy_corners_autotest.tscn` (headless, 90 s; prints stuck seconds, reversals, wall crashes; `CORNERS_DEBUG=1` logs cars standing still).
 - **Shop test** (must PASS after any gun shop / weapon economy / weapon-controller change): `res://tests/shop_autotest.tscn` (headless, `--fixed-fps 60`; `-- --shot-dir=<dir>` windowed: shop + hotbar screenshots).
 - **Street-life test** (must PASS after any pedestrian / traffic / StreetLife change): `res://tests/streetlife_autotest.tscn` (headless, `--fixed-fps 60`; `-- --shot-dir=<dir>` windowed: a street screenshot). Street life is OFF in every other test (`MapData.override`), like street encounters.
 - **Heat / passengers test** (must PASS after any heat, bounty, generated passenger, drop-off, civilian-crime, hostile-marker or death change): `res://tests/heat_passengers_autotest.tscn` (headless, `--fixed-fps 60`; parts A-H).
@@ -124,5 +140,5 @@ The project is a git repo since 2026-11-15 (before that there was none — that 
 - `02 - Development Plan/` — [[Development Plan]] + one note per phase
 - `03 - Architecture/` — [[Architecture]], [[Conventions]]
 - `04 - Progress/` — [[Status]], [[Session Log]], [[Decisions Log]], [[Known Issues]]
-- `05 - Iterations/` — user-scoped iterations. **Two parallel lines of work merged on 2026-11-15**: plain numbers are DLain47's (08-12), and `09V` / `10V` / `11V` plus the `DV-0xx` decisions are Nico's visual & audio line. Numbering is shared again from 13 on (D-079). Active: [[Iteration 17 - Gang Rides]] (the passenger file is switched off by `GangRides.enabled`, D-088); 16, 08-12 and 14 await playtests
+- `05 - Iterations/` — user-scoped iterations. **Two parallel lines of work merged on 2026-11-15**: plain numbers are DLain47's (08-12), and `09V` / `10V` / `11V` plus the `DV-0xx` decisions are Nico's visual & audio line. Numbering is shared again from 13 on (D-079). Active (branch `feat/no-papers`): [[Iteration 17 - Gang Rides]] and [[Iteration 18 - Shop Menu & Car Upgrades]], [[Iteration 19 - Shop Polish & Nitro]], [[Iteration 20 - Escalation Stages]] (switches `GangRides.enabled`, `ShopMenu.enabled` / `sells_cans` / `sells_repair`, `Escalation.enabled`; D-088 to D-091); 16, 08-12 and 14 await playtests
 - `Templates/` — note templates

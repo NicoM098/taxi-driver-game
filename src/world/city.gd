@@ -272,6 +272,9 @@ func _build_piece(p: Dictionary) -> void:
 			add_child(can)
 		"zone", "spawn":
 			pass
+		"repair", "gunshop" when ShopMenu.enabled:
+			# Shop-menu mode (D-089): the shops are bought from the menu; the lot is a plain building.
+			add_child(ShopMenu.build_closed_lot(map, p))
 		"repair":
 			add_child(MapBuilder.build_piece(map, p))
 			var shop := RepairShop.new()

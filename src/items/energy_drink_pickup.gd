@@ -58,7 +58,8 @@ func _on_body_entered(body: Node) -> void:
 	var dmg := body.get_node_or_null("TaxiDamage") as TaxiDamage
 	if dmg == null or dmg.is_wrecked:
 		return
-	dmg.drink(driver_heal, body_heal, heal_duration)
+	var xl := CarUpgrades.can_mult() if ShopMenu.enabled else 1.0   # Monstrous XL (D-089)
+	dmg.drink(driver_heal * xl, body_heal * xl, heal_duration)
 	EventBus.energy_drink_consumed.emit()
 	EventBus.hud_message.emit("*CRACK*  MONSTROUS ENERGY!", &"good")
 	_set_available(false)

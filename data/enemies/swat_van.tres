@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="EnemyCarData" format=3]
+
+[ext_resource type="Script" path="res://src/core/resources/enemy_car_data.gd" id="1_e"]
+
+[resource]
+script = ExtResource("1_e")
+id = &"swat_van"
+display_name = "SWAT"
+body_material = "res://assets/materials/enemy_swat_black.tres"
+siren = true
+hp = 220
+max_speed = 33.0
+engine_force = 10500.0
+mass = 1300.0
+size = 1.1
+aggression = 0.85
+bounty = 60
+heat_on_kill = 1
+damage = 4.0
+fire_rate = 6.0
+burst = 4
+burst_pause = 1.2
+spread_deg = 4.0
+gun_range = 42.0

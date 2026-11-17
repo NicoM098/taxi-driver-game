@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CarUpgradeData" format=3]
+
+[ext_resource type="Script" path="res://src/shop_menu/car_upgrade_data.gd" id="1_u"]
+
+[resource]
+script = ExtResource("1_u")
+id = &"engine"
+display_name = "Engine Tune"
+blurb = "A bigger turbo and a chip from a guy who knows a guy. More pull and a higher top speed."
+slot = 2
+section = &"car"
+stat = &"engine"
+per_level = 0.12
+prices = PackedInt32Array(400, 900, 1800)
+level_text = "+%d %% engine power"

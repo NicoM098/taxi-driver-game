@@ -8,6 +8,9 @@ extends Control
 ## silhouette, blurb, stat bars, BUY / REFILL AMMO, EQUIP / UNEQUIP, its Mk level and the next
 ## UPGRADE (D-085). Only four guns ride in the cab (D-087): the rest are stored here.
 
+## Every feedback line (bought, not enough cash...): the shop menu shows them (D-090).
+signal said(text: String, colour: Color)
+
 const YELLOW := Color(1.0, 0.82, 0.1)
 const GREEN := Color(0.35, 0.85, 0.45)
 const RED := Color(1.0, 0.35, 0.3)
@@ -188,6 +191,7 @@ func refill(id: StringName) -> bool:
 func _say(text: String, colour: Color) -> void:
 	_note.text = text
 	_note.modulate = colour
+	said.emit(text, colour)
 
 
 # --- Refresh ---------------------------------------------------------------------------

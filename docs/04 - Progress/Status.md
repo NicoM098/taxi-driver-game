@@ -1,12 +1,33 @@
 ---
 tags: [progress, status]
-updated: 2026-11-16
+updated: 2026-11-17
 ---
 # Status
 
 > **Read this first every session.** Claude updates it at the end of every session.
 
-## Where we left off (2026-11-16, session 21 — DLain47)
+## Where we left off (2026-11-17, session 22 — DLain47)
+- **Branch `feat/no-papers`** — everything from sessions 21-22 is **committed and pushed**
+  (end of session 22). Nico has a note at the top of [[CLAUDE]] (§0) and a Changelog entry. Holds [[Iteration 17 - Gang Rides]] and the new
+  [[Iteration 18 - Shop Menu & Car Upgrades]] — both built & auto-verified, **not played**.
+- **User on Iteration 17: "good but way too hard"** → gang numbers tuned down (D-089 lists them).
+- **Shop menu (D-089):** the city has no gun shops / repair garages while `ShopMenu.enabled`
+  (lots become plain buildings; nothing deleted). **B** opens SHOP anywhere: gun rack, repair,
+  four taxi upgrades (armor, engine, glass, ram bar), Monstrous Energy cans to carry ($60, drink
+  with **F**) and two can upgrades (XL, cup holder rack). A wreck still ends the run.
+- **New test:** `shop_menu_autotest` (22nd).
+- **Later the same session — [[Iteration 19 - Shop Polish & Nitro]] (D-090):** the shop is now
+  three tabs of one-click cards (guns bought / upgraded / equipped from their card, no second
+  screen), opens with **Tab** (not B); the boost burns a **nitro tank** with a gauge left of the
+  minimap, plus a Nitro Tank upgrade.
+- **Then [[Iteration 20 - Escalation Stages]] (D-091):** no cans and no repair in the shop; the
+  run is three stages (cops + gangs → SWAT + gang bosses → military + cartel), each reached boss
+  fight unlocked by fares + kills + time; F11 skips to the boss. New test `escalation_autotest` (23rd).
+- **Enemy cars (D-092):** no crash damage from buildings; much less stuck in corners (line of
+  sight + streets, three-point turns, out-of-sight rescue). New test `enemy_corners_autotest` (24th).
+- **First thing next session:** the user plays the branch: difficulty, the shop, nitro, the stages.
+
+### Previous: 2026-11-16, session 21 — DLain47
 - **Active:** [[Iteration 17 - Gang Rides]] — built & auto-verified, **not played**. A trial of the
   game **without the passenger file**: one switch, `GangRides.enabled` (`src/gang_rides/`), default
   on; off = the old game, nothing deleted (D-088).

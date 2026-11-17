@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="EnemyCarData" format=3]
+
+[ext_resource type="Script" path="res://src/core/resources/enemy_car_data.gd" id="1_e"]
+
+[resource]
+script = ExtResource("1_e")
+id = &"military_jeep"
+display_name = "Military"
+body_material = "res://assets/materials/enemy_military_olive.tres"
+hp = 260
+max_speed = 36.0
+engine_force = 12000.0
+mass = 1200.0
+size = 1.05
+aggression = 0.8
+bounty = 90
+heat_on_kill = 1
+damage = 5.0
+fire_rate = 8.0
+burst = 6
+burst_pause = 1.0
+spread_deg = 3.5
+gun_range = 50.0

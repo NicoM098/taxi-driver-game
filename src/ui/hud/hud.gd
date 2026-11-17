@@ -65,6 +65,11 @@ func _ready() -> void:
 	_minimap.name = "Minimap"
 	add_child(_minimap)
 	_place(_minimap, 1, 1, 1, 1, -MINIMAP_SIZE - 18, -MINIMAP_SIZE - 76, -18, -76)
+	# Nitro tank: a tall gauge left of the minimap + speed, the corner you check for speed anyway.
+	var nitro := NitroGauge.new()
+	nitro.name = "NitroGauge"
+	add_child(nitro)
+	_place(nitro, 1, 1, 1, 1, -MINIMAP_SIZE - 18 - 14 - 50, -MINIMAP_SIZE - 76, -MINIMAP_SIZE - 18 - 14, -14)
 	_speed_label = _label(34, HORIZONTAL_ALIGNMENT_RIGHT)
 	_place(_speed_label, 1, 1, 1, 1, -320, -62, -18, -14)
 	_hint_label = _label(18, HORIZONTAL_ALIGNMENT_CENTER)
@@ -134,6 +139,7 @@ func _ready() -> void:
 	_summary_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 
 	add_child(RideCard.new())   # gang-rides mode: announces each fare (D-088)
+	add_child(StageHud.new())   # escalation: stage, objectives, boss bars, banners (D-091)
 
 	EventBus.hud_message.connect(show_message)
 	EventBus.style_earned.connect(_on_style_earned)

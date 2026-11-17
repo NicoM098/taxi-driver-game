@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CarUpgradeData" format=3]
+
+[ext_resource type="Script" path="res://src/shop_menu/car_upgrade_data.gd" id="1_u"]
+
+[resource]
+script = ExtResource("1_u")
+id = &"nitro"
+display_name = "Nitro Tank"
+blurb = "A second bottle strapped in the trunk and a fatter feed line. The boost lasts longer and comes back faster."
+slot = 5
+section = &"car"
+stat = &"nitro"
+per_level = 0.35
+prices = PackedInt32Array(300, 700, 1400)
+level_text = "+%d %% nitro tank and refill"

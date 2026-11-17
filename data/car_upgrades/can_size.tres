@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CarUpgradeData" format=3]
+
+[ext_resource type="Script" path="res://src/shop_menu/car_upgrade_data.gd" id="1_u"]
+
+[resource]
+script = ExtResource("1_u")
+id = &"can_size"
+display_name = "Monstrous XL"
+blurb = "The bigger can. Every Monstrous Energy you drink (bought or picked up) heals more."
+slot = 6
+section = &"cans"
+stat = &"can_size"
+per_level = 0.35
+prices = PackedInt32Array(250, 600, 1200)
+level_text = "+%d %% healing per can"

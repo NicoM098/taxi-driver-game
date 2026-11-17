@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CarUpgradeData" format=3]
+
+[ext_resource type="Script" path="res://src/shop_menu/car_upgrade_data.gd" id="1_u"]
+
+[resource]
+script = ExtResource("1_u")
+id = &"armor"
+display_name = "Armor Plating"
+blurb = "Steel sheets bolted under the doors and the hood. The cab takes more punishment before it goes up."
+slot = 1
+section = &"car"
+stat = &"armor"
+per_level = 0.25
+prices = PackedInt32Array(350, 800, 1600)
+level_text = "+%d %% taxi health"

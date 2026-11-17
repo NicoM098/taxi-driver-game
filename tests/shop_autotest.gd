@@ -24,6 +24,7 @@ var _shot_dir: String = ""
 
 
 func _ready() -> void:
+	ShopMenu.enabled = false   # shops in the city (D-089 keeps them, switched off)
 	MapData.use_builtin()
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	GameState.reset_run()

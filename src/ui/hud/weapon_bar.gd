@@ -144,7 +144,7 @@ func _draw_card(wc: WeaponController, w: WeaponData, r: Rect2, owned: bool, sele
 	if not owned:
 		_draw_lock(r.position + Vector2(r.size.x - 22, 6))
 		var left := w.unlock_rides - WeaponUpgrades.rides_done(get_tree())
-		var tag := "$%d · GUN SHOP" % w.price if left <= 0 else "%d MORE FARES" % left
+		var tag := ("$%d · " + ("SHOP [TAB]" if ShopMenu.enabled else "GUN SHOP")) % w.price if left <= 0 else "%d MORE FARES" % left
 		_text(_font, r.position + Vector2(8, r.size.y - 9), tag, Color(1, 1, 1, 0.45), 12, 0)
 		return
 	# Magazine bar + numbers.

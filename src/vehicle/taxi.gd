@@ -29,6 +29,17 @@ signal landed(fall_speed: float)   # touchdown after a real jump (m/s downward)
 @export var rolling_resistance: float = 40.0 # N per (m/s) per wheel
 @export var air_drag: float = 0.9            # N per (m/s)^2
 
+@export_group("Nitro")
+## The boost burns a tank that refills on its own (and with drift links). Off = endless boost
+## (enemy cars, which have no tank).
+@export var nitro_tank: bool = true
+@export var nitro_max: float = 100.0
+@export var nitro_drain: float = 25.0        # per second of boost: a full tank lasts 4 s
+@export var nitro_regen: float = 8.0         # per second once you let go
+@export var nitro_regen_delay: float = 1.0   # seconds off the boost before it refills
+## An emptied tank has to refill this much before the boost lights again (no flicker).
+@export var nitro_relight: float = 20.0
+
 @export_group("Grip")
 @export var front_grip: float = 1.6          # friction coefficient vs. wheel load
 @export var rear_grip: float = 1.9           # > front = stable understeer; handbrake breaks it loose
@@ -104,6 +115,9 @@ var forward_speed: float = 0.0   # m/s along the car's forward axis (+ = forward
 var grounded_wheel_count: int = 0
 var is_drifting: bool = false
 var is_boosting: bool = false
+var nitro: float = 100.0
+var nitro_empty: bool = false    # ran dry: waits for nitro_relight
+var _nitro_rest: float = 0.0
 var steer_value: float = 0.0     # smoothed steering input -1..1
 var limp: bool = false           # wrecked: slow, misfiring, pulling to the sides
 var _limp_time: float = 0.0
@@ -351,7 +365,8 @@ func _physics_process(delta: float) -> void:
 			if wheel.is_driven:
 				driven_grounded += 1
 
-	is_boosting = input.boost and input.throttle > 0.0 and grounded_wheel_count > 0 and not limp
+	is_boosting = input.boost and input.throttle > 0.0 and grounded_wheel_count > 0 and not limp 			and not (nitro_tank and nitro_empty)
+	_update_nitro(delta)
 	if limp:
 		_limp_time += delta
 	_handbrake_amount = 0.0
@@ -426,6 +441,28 @@ func add_speed_boost(kick: float, top_bonus: float, duration: float) -> void:
 		apply_central_impulse(flat_forward.normalized() * kick * mass)
 	_speed_bonus = maxf(_speed_bonus, top_bonus)
 	_speed_bonus_time = maxf(_speed_bonus_time, duration)
+
+
+## Nitro (Iteration 19): the boost drains the tank, letting go refills it after a short rest.
+func _update_nitro(delta: float) -> void:
+	if not nitro_tank:
+		return
+	if is_boosting:
+		nitro = maxf(nitro - nitro_drain * delta, 0.0)
+		_nitro_rest = 0.0
+		if nitro <= 0.0:
+			nitro_empty = true
+		return
+	_nitro_rest += delta
+	if _nitro_rest >= nitro_regen_delay:
+		add_nitro(nitro_regen * delta)
+
+
+## Adds nitro (the tank's own refill, drift-chain links).
+func add_nitro(amount: float) -> void:
+	nitro = clampf(nitro + amount, 0.0, nitro_max)
+	if nitro_empty and nitro >= minf(nitro_relight, nitro_max):
+		nitro_empty = false
 
 
 ## Moves the taxi (zero velocity) on the next physics step.

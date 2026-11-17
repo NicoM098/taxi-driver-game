@@ -20,6 +20,7 @@ var _shot_dir: String = ""
 
 
 func _ready() -> void:
+	ShopMenu.enabled = false   # shops in the city (D-089 keeps them, switched off)
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--shot-dir="):
 			_shot_dir = arg.get_slice("=", 1)

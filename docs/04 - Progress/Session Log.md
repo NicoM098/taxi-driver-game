@@ -767,3 +767,39 @@ open question.
 **Files changed:** `src/ride/ride_manager.gd`, `src/autoload/event_bus.gd`, `src/ui/hud/hud.gd`, `src/ui/tutorial/tutorial.gd`, `src/main/game.tscn`; new files above; tests `gang_rides` (new), `tutorial`, and `dossier` / `events` / `heat_passengers` / `hostiles` (flag off).
 **Tested:** import clean; gang_rides A-G PASS (zones per district, a red member waits in the red zone in red, no file, clock/pay match the difficulty, a DEADLY plan never includes his own gang, a crew fires by itself with its own cars + alert, delivered at 14 m/s, the granny's card and gift, all four difficulties roll). Screenshots of the card and a rival crew checked (the card first stretched to full screen height and covered the health bars — fixed). Full suite: gang_rides, dossier, ride, events, heat_passengers, hostiles, tutorial, pickup, enemy, map, minimap, shop, upgrades, arsenal, weapon, streetlife, style, jump, curb PASS; enemy_city failed once (KI-029) then 3/3.
 **Next session should:** the user plays the mode; polish from their feedback.
+
+## 2026-11-17 — Session 22 (DLain47) — Shop menu, car upgrades, Monstrous Energy cans
+**Iteration:** [[Iteration 18 - Shop Menu & Car Upgrades]] (new), [[Iteration 17 - Gang Rides]] (tuned) · **Branch:** `feat/no-papers`
+**Goal:** "way too hard"; remove the shops into a menu that opens anytime; car upgrades and Monstrous Energy cans.
+**Done:**
+- Gang rides tuned down (more clock, rarer / smaller crews, ordinary fares safe below HARD).
+- `src/shop_menu/`: `ShopMenu` (switch, screen, closed lots), `CarUpgrades`, `CarUpgradeData`, `CanHolder`; `data/car_upgrades/` (6). Hooks: `GameState` (car_levels, cans), `setup_project.gd` / `project.godot` (shop_menu B / Back, drink F / Y; Y off weapon_next), `main.tscn` (ShopMenu node), `main.gd` (input while open), `city.gd` (closed lots), `taxi_damage.gd` (wreck still ends the run), `energy_drink_pickup.gd` (XL), main menu controls list (D-089).
+**Tested:** import clean; shop_menu A-G PASS (no shops in the city, B opens / closes, each upgrade changes the right number and does not stack, cans capacity / F drink / XL heal, repair charges the quote, gun rack opens, wreck = death, reset_run clears). Menu screenshot checked (tightened to fit 720p). Full suite PASS (ride test now runs with the switch off: it repairs at a garage); hostiles failed once (KI-032) then 3/3.
+**Next session should:** the user plays `feat/no-papers`.
+
+## 2026-11-17 — Session 22 (cont.) — Shop polish, Tab, nitro tank
+**Iteration:** [[Iteration 19 - Shop Polish & Nitro]] (new) · **Branch:** `feat/no-papers`
+**Goal:** one-click shop (no selecting then confirming, no second gun screen), prettier; open with Tab; a nitro bar.
+**Done:**
+- `ShopMenu` rewritten: tabs GUNS / THE CAB / MONSTROUS ENERGY, cards with icons, pips and their own buttons; repair in the header; slide-in, purchase flash. `GunShopUI.said` signal.
+- Tab opens the shop (Tab off `interact`); texts updated (CanHolder, main menu, weapon bar).
+- Nitro tank on the taxi (drain / rest / refill / relight; enemies endless; drift links refill), `NitroGauge` HUD, Nitro Tank upgrade (D-090).
+**Files changed:** `src/shop_menu/{shop_menu,car_upgrades,car_upgrade_data,can_holder}.gd`, `data/car_upgrades/{nitro (new),can_size,can_holder}.tres`, `src/ui/shop/gun_shop_ui.gd`, `src/ui/hud/{hud,nitro_gauge (new),weapon_bar}.gd`, `src/vehicle/{taxi,drift_chain}.gd`, `src/enemies/enemy_car.gd`, `src/ui/menu/main_menu.gd`, `src/autoload/event_bus.gd`, `src/world/{gun_shop,repair_shop}.gd` (comments), `tools/setup_project.gd`, `project.godot`, `tests/shop_menu_autotest.gd`.
+**Tested:** import clean; shop_menu A-H PASS; three tab screenshots and the HUD gauge checked (gun page tightened to fit 720p). Full suite (22 tests, vehicle included) PASS first time.
+**Next session should:** the user plays `feat/no-papers` (difficulty, shop, nitro feel).
+
+## 2026-11-17 — Session 22 (cont.) — Escalation stages, shop without cans / repair
+**Iteration:** [[Iteration 20 - Escalation Stages]] (new) · **Branch:** `feat/no-papers`
+**Goal:** no energy drinks or repair to buy; three escalating stages with bosses, advanced by fares + kills + time.
+**Done:** `ShopMenu.sells_cans` / `sells_repair` off; `src/escalation/` (Escalation, StageData, StageHud), `data/stages/` (3), 10 enemy cars + 4 materials, `EnemyCarData` size / plow / is_boss, sized `EnemyCar` body, `EnemyDirector.set_roster` / `spawn_boss` (+ cleanup fix for externally freed cars), HUD stage panel, `game.tscn` node, F11 debug (D-091).
+**Files changed:** `src/shop_menu/shop_menu.gd`, `src/core/resources/enemy_car_data.gd`, `src/enemies/{enemy_car,enemy_director}.gd`, `src/ui/hud/hud.gd`, `src/main/game.tscn`, `tools/setup_project.gd`, `project.godot`; new `src/escalation/*`, `data/stages/*`, `data/enemies/{swat_van,military_jeep,cartel_truck,cartel_lieutenant,gang_boss_*,boss_*}.tres`, `assets/materials/enemy_{swat_black,military_olive,cartel_white,boss_gold}.tres`, `tests/escalation_autotest.*`; `tests/shop_menu_autotest.gd` (switches on).
+**Tested:** import clean; escalation A-G PASS (boss drives at 21 m/s after 6 s, sits on the road); shop_menu PASS. Screenshots: the Captain, the three gang-boss bars (names overlapped the bars — widened).
+**Next session should:** the user plays all of `feat/no-papers`.
+- **Enemy corners (D-092):** enemies take no crash damage from buildings (contacts must include a car); AI uses line of sight + streets, tighter waypoints, three-point turns, escalating unstuck and a last-resort out-of-sight rescue. New `tests/enemy_corners_autotest` (old AI: 146 s stuck / 590 wall HP in 90 s; new: 26-46 s / 0). Files: `src/enemies/{enemy_driver_ai,enemy_car,enemy_director}.gd`, tests `enemy_corners` (new).
+- **Close of session 22:** full suite 24/24 PASS. Changelog entry and a note for Nico (top of [[CLAUDE]], §0) written; everything committed and pushed to `feat/no-papers` at the user's request.
+**Next session should:** DLain47 plays `feat/no-papers` end to end:
+- gang-ride difficulty;
+- the shop;
+- nitro;
+- the three stages and bosses (F11 skips to a boss);
+- the enemies in corners.

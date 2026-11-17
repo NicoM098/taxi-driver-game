@@ -188,7 +188,11 @@ func _test_boarding(member: WaitingPassenger) -> void:
 # --- D ----------------------------------------------------------------------------------
 
 func _test_rivals() -> void:
-	var planned := _gangs.plan_threats(_rides.ride.profile, GangRides.Difficulty.DEADLY)
+	var planned: Array[Dictionary] = []
+	for i in 10:   # 75 % per rival on DEADLY: a few tries make "nobody came" impossible in practice
+		planned = _gangs.plan_threats(_rides.ride.profile, GangRides.Difficulty.DEADLY)
+		if not planned.is_empty():
+			break
 	var ids: Array[StringName] = []
 	for th in planned:
 		ids.append((th["gang"] as GangData).id)
@@ -196,7 +200,7 @@ func _test_rivals() -> void:
 	if ids.has(&"red"):
 		_errors.append("D: a red member's own gang came for him")
 	if planned.is_empty():
-		_errors.append("D: nobody came on a DEADLY ride (95 %% per rival)")
+		_errors.append("D: nobody came on ten DEADLY rides")
 		return
 	# Let the first crew fire by itself (progress already reached), keep the rest for later.
 	_director.clear_all()

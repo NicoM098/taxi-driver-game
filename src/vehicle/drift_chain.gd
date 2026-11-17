@@ -26,6 +26,7 @@ signal chain_broken(points: float)
 @export_group("Speed reward")
 @export var boost_per_link: float = 0.8          # m/s forward push (small: no lurch)
 @export var boost_multiplier_scale: float = 0.5  # extra push fraction per multiplier above x1
+@export var nitro_per_link: float = 8.0          # each link tops up the taxi's nitro tank
 @export var top_speed_bonus: float = 4.0         # m/s
 @export var top_speed_bonus_time: float = 2.0
 @export_group("Breaking")
@@ -101,6 +102,7 @@ func _start_segment(dir: int) -> void:
 		multiplier = minf(1.0 + links * multiplier_step, max_multiplier)
 		var kick := boost_per_link * (1.0 + (multiplier - 1.0) * boost_multiplier_scale)
 		taxi.add_speed_boost(kick, top_speed_bonus, top_speed_bonus_time)
+		taxi.add_nitro(nitro_per_link * multiplier)
 		chain_link.emit(links, multiplier)
 	is_active = true
 	_current_dir = dir

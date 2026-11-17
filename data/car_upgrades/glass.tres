@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CarUpgradeData" format=3]
+
+[ext_resource type="Script" path="res://src/shop_menu/car_upgrade_data.gd" id="1_u"]
+
+[resource]
+script = ExtResource("1_u")
+id = &"glass"
+display_name = "Bulletproof Glass"
+blurb = "Thick laminated windows. Bullets through the cabin hurt the driver less."
+slot = 3
+section = &"car"
+stat = &"glass"
+per_level = 0.2
+prices = PackedInt32Array(450, 1000, 2000)
+level_text = "-%d %% damage to the driver"

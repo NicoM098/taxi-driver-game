@@ -159,7 +159,8 @@ func _wreck(reason: StringName) -> void:
 	EventBus.taxi_wrecked.emit(reason)
 	# Either bar at 0 ends the run (user 2026-11-15: "when your life runs out you explode").
 	# Only worlds without repair shops (shooting range) keep the old self-repair.
-	if reason == &"driver_killed" or get_tree().get_first_node_in_group(&"repair_shops") != null:
+	# Shop-menu mode (D-089) has no repair garages in the city, but a wreck still ends the run there.
+	if reason == &"driver_killed" or get_tree().get_first_node_in_group(&"repair_shops") != null 			or (ShopMenu.enabled and get_tree().get_first_node_in_group(&"city") != null):
 		_die()
 		return
 	EventBus.hud_message.emit("WRECKED!", &"bad")

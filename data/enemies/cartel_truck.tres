@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="EnemyCarData" format=3]
+
+[ext_resource type="Script" path="res://src/core/resources/enemy_car_data.gd" id="1_e"]
+
+[resource]
+script = ExtResource("1_e")
+id = &"cartel_truck"
+display_name = "Cartel"
+body_material = "res://assets/materials/enemy_cartel_white.tres"
+hp = 240
+max_speed = 36.0
+engine_force = 12000.0
+mass = 1300.0
+size = 1.1
+aggression = 0.75
+bounty = 110
+heat_on_kill = 0
+damage = 5.0
+fire_rate = 9.0
+burst = 5
+burst_pause = 1.0
+spread_deg = 4.0
+gun_range = 44.0

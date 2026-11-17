@@ -1,7 +1,7 @@
 class_name GunShop
 extends Node3D
 ## A gun store in the city (map piece "gunshop"). Stop the taxi on its green pad and press
-## interact (E / Tab / D-pad up): the shop screen (GunShopUI, in Main's UI layer) opens.
+## interact (E / D-pad up): the shop screen (GunShopUI, in Main's UI layer) opens.
 ## Not while wrecked or while a passenger is boarding / reading their file.
 ## A ring and a beam mark the pad (ShopMarker).
 

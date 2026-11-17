@@ -15,6 +15,12 @@ extends Resource
 @export var mass: float = 800.0
 ## 0..1: how often it switches from flanking to ramming.
 @export var aggression: float = 0.5
+## Escalation (D-091): bigger cars. Scales the body's width and length (and the wheelbase).
+@export var size: float = 1.0
+## A steel plow on the nose and armour on the roof (bosses, gang bosses).
+@export var plow: bool = false
+## A boss: shown with a health bar, never given up on (the director keeps bringing it back).
+@export var is_boss: bool = false
 
 @export_group("Rewards")
 @export var bounty: int = 40

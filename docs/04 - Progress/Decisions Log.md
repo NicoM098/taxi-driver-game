@@ -919,3 +919,41 @@ or sickening.
 - The ride card describes ride events by class (pursuers, armed, thief, gift, detour, police, timer), skipping events that need a file action.
 **Status:** accepted (auto-verified: new `gang_rides_autotest` A-G; screenshots of the card and a rival crew).
 
+## D-089 — Shop menu: every shop in one screen, car upgrades, Monstrous Energy to carry (2026-11-17)
+**Context:** user on `feat/no-papers`: "delete the shops and have all of the shops in a menu that you can open anytime, and add upgrades for the car and the monstrous energy cans". See [[Iteration 18 - Shop Menu & Car Upgrades]].
+**Decision (Claude's calls, the user can overrule):**
+- Isolated like D-088: `ShopMenu.enabled` (static, default true) in `src/shop_menu/`. While on, `City` builds a plain lot (`ShopMenu.build_closed_lot`, same back-half block so solid cells still match) instead of a gun shop / repair garage; `false` = the old city. Nothing deleted.
+- **B / Back** opens the menu anywhere (pauses like the gun shop). The gun rack *is* the existing `GunShopUI`, opened without a pad. Repair costs what the garage charged.
+- Taxi upgrades are data (`CarUpgradeData`, `data/car_upgrades/`), applied by `CarUpgrades.apply` as base × multiplier with the base values kept as metadata on the taxi / TaxiDamage, so re-applying never stacks.
+- Monstrous Energy cans: $60, carried in `GameState.cans`, drunk with **F / Y** (`CanHolder`); Y is taken from `weapon_next` (D-pad right still cycles).
+- `TaxiDamage._wreck`: without garages a wreck used to self-repair (shooting-range rule); with the menu on and a city present it still ends the run.
+- Gang rides (D-088) tuned down the same day ("way too hard"): EASY/NORMAL/HARD/DEADLY clock ×1.4/1.2/1.05/0.95, rival chance 15/30/50/75 %, 1/1/1/2 cars, no crew on an ordinary fare below HARD, crews from 25-70 % of the ride, 2 members waiting at most.
+**Status:** accepted (auto-verified: new `shop_menu_autotest` A-G; screenshot of the menu).
+
+
+## D-090 — Shop as tabs of one-click cards, Tab key, nitro tank (2026-11-17)
+**Context:** user on `feat/no-papers`: entries had to be selected and then confirmed on the right (and the gun rack was a second screen); "make it prettier"; open with Tab; "a nitro bar that is in a easy to see zone and looks cool". See [[Iteration 19 - Shop Polish & Nitro]].
+**Decision (Claude's calls, the user can overrule):**
+- `ShopMenu` rewritten as three tabs of cards, each card with its own buttons. Guns are bought / upgraded / refilled / equipped from their card; the menu calls `GunShopUI`'s public `buy` / `upgrade` / `refill` / `toggle_equip` (same rules, no duplicate) and shows its messages through a new `GunShopUI.said` signal. Repair lives in the header.
+- `shop_menu` = **Tab** / Back; Tab removed from `interact`. The menu reads input in `_input` (Tab is also the GUI's focus-next) and releases focus on close.
+- The boost becomes a **nitro tank** on `Taxi` (`nitro_tank`, default true; `EnemyCar` sets it false so AI keeps an endless boost). Drift links refill it. New car upgrade **Nitro Tank**. The HUD gauge (`NitroGauge`) sits left of the minimap + speed.
+**Status:** accepted (auto-verified: `shop_menu_autotest` A-H; screenshots of the three tabs and the gauge).
+
+## D-091 — Escalation: three stages with bosses; no cans, no repair in the shop (2026-11-17)
+**Context:** user on `feat/no-papers`: remove buying energy drinks and repairing; 5 stars was too easy — three levels instead (cops + gangs → SWAT + gang bosses → military + cartel), three bosses, progress by a mix of fares, time and kills. See [[Iteration 20 - Escalation Stages]].
+**Decision (Claude's calls, the user can overrule):**
+- `ShopMenu.sells_cans` / `sells_repair` (static, default false). XL listed under THE CAB, the Cup Holder Rack not sold. The shop-menu test turns both on to keep covering them.
+- The stages are run progression, not a replacement for heat: heat still drives *when* units come; the stage decides *which* (the director's police / gang slots) and how many at once, and can hold a heat floor (0 / 2 / 3).
+- A stage advances only when **all three** objectives are met (fares, kills, survived seconds in the stage), then a 6 s warning and the boss fight; all bosses destroyed → reward, 5 s, next stage. Read literally, "3 bosses" = one boss fight per stage: Precinct Captain; the three gang bosses (the user's "few gang bosses ... mini bossfights before passing to the next stage") who also roam stage 2 as mini-bosses; the Army APC + the Kingpin.
+- Bosses bypass the car cap and have 999 relocations; the Escalation respawns one that disappears without being destroyed.
+- Isolated: `Escalation.enabled` (default true); outside `src/escalation/` only data fields, a sized `build_body`, two director methods, one HUD line, one game.tscn node, an F11 debug action.
+**Status:** accepted (auto-verified: new `escalation_autotest` A-G; screenshots).
+
+## D-092 — Enemy cars: out of corners, no crash damage from buildings (2026-11-17)
+**Context:** user before playtesting `feat/no-papers`: "the enemy cars are getting stuck in every corner quite a lot", and they should take no crash damage against buildings ("they kill themselves over time").
+**Decision (Claude's calls):**
+- `EnemyCar._on_crash` hurts only when a `RigidBody3D` (taxi, traffic, another enemy) is among its contacts (`contact_monitor` on). Walls, buildings and props do nothing. Ramming them with the taxi still hurts them.
+- `EnemyDriverAI`: line of sight to the target (raycast on buildings, every 0.25 s); without it CHASE / FLANK follow the street route instead of driving straight into the building. Waypoints switch at 6 m or once passed (was 10 m: cut corners); braking for corners starts 45 m ahead. Three-point turns: when the way is behind and the car is slow, it reverses with opposite lock and switches direction whenever blocked. Stuck: quicker detection (0.75 s), also "moved < 4 m in 3 s", longer reverses with alternating sides each time; after 4 in a row the director moves it behind the player (`rescue_stuck`, only when unseen or 60 m+ away).
+- `EnemyDirector._cleanup` no longer `erase()`s freed cars from its typed list (it errored every frame and kept them).
+**Measured** (new `enemy_corners_autotest`: 5 hunters, a taxi jumping streets every 12 s, 90 s): old AI 146 s stuck, 70 reversals, 590 HP lost away from the taxi → new 26-46 s stuck over four runs (mostly sub-second stops), 21-31 reversals, 0 crash damage from walls.
+**Status:** accepted (auto-verified).

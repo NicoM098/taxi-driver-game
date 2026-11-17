@@ -102,7 +102,7 @@ signal pedestrian_hit(position: Vector3)
 @warning_ignore("unused_signal")
 signal civilian_killed(position: Vector3, kind: StringName)
 
-## A place the taxi is parked at offers an action on `interact` (E / Tab / D-pad up), e.g. a shop
+## A place the taxi is parked at offers an action on `interact` (E / D-pad up), e.g. a shop
 ## pad. `text` is the whole prompt line; empty clears it. `source` is who asked, so one shop
 ## clearing its prompt never wipes another's.
 @warning_ignore("unused_signal")

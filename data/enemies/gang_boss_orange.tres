@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="EnemyCarData" format=3]
+
+[ext_resource type="Script" path="res://src/core/resources/enemy_car_data.gd" id="1_e"]
+
+[resource]
+script = ExtResource("1_e")
+id = &"gang_boss_orange"
+display_name = "Orange Jackals Boss"
+body_material = "res://assets/materials/enemy_gang_orange.tres"
+hp = 420
+max_speed = 39.0
+engine_force = 15000.0
+mass = 1600.0
+size = 1.2
+plow = true
+aggression = 0.9
+bounty = 400
+heat_on_kill = 0
+damage = 4.0
+fire_rate = 9.0
+burst = 6
+burst_pause = 1.0
+spread_deg = 5.0
+gun_range = 40.0

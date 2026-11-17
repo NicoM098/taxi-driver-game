@@ -1,7 +1,7 @@
 class_name RepairShop
 extends Node3D
 ## A garage in the city (map piece "repair"). Stop the taxi on the yellow pad and press
-## interact (E / Tab / D-pad up) to get it fixed: a wreck costs `wreck_fee`, damage costs per
+## interact (E / D-pad up) to get it fixed: a wreck costs `wreck_fee`, damage costs per
 ## missing hit point. If you cannot pay, they take what you have (a wrecked cab must never be
 ## stuck for good).
 ## A ring and a beam mark the pad (ShopMarker); the beam turns red while the taxi is wrecked.

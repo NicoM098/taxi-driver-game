@@ -23,21 +23,23 @@ const GANG_DIR := "res://data/gangs/"
 enum Difficulty { EASY, NORMAL, HARD, DEADLY }
 ## Per difficulty: roll weight, ride clock and pay multipliers, chance that EACH rival gang
 ## comes for a gang member, cars per rival crew, chance a random crew hits an ordinary fare.
+## Tuned down 2026-11-17 (user: "way too hard"): more time, rarer and smaller crews, and an
+## ordinary fare only draws a crew on HARD / DEADLY rides.
 const DIFFICULTY: Array[Dictionary] = [
-	{"name": "EASY", "weight": 0.30, "time": 1.25, "pay": 0.8, "rival_chance": 0.25, "cars": 1, "ambush": 0.0,
+	{"name": "EASY", "weight": 0.35, "time": 1.4, "pay": 0.9, "rival_chance": 0.15, "cars": 1, "ambush": 0.0,
 		"color": Color(0.45, 1.0, 0.45)},
-	{"name": "NORMAL", "weight": 0.35, "time": 1.0, "pay": 1.0, "rival_chance": 0.45, "cars": 1, "ambush": 0.1,
+	{"name": "NORMAL", "weight": 0.35, "time": 1.2, "pay": 1.0, "rival_chance": 0.3, "cars": 1, "ambush": 0.0,
 		"color": Color(1.0, 1.0, 1.0)},
-	{"name": "HARD", "weight": 0.23, "time": 0.85, "pay": 1.4, "rival_chance": 0.7, "cars": 2, "ambush": 0.35,
+	{"name": "HARD", "weight": 0.2, "time": 1.05, "pay": 1.4, "rival_chance": 0.5, "cars": 1, "ambush": 0.15,
 		"color": Color(1.0, 0.7, 0.25)},
-	{"name": "DEADLY", "weight": 0.12, "time": 0.75, "pay": 2.0, "rival_chance": 0.95, "cars": 3, "ambush": 0.7,
+	{"name": "DEADLY", "weight": 0.1, "time": 0.95, "pay": 1.9, "rival_chance": 0.75, "cars": 2, "ambush": 0.35,
 		"color": Color(1.0, 0.3, 0.3)},
 ]
 const PATTERNS: Array[StringName] = [&"tail", &"ambush_ahead", &"pincer"]
 
 @export_group("Gang members waiting for a cab")
 ## At most this many gang members wait at once (all gangs together).
-@export var max_members_waiting: int = 3
+@export var max_members_waiting: int = 2
 ## Seconds between two attempts to put a member at a stop of their zone.
 @export var member_interval: float = 9.0
 
@@ -249,8 +251,8 @@ func plan_threats(profile: PassengerProfile, diff: int) -> Array[Dictionary]:
 	for g in crews:
 		out.append({
 			"gang": g,
-			"progress": _rng.randf_range(0.12, 0.6),
-			"cars": int(d["cars"]) + (1 if diff >= Difficulty.HARD and _rng.randf() < 0.4 else 0),
+			"progress": _rng.randf_range(0.25, 0.7),
+			"cars": int(d["cars"]) + (1 if diff >= Difficulty.HARD and _rng.randf() < 0.3 else 0),
 			"pattern": PATTERNS[_rng.randi() % PATTERNS.size()],
 		})
 	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a["progress"] < b["progress"])

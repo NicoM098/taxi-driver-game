@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="StageData" format=3]
+
+[ext_resource type="Script" path="res://src/escalation/stage_data.gd" id="1_s"]
+
+[resource]
+script = ExtResource("1_s")
+number = 1
+title = "Street War"
+tagline = "The cops and the gangs."
+color = Color(1, 0.78, 0.2, 1)
+law_car = "res://data/enemies/police_cruiser.tres"
+crime_car = "res://data/enemies/gang_coupe.tres"
+max_enemies = 5
+heat_floor = 0
+elite_cars = PackedStringArray()
+elite_interval = 0.0
+elite_heat = 3
+fares = 5
+kills = 10
+seconds = 240.0
+boss_title = "The Precinct Captain"
+boss_cars = PackedStringArray("res://data/enemies/boss_captain.tres")
+escort_car = "res://data/enemies/police_cruiser.tres"
+escort_count = 2
+reward = 1000

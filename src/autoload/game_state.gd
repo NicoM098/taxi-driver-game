@@ -17,6 +17,10 @@ var loadout: Array[StringName] = STARTING_WEAPONS.duplicate()
 ## Weapon id -> upgrade level (1 = Mk I as bought .. WeaponUpgrades.MAX_LEVEL). Lost with the run
 ## like everything else (D-085). Missing id = level 1.
 var weapon_levels: Dictionary = {}
+## Shop menu (D-089): upgrade id (data/car_upgrades/) -> level bought (missing = 0), and the
+## Monstrous Energy cans carried. Lost with the run.
+var car_levels: Dictionary = {}
+var cans: int = 0
 ## Set by the main menu: the next game runs the short tutorial (src/ui/tutorial/tutorial.gd),
 ## which clears it when it finishes. While it is on: only calm passengers, no street encounters.
 var tutorial_active: bool = false
@@ -29,6 +33,8 @@ func reset_run() -> void:
 	owned_weapons = STARTING_WEAPONS.duplicate()
 	weapon_levels = {}
 	loadout = STARTING_WEAPONS.duplicate()
+	car_levels = {}
+	cans = 0
 
 
 func weapon_level(id: StringName) -> int:

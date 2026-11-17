@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="EnemyCarData" format=3]
+
+[ext_resource type="Script" path="res://src/core/resources/enemy_car_data.gd" id="1_e"]
+
+[resource]
+script = ExtResource("1_e")
+id = &"cartel_lieutenant"
+display_name = "Cartel Lieutenant"
+body_material = "res://assets/materials/enemy_boss_gold.tres"
+hp = 700
+max_speed = 36.0
+engine_force = 15000.0
+mass = 2000.0
+size = 1.25
+plow = true
+aggression = 0.85
+bounty = 600
+heat_on_kill = 0
+damage = 6.0
+fire_rate = 10.0
+burst = 8
+burst_pause = 1.0
+spread_deg = 4.0
+gun_range = 50.0

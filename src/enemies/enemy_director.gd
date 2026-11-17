@@ -54,6 +54,42 @@ var _used_spawns: PackedVector3Array = PackedVector3Array()  # within one spawn 
 var _spawn_serial: int = 0
 
 
+## Escalation (D-091): the stage decides who answers the heat — `police` replaces the police
+## cruiser, `gang` the bounty hunters' coupe — and how many cars may hunt at once.
+func set_roster(police: EnemyCarData, gang: EnemyCarData, cap: int) -> void:
+	if police != null:
+		_police = police
+	if gang != null:
+		_gang = gang
+	max_enemies = cap
+
+
+## Last resort for a car the AI could not get out of a corner (D-092): if the player cannot
+## see it (or it is far down the street, 60 m+), it is put back on the street behind the
+## player. True if it was moved.
+func rescue_stuck(car: EnemyCar) -> bool:
+	if _taxi == null or not is_instance_valid(car):
+		return false
+	if car.global_position.distance_to(_taxi.global_position) < 60.0 and _is_visible_from_taxi(car.global_position):
+		return false
+	if Engine.get_physics_frames() - car.relocated_frame < 120:
+		return false
+	car.relocated_frame = Engine.get_physics_frames()
+	_used_spawns.clear()
+	car.teleport(_spawn_transform(0))
+	return true
+
+
+## A boss (D-091): spawned behind, out of sight, past the car cap, and never given up on.
+func spawn_boss(data: EnemyCarData) -> EnemyCar:
+	if _taxi == null:
+		return null
+	_used_spawns.clear()
+	var car := _spawn_car(data, _spawn_transform(0), 0)
+	car.relocations_left = 999
+	return car
+
+
 func _ready() -> void:
 	add_to_group(&"enemy_director")
 	_rng.randomize()
@@ -355,10 +391,9 @@ func _spawn_transform(index: int) -> Transform3D:
 
 
 func _cleanup() -> void:
+	# A freed car cannot be erase()d from a typed array (it errors and stays): rebuild instead.
+	enemies.assign(enemies.filter(func(c: Variant) -> bool: return is_instance_valid(c)))
 	for car in enemies.duplicate():
-		if not is_instance_valid(car):
-			enemies.erase(car)
-			continue
 		var dist: float = car.global_position.distance_to(_taxi.global_position)
 		var fell: bool = car.global_position.y < -20.0
 		# Waiting ambushers and badly damaged cars running away are left alone.

@@ -28,6 +28,7 @@ var _shot_dir: String = ""
 
 
 func _ready() -> void:
+	ShopMenu.enabled = false   # part 6 repairs at a repair garage (D-089 keeps them, switched off)
 	MapData.use_builtin()   # never the user's edited map
 	process_mode = Node.PROCESS_MODE_ALWAYS   # keep running while the passenger file pauses the world
 	for arg in OS.get_cmdline_user_args():

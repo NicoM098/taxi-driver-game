@@ -84,15 +84,19 @@ func _input_map() -> void:
 	_action("aim", [_mouse(MOUSE_BUTTON_RIGHT), _btn(JOY_BUTTON_LEFT_SHOULDER)])
 	_action("fire", [_mouse(MOUSE_BUTTON_LEFT), _btn(JOY_BUTTON_RIGHT_SHOULDER)])
 	_action("reload", [_key(KEY_R), _btn(JOY_BUTTON_X)])
-	_action("weapon_next", [_mouse(MOUSE_BUTTON_WHEEL_DOWN), _btn(JOY_BUTTON_Y), _btn(JOY_BUTTON_DPAD_RIGHT)])
+	# Y drinks a Monstrous Energy can now (D-089); D-pad right still cycles the guns.
+	_action("weapon_next", [_mouse(MOUSE_BUTTON_WHEEL_DOWN), _btn(JOY_BUTTON_DPAD_RIGHT)])
 	_action("weapon_prev", [_mouse(MOUSE_BUTTON_WHEEL_UP), _btn(JOY_BUTTON_DPAD_LEFT)])
 	_action("weapon_1", [_key(KEY_1)])
 	_action("weapon_2", [_key(KEY_2)])
 	_action("weapon_3", [_key(KEY_3)])
 	_action("weapon_4", [_key(KEY_4)])
 
-	_action("interact", [_key(KEY_E), _key(KEY_TAB), _btn(JOY_BUTTON_DPAD_UP)])
+	_action("interact", [_key(KEY_E), _btn(JOY_BUTTON_DPAD_UP)])
 	_action("kick_out", [_key(KEY_Q), _btn(JOY_BUTTON_DPAD_DOWN)])
+	# Tab opens the shop menu (D-090; it was B). Tab is no longer an interact key.
+	_action("shop_menu", [_key(KEY_TAB), _btn(JOY_BUTTON_BACK)])
+	_action("drink", [_key(KEY_F), _btn(JOY_BUTTON_Y)])
 	_action("pause", [_key(KEY_ESCAPE), _btn(JOY_BUTTON_START)])
 
 	_action("debug_toggle_ps1", [_key(KEY_F1)])
@@ -103,6 +107,8 @@ func _input_map() -> void:
 	_action("debug_toggle_interpolation", [_key(KEY_F4)])
 	# F5 is "run project" and F9 / F10 are the embedded game view's suspend / next frame.
 	_action("debug_cycle_mood", [_key(KEY_F6)])
+	# Escalation (D-091): finish the current stage's objectives -> its boss fight.
+	_action("debug_next_stage", [_key(KEY_F11)])
 
 
 func _action(action_name: String, events: Array, deadzone: float = 0.2) -> void:

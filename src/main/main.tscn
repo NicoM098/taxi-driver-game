@@ -8,6 +8,7 @@
 [ext_resource type="Script" path="res://src/dossier/dossier.gd" id="6_dossier"]
 [ext_resource type="Script" path="res://src/ui/tutorial/tutorial.gd" id="7_tutorial"]
 [ext_resource type="Script" path="res://src/ui/shop/gun_shop_ui.gd" id="8_shop"]
+[ext_resource type="Script" path="res://src/shop_menu/shop_menu.gd" id="9_shopmenu"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_post"]
 shader = ExtResource("3_post")
@@ -67,6 +68,15 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("8_shop")
+
+[node name="ShopMenu" type="Control" parent="UI"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("9_shopmenu")
 
 [node name="Tutorial" type="Control" parent="UI"]
 anchors_preset = 15
