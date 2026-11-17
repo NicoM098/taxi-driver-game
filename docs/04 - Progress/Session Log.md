@@ -736,3 +736,24 @@ texture). The test's first run failed on its own colour comparison: `Color.is_eq
 survive an RGBA8 round trip, so it compares with a 0.01 tolerance now.
 **Next session should:** the user drives it; whether the rotating blocks read or shimmer is the
 open question.
+
+## 2026-11-16 — Session 20 (DLain47) — Pull Nico's work, minimap markers, shops, weapon upgrades
+**Iteration:** [[Iteration 15 - Minimap]] (closed), [[Iteration 16 - Weapon Upgrades & Unlocks]] (new) · **Phases touched:** 05, 11
+**Goal:** pull Nico's pushes and report what changed; minimap markers; shop rings / beams / E; weapon upgrades and slower unlocks.
+**Done:**
+- Pulled `temp/playtest-merge` up to `a749f5d` (Nico's Iterations 13, 14, 15, D-078…D-083, [[Changelog]]). His changelog entry for the minimap names `1b38641`; the pushed commit is `a749f5d`.
+- Minimap: shop blips used `global_position`, which is (0, 0, 0) for every shop → now `pad_position`. Destination was a small yellow dot like the player arrow → pulsing green diamond. Shops drawn as outlined squares.
+- Shops (D-084): ring + beam on every shop pad in the minimap colours; repair / gun shop used with E (prompt on the HUD) instead of waiting on the pad.
+**Files changed:** `src/ui/hud/{minimap,hud}.gd`, `src/world/{shop_marker (new),repair_shop,gun_shop}.gd`, `src/autoload/event_bus.gd`, `src/editor/map_editor.gd` (tooltips), tests `minimap`, `shop`, `ride`.
+**Tested:** import clean; `minimap_autotest` PASS (new part 3: the shop blip lands on its piece); windowed probe on `TEST1` with a forced ride: repair, gun shop and destination all visible. After D-084: shop, ride, minimap, map, tutorial, heat_passengers, style, events PASS; screenshots of the rings, beams and prompts. Not re-run: vehicle, enemy, enemy_city, hostiles, weapon, dossier, pickup, jump, curb, streetlife (untouched systems).
+- Minimap markers made big (lettered shop squares, 22 px destination). **User approved the minimap work → [[Iteration 15 - Minimap]] closed.**
+- New [[Iteration 16 - Weapon Upgrades & Unlocks]] (D-085): guns unlock by fares delivered and cost ~2x; Mk I-IV upgrades at the gun shop, Mk IV = a special per gun (deadeye, drum, dragon's breath, AP rounds). New `WeaponUpgrades`, `Burning`, `tests/upgrades_autotest`.
+**Files changed (Iteration 16):** `src/core/resources/weapon_data.gd`, `src/autoload/game_state.gd`, `src/combat/{weapon_controller,weapon_upgrades (new),burning (new)}.gd`, `src/ui/shop/gun_shop_ui.gd`, `src/ui/hud/weapon_bar.gd`, `data/weapons/*.tres`, tests `upgrades` (new), `shop`.
+**Tested (Iteration 16):** import clean; upgrades 16/16, shop, weapon, ride, tutorial, heat_passengers, enemy, enemy_city, hostiles, streetlife, pickup, dossier PASS; events failed once (KI-031) then 3/3. Gun shop + hotbar screenshots checked.
+- Heavy weapons (D-086): mines, minigun, rocket launcher, laser — $1800-5000, unlocked at 15-35 fares, each with a Mk IV special. New `Blast`, `Rocket`, `Mine`; laser beam, minigun spin-up; keys 5-8. Gun shop rebuilt as list + detail; hotbar in rows of four.
+**Files changed (heavy weapons):** `src/core/resources/weapon_data.gd`, `src/combat/{weapon_controller,weapon_upgrades,blast (new),rocket (new),mine (new)}.gd`, `src/ui/shop/gun_shop_ui.gd` (rewritten), `src/ui/hud/weapon_bar.gd`, `src/autoload/audio.gd` (sound mapping — Nico's file), `tools/setup_project.gd` (keys 5-8), `data/weapons/{mines,minigun,rocket,laser}.tres` (new), tests `arsenal` (new), `shop`.
+**Tested (heavy weapons):** arsenal 18/18, upgrades, shop, weapon, ride, events, tutorial, heat_passengers, enemy, hostiles, streetlife, pickup, dossier, minimap, map, style, jump, curb, vehicle PASS; enemy_city failed once (KI-029) then 3/3. Screenshots: laser beam, rocket in flight, the new shop, an 8-gun hotbar.
+- Loadout of four (D-087): own any number of guns, carry four on keys 1-4; swap at the gun shop (EQUIP / UNEQUIP). Keys 5-8 removed again.
+**Tested (loadout):** upgrades (new part G), arsenal, shop, weapon, ride, events, tutorial, heat_passengers, enemy, enemy_city, hostiles, pickup, dossier, streetlife PASS.
+- Pulled Nico's branch rule (`023c105`, [[CLAUDE]] §6). Asked which branch: the user chose `temp/playtest-merge` for everything, Iteration 16 included. Changelog entry written, committed and pushed.
+**Next session should:** playtest Iteration 16 (unlock pace, prices, specials, the heavy weapons) (`audio.gd` and the shop rewrite flagged for Nico in the Changelog).

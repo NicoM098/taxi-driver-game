@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="WeaponData" format=3]
+
+[ext_resource type="Script" path="res://src/core/resources/weapon_data.gd" id="1_w"]
+
+[resource]
+script = ExtResource("1_w")
+id = &"rocket"
+slot = 7
+blurb = "One rocket, one very big problem for whoever it hits."
+price = 3500
+ammo_price = 200
+display_name = "Rocket launcher"
+kind = &"rocket"
+beam = false
+spin_up = 0.0
+blast_radius = 6.0
+projectile_speed = 55.0
+damage = 180.0
+pellets = 1
+weapon_range = 300.0
+impact_force = 0.0
+fire_rate = 0.8
+automatic = false
+mag_size = 1
+reserve_max = 6
+reload_time = 2.4
+spread_aimed = 0.3
+spread_hip = 2.0
+spread_per_speed = 0.03
+spread_per_turn = 1.0
+spread_per_shot = 0.0
+recoil_pitch = 7.0
+recoil_yaw = 1.0
+gun_size = Vector3(0.1, 0.1, 0.52)
+gun_color = Color(0.25, 0.32, 0.22, 1)
+unlock_rides = 28
+upgrade_prices = PackedInt32Array(1000, 1900, 3500)
+special = &"twin"
+special_name = "Twin tubes"
+special_text = "Fires two rockets at once."

@@ -41,6 +41,7 @@ func _run() -> void:
 	map.pieces.append(MapData.make_piece("spawn", 4, 4))
 	map.pieces.append(MapData.make_piece("building", 10, 6, 3, 2))    # 6 solid cells
 	map.pieces.append(MapData.make_piece("sidewalk", 20, 10, 4, 1))   # 4 covered, not solid
+	map.pieces.append(MapData.make_piece("repair", 30, 14, 4, 4))     # for the shop-blip check
 	var tex := Minimap.bake(map)
 	_check(tex != null, "bake returns a texture")
 	var img := tex.get_image()
@@ -64,8 +65,8 @@ func _run() -> void:
 				painted_solid += 1
 			elif _same(col, Minimap.COVERED):
 				painted_covered += 1
-	_check(solid == painted_solid and solid == 6,
-			"solid cells painted as buildings: %d flagged, %d painted (expected 6)" % [solid, painted_solid])
+	_check(solid == painted_solid and solid == 6 + 16,
+			"solid cells painted as buildings: %d flagged, %d painted (expected 22: building + repair shop)" % [solid, painted_solid])
 	_check(covered == painted_covered and covered == 4,
 			"covered cells painted as covered: %d flagged, %d painted (expected 4)" % [covered, painted_covered])
 
@@ -101,6 +102,16 @@ func _run() -> void:
 		var beside := minimap.world_to_minimap(here + right * 40.0)
 		_check(beside.x > centre.x + 10.0 and absf(beside.y - centre.y) < 6.0,
 				"yaw %.0f: 40 m to the right draws right of the centre (got %.0f, %.0f)" % [yaw_deg, beside.x, beside.y])
+
+	# --- 3. shop blips sit on the shop, not on the world origin ------------------------
+	# Shop nodes stay at (0, 0, 0) and build their geometry in world space, so a blip drawn
+	# at global_position put every shop in the middle of the map (found in play, 2026-11-16).
+	var points := Minimap.shop_points(city.repair_shops)
+	_check(points.size() == 1, "one repair shop on the map (got %d)" % points.size())
+	if points.size() == 1:
+		var shop_cell := map.world_to_cell(points[0])
+		_check(shop_cell.x >= 29 and shop_cell.x <= 35 and shop_cell.y >= 13 and shop_cell.y <= 19,
+				"repair blip lands by its piece at cell (30, 14) (got %s)" % shop_cell)
 
 	if _errors.is_empty():
 		print("[MinimapTest] PASS")

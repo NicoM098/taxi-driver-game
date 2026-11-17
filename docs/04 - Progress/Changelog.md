@@ -21,6 +21,48 @@ updated: 2026-11-16
 
 ---
 
+## 2026-11-16 · DLain47 · `temp/playtest-merge` · after `023c105`
+**On this branch by the user's choice:** asked under your new branch rule (§6), DLain47 chose to
+put all of it here, including **Iteration 16, which nobody has played yet**. Expect it in your
+next build.
+
+**Minimap and shops (approved by DLain47 in play)**
+- **Bug in the minimap:** every shop was drawn at the world origin. `RepairShop` / `GunShop`
+  nodes stay at (0, 0, 0) and build in world space; the minimap now uses `pad_position`
+  (`Minimap.shop_points`, covered by `minimap_autotest` part 3).
+- **Bigger markers:** shops are lettered squares (R / G), the destination is a pulsing green
+  diamond, and everything has an outline. The constants are at the top of `minimap.gd`.
+- **Shops (D-084):** every pad gets a ring and a beam (`ShopMarker`, minimap colours). You stop
+  and press **E** (`interact`) instead of waiting on the pad. New
+  `EventBus.interact_prompt(source, text)` and a prompt label in `hud.gd`.
+
+**Iteration 16 — Weapon Upgrades & Unlocks (built, auto-verified, not played)**
+- **D-085:** guns unlock by fares delivered in the run (SMG 5, sawed-off 12, rifle 20) and cost
+  about twice as much. Mk I-IV upgrades at the gun shop; Mk IV is a special per gun: deadeye,
+  drum, dragon's breath (`Burning`), AP rounds.
+- **D-086:** four heavy guns:
+  - mines ($1800 / 15 fares),
+  - minigun ($2500 / 22),
+  - rocket launcher ($3500 / 28),
+  - laser ($5000 / 35).
+
+  New `Blast` (explosions never hurt the player's taxi), `Rocket` and `Mine`.
+- **D-087:** you can own any number of guns but carry 4 (keys 1-4); the rest are stored at the
+  gun shop (EQUIP / UNEQUIP).
+- **Touches shared code, worth your time:**
+  - `audio.gd`: `_on_weapon_fired` maps the new guns to your bank, pitched. **KI-037**: they need
+    real samples in `gen_sfx.py`.
+  - `gun_shop_ui.gd`: rewritten as list + detail.
+  - `weapon_controller.gd`: `weapons` = equipped upgraded copies, `_arsenal` = everything owned.
+    Fire is split into hitscan / rocket / mine, and there is a beam for the laser.
+  - `weapon_bar.gd`: shows the loadout.
+  - `WeaponData`: new fields (`kind`, `beam`, `spin_up`, `blast_radius`, `projectile_speed`,
+    `unlock_rides`, `upgrade_prices`, `special*`).
+  - `GameState`: `weapon_levels` and `loadout`.
+- **Tests:** two new ones, `upgrades_autotest` and `arsenal_autotest` (20 now); `shop`, `ride`,
+  `minimap` updated. All PASS. `events` (KI-031) and `enemy_city` (KI-029) each failed once and
+  passed 3/3 on re-run.
+
 ## 2026-11-16 · Nico · `temp/playtest-merge` · `9dd5a8c`
 **A branch rule, for both of us** ([[CLAUDE]] §6). Iteration 15 went straight onto this shared
 branch because it was simply the one open at the time, and that is the branch you pull and build

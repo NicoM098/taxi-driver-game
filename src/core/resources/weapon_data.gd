@@ -1,13 +1,27 @@
 class_name WeaponData
 extends Resource
-## One weapon type (hitscan). Files live in res://data/weapons/<id>.tres.
+## One weapon type. Files live in res://data/weapons/<id>.tres; a new file is a new gun in the
+## shop and the hotbar (slot = number key, 1-8).
 
 @export var id: StringName = &""
 @export var display_name: String = "Weapon"
-## Fixed hotbar slot (1-4) = the number key that selects it. Weapons are listed in slot order.
+## Fixed hotbar slot (1-8) = the number key that selects it. Weapons are listed in slot order.
 @export var slot: int = 1
 ## One line for the gun shop.
 @export var blurb: String = ""
+
+@export_group("Behaviour")
+## &"hitscan" (instant rays; also the minigun and the laser), &"rocket" (a projectile that
+## explodes on impact) or &"mine" (dropped behind the taxi, explodes under a car). D-086.
+@export var kind: StringName = &"hitscan"
+## Hitscan only: draw one continuous beam instead of tracers (the laser).
+@export var beam: bool = false
+## Seconds of holding fire before the first shot (the minigun's barrels spinning up).
+@export var spin_up: float = 0.0
+## Rocket / mine: explosion radius in metres (full damage at the centre, 35 % at the edge).
+@export var blast_radius: float = 0.0
+## Rocket: flight speed in m/s.
+@export var projectile_speed: float = 0.0
 
 @export_group("Damage")
 @export var damage: float = 25.0          # per pellet
@@ -42,3 +56,15 @@ extends Resource
 @export var price: int = 0
 ## Price of refilling the reserve to the max at the gun shop.
 @export var ammo_price: int = 0
+## Rides delivered in this run before the gun shop will sell it (0 = always on sale). D-085.
+@export var unlock_rides: int = 0
+
+@export_group("Upgrades")
+## Prices of Mk II, Mk III and Mk IV at the gun shop (WeaponUpgrades). Mk I is the gun as bought.
+@export var upgrade_prices: PackedInt32Array = PackedInt32Array([150, 300, 600])
+## What Mk IV adds on top of the stats: &"deadeye" / &"drum" / &"incendiary" / &"piercing"
+## (handled in WeaponUpgrades.apply and WeaponController._fire).
+@export var special: StringName = &""
+@export var special_name: String = ""
+@export var special_text: String = ""
+

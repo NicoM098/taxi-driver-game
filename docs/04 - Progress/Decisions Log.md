@@ -874,3 +874,38 @@ quantises to 1/255. The test compares with a 0.01 tolerance now.
 **Status:** accepted (auto-verified: import clean, all 18 autotests PASS, screenshot taken in the
 running game) — **needs the user's eyes in motion**, above all whether the rotation feels readable
 or sickening.
+
+## D-084 — Shops: ring + beam on the pad, used with interact (E) instead of waiting (2026-11-16)
+**Context:** user: "i want the shops to have a circle below them and have a beam as well, i also want them to be interactable with the letter e instead of you having to wait there for a second".
+**Decision:**
+- New `ShopMarker` (`src/world/shop_marker.gd`), built by `RepairShop` / `GunShop`: a flattened `TorusMesh` ring the size of the pad and a 40 m beam, both a duplicate of `beacon_green` recoloured to the minimap's shop colours (repair light blue, gun shop orange). Visual only. The beam hides while the taxi is on the pad (it would fill the windshield); the repair beam turns red while the taxi is wrecked, replacing the old red-only beacon.
+- Stopped on the pad (≤ 2.5 m/s) → HUD prompt `[E]  REPAIR  -$N` / `[E]  GUN SHOP` (`D-pad ↑` on a gamepad); the existing `interact` action (E / Tab / D-pad up) repairs or opens the shop. Removed: the repair `work_time` and the gun shop's `wait_time` / "leave the pad first" re-arm (no longer needed: nothing opens by itself).
+- New `EventBus.interact_prompt(source, text)`; the HUD only clears the prompt for the source that set it, so two shops never fight over it.
+**Status:** accepted (auto-verified: import clean; shop, ride, minimap, map, tutorial, heat_passengers, style, events PASS; shop and ride tests now check that parking alone does nothing; windowed screenshots of both pads, rings, beams and prompts on the built-in city). Not yet seen by the user.
+
+## D-085 — Weapons unlock by fares delivered, cost more, and upgrade Mk I-IV with a special at Mk IV (2026-11-16)
+**Context:** user: guns are too easy to get, all of them come too fast, so it gets boring; wants an upgrade system. Design picked by the user from options: unlock by "reputation" + higher price; upgrades with a special effect; everything lost at GAME OVER.
+**Decision:**
+- `WeaponData.unlock_rides` (SMG 5, sawed-off 12, rifle 20) checked against `ShiftManager.rides_completed`; prices ~2x (400 / 600 / 850).
+- `GameState.weapon_levels` (id → 1..4). The `.tres` is always Mk I; `WeaponUpgrades.apply()` returns an upgraded **copy**, and `WeaponController.weapons` holds those copies — the shop and hotbar keep reading the base files, so nothing writes to a resource on disk. Mk II damage ×1.25; Mk III mag ×1.5, reload ×0.75, spread and recoil ×0.7; Mk IV the special. Upgrading refills the gun.
+- Specials, all in the existing fire path: deadeye (aimed damage ×2), drum (75 mag, reserve ×2, in `apply`), dragon's breath (`Burning` node on the target's HealthComponent owner, 9 dps for 4 s, refreshed not stacked), AP rounds (re-cast the ray from the hit point, excluding every collider of the vehicle it went through, up to 3 targets).
+**Status:** accepted (auto-verified: import clean; new `upgrades_autotest` 16/16, `shop` with locks / prices / upgrade, weapon, ride, tutorial, heat_passengers, enemy, enemy_city, hostiles, streetlife, pickup, dossier PASS; events 3/3 on re-run after one KI-031 failure). Balance not played yet.
+
+## D-086 — Heavy weapons: mines, minigun, rocket launcher, laser (2026-11-16)
+**Context:** user: "mucha variedad de armas. Minas, Rocket Launcher, Minigun, que sean carísimos, y rayo láser también."
+**Decision:**
+- Still data: four new `.tres` in `data/weapons/` (slots 5-8, keys 5-8 added to the input map). `WeaponData` gains `kind` (`hitscan` / `rocket` / `mine`), `beam`, `spin_up`, `blast_radius`, `projectile_speed`. The minigun and the laser stay hitscan (spin-up gate; a world-space beam instead of tracers), so they reuse the existing fire path, spread, piercing and upgrades.
+- `Blast.detonate()` is the one explosion: sphere query on the hitbox layer, **one hit per HealthComponent** (the closest hitbox, its multiplier divided out so a head hitbox does not one-shot through the roof), linear falloff to 35 %, impulse on cars, `CombatFx.explosion` + `EventBus.explosion` (camera shake, sound, panic). **The player's taxi is skipped** — no self-damage, an arcade choice.
+- `Rocket` ray-casts each physics step (no tunnelling at 55 m/s). `Mine` is dropped behind the taxi, arms after 0.8 s, triggers on the enemy / traffic layers only, max 8 alive.
+- Prices $1800-5000, unlocked from 15 to 35 fares (on top of D-085), Mk IV specials: heavy charge, hot barrels, twin tubes, piercing beam.
+- Eight guns broke both UIs: the gun shop is now a list + detail panel; the hotbar shows owned guns + the next one on sale, in rows of four.
+**Status:** accepted (auto-verified: new `arsenal_autotest` 18/18; every other autotest PASS — enemy_city failed once (KI-029) then 3/3; screenshots of the laser, a rocket, the shop and an 8-gun hotbar). Balance and sounds not played.
+
+## D-087 — A loadout of four: own any number, carry four (2026-11-16)
+**Context:** user, after D-086: "Mi idea era que solamente se pudiera equipar hasta un máximo de 4 armas a la vez."
+**Decision (Claude's calls, the user can overrule):**
+- Every gun bought stays **owned** for the run (`WeaponController._arsenal`, its ammo and Mk level kept); at most `LOADOUT_SIZE = 4` are **equipped** (`GameState.loadout`, `WeaponController.weapons`), on keys 1-4 in catalogue order. Keys 5-8 (added in D-086) are removed again.
+- Buying with a free place equips the gun; with four already equipped it is stored ("bought and stored"). Swapping happens **only at the gun shop** (EQUIP / UNEQUIP in the detail panel, EQUIPPED · key N / STORED in the list). At least one gun always stays equipped.
+- The hotbar shows only the equipped guns, numbered by key, plus the next gun on sale while there is room.
+**Status:** accepted (auto-verified: upgrades G (10 checks), shop equip / unequip, arsenal, weapon, ride, events, tutorial, heat_passengers, enemy, enemy_city, hostiles, pickup, dossier, streetlife PASS; screenshots of the shop list and the 4-card hotbar).
+

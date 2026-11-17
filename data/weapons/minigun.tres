@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="WeaponData" format=3]
+
+[ext_resource type="Script" path="res://src/core/resources/weapon_data.gd" id="1_w"]
+
+[resource]
+script = ExtResource("1_w")
+id = &"minigun"
+slot = 6
+blurb = "Six barrels, 20 rounds a second. Spins up before it fires."
+price = 2500
+ammo_price = 150
+display_name = "Minigun"
+kind = &"hitscan"
+beam = false
+spin_up = 0.6
+blast_radius = 0.0
+projectile_speed = 0.0
+damage = 10.0
+pellets = 1
+weapon_range = 140.0
+impact_force = 2.0
+fire_rate = 20.0
+automatic = true
+mag_size = 200
+reserve_max = 400
+reload_time = 3.0
+spread_aimed = 1.6
+spread_hip = 3.0
+spread_per_speed = 0.06
+spread_per_turn = 2.0
+spread_per_shot = 0.12
+recoil_pitch = 0.5
+recoil_yaw = 0.6
+gun_size = Vector3(0.1, 0.09, 0.46)
+gun_color = Color(0.18, 0.18, 0.2, 1)
+unlock_rides = 22
+upgrade_prices = PackedInt32Array(800, 1500, 2800)
+special = &"no_spinup"
+special_name = "Hot barrels"
+special_text = "No spin-up: fires the moment you pull."

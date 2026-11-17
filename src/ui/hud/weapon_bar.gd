@@ -1,15 +1,17 @@
 class_name WeaponBar
 extends Control
 ## Weapon hotbar (bottom-left of the HUD, full-screen Control that only draws there).
-## One card per weapon that exists, in slot order = number key: gun silhouette, slot key,
-## magazine bar + "mag | reserve". The equipped one is raised, yellow-framed and white; owned
-## ones are grey; not-owned ones are dark with a lock and their gun-shop price. Above the bar
-## the equipped weapon's name + ammo in big type; on a switch the name pops.
+## One card per EQUIPPED weapon (the loadout, at most four, D-087), in key order 1-4: gun
+## silhouette, key, magazine bar + "mag | reserve", Mk level. The one in hand is raised,
+## yellow-framed and white; the others grey. While the loadout has room, one dark locked card
+## for the next gun on sale (price or fares still needed). Above the bar the gun in hand's name +
+## ammo in big type; on a switch the name pops.
 
 const CARD := Vector2(116.0, 84.0)
 const GAP := 8.0
 const MARGIN := Vector2(18.0, 16.0)
 const RAISE := 10.0
+const PER_ROW := 4
 const YELLOW := Color(1.0, 0.82, 0.1)
 const RED := Color(1.0, 0.35, 0.3)
 const BG := Color(0.04, 0.04, 0.06, 0.72)
@@ -42,6 +44,33 @@ const SHAPES := {
 		[Vector2(30, 9), Vector2(50, 9), Vector2(50, 21), Vector2(30, 21)],
 		[Vector2(0, 15), Vector2(30, 11), Vector2(30, 22), Vector2(2, 30)],
 		[Vector2(36, 21), Vector2(48, 21), Vector2(46, 30), Vector2(36, 29)],
+	],
+	&"mines": [
+		[Vector2(14, 22), Vector2(86, 22), Vector2(80, 34), Vector2(20, 34)],
+		[Vector2(26, 14), Vector2(74, 14), Vector2(86, 22), Vector2(14, 22)],
+		[Vector2(44, 6), Vector2(56, 6), Vector2(56, 14), Vector2(44, 14)],
+	],
+	&"minigun": [
+		[Vector2(40, 6), Vector2(99, 6), Vector2(99, 11), Vector2(40, 11)],
+		[Vector2(40, 13), Vector2(99, 13), Vector2(99, 18), Vector2(40, 18)],
+		[Vector2(40, 20), Vector2(99, 20), Vector2(99, 25), Vector2(40, 25)],
+		[Vector2(14, 4), Vector2(42, 4), Vector2(42, 28), Vector2(14, 28)],
+		[Vector2(22, 28), Vector2(32, 28), Vector2(30, 39), Vector2(20, 39)],
+		[Vector2(2, 10), Vector2(14, 8), Vector2(14, 22), Vector2(2, 20)],
+	],
+	&"rocket": [
+		[Vector2(4, 10), Vector2(90, 10), Vector2(90, 22), Vector2(4, 22)],
+		[Vector2(88, 7), Vector2(99, 7), Vector2(99, 25), Vector2(88, 25)],
+		[Vector2(36, 22), Vector2(46, 22), Vector2(44, 36), Vector2(34, 36)],
+		[Vector2(56, 22), Vector2(64, 22), Vector2(64, 32), Vector2(56, 32)],
+		[Vector2(50, 4), Vector2(66, 4), Vector2(66, 10), Vector2(50, 10)],
+	],
+	&"laser": [
+		[Vector2(24, 9), Vector2(78, 9), Vector2(78, 23), Vector2(24, 23)],
+		[Vector2(78, 13), Vector2(99, 14), Vector2(99, 18), Vector2(78, 19)],
+		[Vector2(30, 23), Vector2(42, 23), Vector2(40, 38), Vector2(28, 38)],
+		[Vector2(48, 4), Vector2(70, 4), Vector2(70, 9), Vector2(48, 9)],
+		[Vector2(4, 11), Vector2(24, 12), Vector2(24, 20), Vector2(4, 22)],
 	],
 }
 
@@ -77,16 +106,20 @@ func _draw() -> void:
 	if wc == null or wc.current_weapon() == null:
 		return
 	var cur := wc.current_weapon()
-	var base_y := size.y - MARGIN.y - CARD.y
-	for i in _catalogue.size():
-		var w := _catalogue[i]
+	var shown := cards_to_show(wc)
+	var rows := ceili(shown.size() / float(PER_ROW))
+	var bottom_y := size.y - MARGIN.y - CARD.y
+	for i in shown.size():
+		var w: WeaponData = shown[i]
 		var owned := wc.owns(w.id)
 		var selected := w.id == cur.id
-		var pos := Vector2(MARGIN.x + i * (CARD.x + GAP), base_y - (RAISE if selected else 0.0))
-		_draw_card(wc, w, Rect2(pos, CARD), owned, selected)
+		var row := i / PER_ROW
+		var pos := Vector2(MARGIN.x + (i % PER_ROW) * (CARD.x + GAP),
+				bottom_y - row * (CARD.y + GAP + RAISE) - (RAISE if selected else 0.0))
+		_draw_card(wc, w, Rect2(pos, CARD), owned, selected, i + 1)
 	# Equipped weapon: name + ammo in big type above the bar.
 	var a := wc.get_ammo()
-	var title_y := base_y - RAISE - 14.0
+	var title_y := bottom_y - (rows - 1) * (CARD.y + GAP + RAISE) - RAISE - 14.0
 	var name_size := int(30 + 10 * _pop)
 	var title := cur.display_name.to_upper()
 	_text(_bold, Vector2(MARGIN.x, title_y), title, YELLOW.lerp(Color.WHITE, _pop), name_size, 7)
@@ -96,27 +129,30 @@ func _draw() -> void:
 	_text(_bold, Vector2(MARGIN.x + tw + 16.0, title_y), ammo_text, ammo_col, 26, 6)
 
 
-func _draw_card(wc: WeaponController, w: WeaponData, r: Rect2, owned: bool, selected: bool) -> void:
+func _draw_card(wc: WeaponController, w: WeaponData, r: Rect2, owned: bool, selected: bool, key_number: int) -> void:
 	draw_rect(r, BG if owned else Color(0.02, 0.02, 0.03, 0.55))
 	if selected:
 		draw_rect(r.grow(1.0), YELLOW, false, 3.0)
 	# Slot key.
 	var key := Rect2(r.position + Vector2(5, 5), Vector2(20, 20))
 	draw_rect(key, YELLOW if selected else Color(1, 1, 1, 0.18 if owned else 0.08))
-	_text(_font, key.position + Vector2(6, 15), str(w.slot), Color.BLACK if selected else Color(1, 1, 1, 0.8 if owned else 0.35), 15, 0)
+	_text(_font, key.position + Vector2(6, 15), str(key_number), Color.BLACK if selected else Color(1, 1, 1, 0.8 if owned else 0.35), 15, 0)
 	# Silhouette.
 	var icon := Rect2(r.position + Vector2(10, 22), Vector2(r.size.x - 20, 34))
 	var col := Color.WHITE if selected else (Color(0.72, 0.72, 0.75) if owned else Color(0.25, 0.25, 0.28))
 	_draw_gun(w.id, icon, col)
 	if not owned:
 		_draw_lock(r.position + Vector2(r.size.x - 22, 6))
-		_text(_font, r.position + Vector2(8, r.size.y - 9), "$%d · GUN SHOP" % w.price, Color(1, 1, 1, 0.45), 12, 0)
+		var left := w.unlock_rides - WeaponUpgrades.rides_done(get_tree())
+		var tag := "$%d · GUN SHOP" % w.price if left <= 0 else "%d MORE FARES" % left
+		_text(_font, r.position + Vector2(8, r.size.y - 9), tag, Color(1, 1, 1, 0.45), 12, 0)
 		return
 	# Magazine bar + numbers.
 	var a := wc.get_ammo(w)
 	var bar := Rect2(r.position + Vector2(8, r.size.y - 22), Vector2(r.size.x - 16, 5))
 	draw_rect(bar, Color(1, 1, 1, 0.15))
-	var fill := clampf(float(a["mag"]) / maxf(w.mag_size, 1), 0.0, 1.0)
+	var carried := wc.get_weapon(w.id)   # upgraded copy: its magazine may be bigger (D-085)
+	var fill := clampf(float(a["mag"]) / maxf(carried.mag_size if carried != null else w.mag_size, 1), 0.0, 1.0)
 	if selected and wc.is_reloading:
 		fill = wc.get_reload_progress()
 	var fill_col := RED if int(a["mag"]) == 0 and not (selected and wc.is_reloading) else (YELLOW if selected else Color(0.8, 0.8, 0.8))
@@ -124,6 +160,28 @@ func _draw_card(wc: WeaponController, w: WeaponData, r: Rect2, owned: bool, sele
 	var low := int(a["mag"]) == 0 and int(a["reserve"]) == 0
 	_text(_font, r.position + Vector2(8, r.size.y - 4), "EMPTY" if low else "%d | %d" % [a["mag"], a["reserve"]],
 		RED if low else Color(1, 1, 1, 0.85 if selected else 0.6), 13, 0)
+	var level := GameState.weapon_level(w.id)
+	if level > 1:
+		_text(_font, r.position + Vector2(r.size.x - 40, 19), WeaponUpgrades.level_name(level),
+			YELLOW if level >= WeaponUpgrades.MAX_LEVEL else Color(1, 1, 1, 0.7), 12, 0)
+
+
+## The equipped guns in key order, then — if the loadout has room — the next one on sale.
+func cards_to_show(wc: WeaponController) -> Array[WeaponData]:
+	var out: Array[WeaponData] = []
+	for w in wc.weapons:
+		out.append(w)
+	if out.size() >= WeaponController.LOADOUT_SIZE:
+		return out
+	var next: WeaponData = null
+	for w in _catalogue:
+		if wc.owns(w.id):
+			continue
+		elif next == null or w.unlock_rides < next.unlock_rides 				or (w.unlock_rides == next.unlock_rides and w.price < next.price):
+			next = w
+	if next != null:
+		out.append(next)
+	return out
 
 
 func _draw_gun(id: StringName, box: Rect2, col: Color) -> void:

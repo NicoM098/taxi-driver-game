@@ -1,9 +1,9 @@
 ---
 tags: [iteration]
 iteration: 15
-status: awaiting playtest
+status: closed
 started: 2026-11-16
-finished:
+finished: 2026-11-16
 ---
 # Iteration 15 — Minimap
 
@@ -100,7 +100,21 @@ art does not have.
 - [ ] Does anything flicker while turning?
 
 ## Feedback from user
--
+- 2026-11-16 (DLain47): "i dont see the markers for the repair shops or the gun shops nor the ride
+  destination". **Shops: a bug.** `RepairShop` / `GunShop` nodes stay at the world origin and build
+  their geometry in world space, so `global_position` put all six shops at (0, 0, 0) and usually
+  culled them. Now drawn at `pad_position` (`Minimap.shop_points`), with a regression check in
+  `minimap_autotest` (part 3). **Destination: drawn, but unreadable.** It was a 4 px dot in the
+  player arrow's yellow. Now a pulsing green diamond with a white outline (green like the
+  dashboard arrow and the beacon); shops are outlined squares. Verified with a windowed screenshot
+  on `TEST1`. Not yet re-checked by the user.
+- 2026-11-16 (DLain47): "i want the markers to be more noticeable on the minimap, quite big".
+  Every marker roughly doubled and outlined in black: shops 18 px squares with a letter (**R**
+  repair, **G** gun shop), destination a 22 px pulsing diamond, fares 10 px and enemies 12 px dots,
+  player arrow 18 px. Sizes are constants at the top of `minimap.gd` (`SHOP_HALF`,
+  `DESTINATION_RADIUS`, `blip_radius`). Checked with a screenshot.
+- 2026-11-16 (DLain47): "esa parte está correcta y aprobada" — minimap markers (and the shop
+  rings / beams / E, D-084) approved. **Iteration closed.**
 
 ## Discovered / Deferred
 - **The rotation maths needed no correction factor**: the taxi's forward is -Z, which is already

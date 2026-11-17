@@ -290,15 +290,39 @@ func _connect_events() -> void:
 		play(&"ui_click", BUS_UI, -8.0))
 
 
+var _laser_ticks: int = 0
+
+
 func _on_weapon_fired(weapon: Resource) -> void:
 	var data := weapon as WeaponData
 	var id := String(data.id) if data != null else ""
 	var sound := &"shot_revolver"
+	var volume := -2.0
+	var pitch := randf_range(0.97, 1.03)
+	# The heavy weapons (D-086) reuse the generated bank, pitched: there are no samples of their own yet.
 	if id.contains("smg"):
 		sound = &"shot_smg"
 	elif id.contains("saw") or id.contains("shot"):
 		sound = &"shot_shotgun"
-	play(sound, BUS_SFX, -2.0, randf_range(0.97, 1.03))
+	elif id == "minigun":
+		sound = &"shot_smg"
+		pitch *= 0.78
+		volume = -4.0
+	elif id == "rocket":
+		sound = &"shot_shotgun"
+		pitch *= 0.55
+	elif id == "mines":
+		sound = &"ui_click"
+		volume = -4.0
+	elif id == "laser":
+		# 25 ticks a second: a thin high zap every third one, or it turns into noise.
+		_laser_ticks += 1
+		if _laser_ticks % 3 != 0:
+			return
+		sound = &"shot_smg"
+		pitch *= 2.3
+		volume = -12.0
+	play(sound, BUS_SFX, volume, pitch)
 
 
 func _on_taxi_damaged(amount: float, _hp_left: float) -> void:

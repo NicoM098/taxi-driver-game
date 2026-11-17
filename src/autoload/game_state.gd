@@ -11,6 +11,12 @@ var heat: int = 0
 ## bought at gun shops (WeaponController.add_weapon).
 const STARTING_WEAPONS: Array[StringName] = [&"revolver"]
 var owned_weapons: Array[StringName] = STARTING_WEAPONS.duplicate()
+## The guns on the hotbar (keys 1-4, at most WeaponController.LOADOUT_SIZE): owned guns not in
+## here wait at the gun shop (D-087). WeaponController keeps it in step.
+var loadout: Array[StringName] = STARTING_WEAPONS.duplicate()
+## Weapon id -> upgrade level (1 = Mk I as bought .. WeaponUpgrades.MAX_LEVEL). Lost with the run
+## like everything else (D-085). Missing id = level 1.
+var weapon_levels: Dictionary = {}
 ## Set by the main menu: the next game runs the short tutorial (src/ui/tutorial/tutorial.gd),
 ## which clears it when it finishes. While it is on: only calm passengers, no street encounters.
 var tutorial_active: bool = false
@@ -21,6 +27,12 @@ func reset_run() -> void:
 	shift_number = 0
 	heat = 0
 	owned_weapons = STARTING_WEAPONS.duplicate()
+	weapon_levels = {}
+	loadout = STARTING_WEAPONS.duplicate()
+
+
+func weapon_level(id: StringName) -> int:
+	return int(weapon_levels.get(id, 1))
 
 
 func add_cash(amount: int) -> void:
@@ -34,7 +46,7 @@ func set_heat(level: int) -> void:
 
 
 func to_dict() -> Dictionary:
-	return {"cash": cash, "shift_number": shift_number, "heat": heat, "owned_weapons": owned_weapons}
+	return {"cash": cash, "shift_number": shift_number, "heat": heat, "owned_weapons": owned_weapons, "loadout": loadout}
 
 
 func from_dict(data: Dictionary) -> void:

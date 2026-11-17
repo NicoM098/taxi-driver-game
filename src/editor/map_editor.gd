@@ -972,9 +972,9 @@ func _help_for(type: String, p: Dictionary) -> String:
 		"pillar":
 			return "A single post in the middle of the cell."
 		"repair":
-			return "Garage with a yellow pad on the 'Facing' side. A wrecked taxi limps until it stops on a pad. Put a few around the map and keep the pad reachable from the street."
+			return "Garage with a yellow pad on the 'Facing' side. Stop on the pad and press E to repair (a ring and a light-blue beam mark it). Put a few around the map and keep the pad reachable from the street."
 		"gunshop":
-			return "Gun store with a green pad on the 'Facing' side. Stop on the pad to buy guns (SMG, sawed-off, rifle) and ammo. One or two per map; keep the pad reachable from the street."
+			return "Gun store with a green pad on the 'Facing' side. Stop on the pad and press E to buy guns (SMG, sawed-off, rifle) and ammo. One or two per map; keep the pad reachable from the street."
 		"stop":
 			return "Where passengers wait and get dropped off. Place it on a STREET cell next to a sidewalk; 'Facing' is the side the passenger stands on. Name it, or leave it empty for an automatic name. More stops = more variety (12+)."
 		"drink":

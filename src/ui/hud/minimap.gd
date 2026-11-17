@@ -21,13 +21,18 @@ const C_PLAYER := Color(1.0, 0.85, 0.2)
 const C_ENEMY := Color(1.0, 0.3, 0.25)
 const C_POLICE := Color(0.4, 0.65, 1.0)
 const C_FARE := Color(0.5, 1.0, 0.5)
-const C_DESTINATION := Color(1.0, 0.85, 0.2)
+## Green like the dashboard arrow and the beacon in the world, never the player's yellow.
+const C_DESTINATION := Color(0.3, 1.0, 0.45)
 const C_REPAIR := Color(0.6, 0.8, 1.0)
 const C_GUNSHOP := Color(1.0, 0.6, 0.2)
+const OUTLINE := Color(0.0, 0.0, 0.0, 0.9)
+## Marker sizes in pixels, on a 164 px square: big on purpose, they must read at a glance.
+const SHOP_HALF := 9.0
+const DESTINATION_RADIUS := 11.0
 
 ## How many cells fit across the square. One cell is 8 m, so 26 is a bit over 200 m.
 @export var cells_across: float = 26.0
-@export var blip_radius: float = 3.0
+@export var blip_radius: float = 5.0          # cars and fares; shops and the destination are bigger
 
 var _tex: ImageTexture
 var _map: MapData
@@ -120,10 +125,10 @@ func _draw_blips() -> void:
 	var reach := cells_across * 0.75 * MapData.CELL
 	var here := _taxi.global_position
 
-	for shop in _city.repair_shops:
-		_blip(shop.global_position, here, reach, C_REPAIR)
-	for shop in _city.gun_shops:
-		_blip(shop.global_position, here, reach, C_GUNSHOP)
+	for p in shop_points(_city.repair_shops):
+		_shop_blip(p, here, reach, C_REPAIR, "R")
+	for p in shop_points(_city.gun_shops):
+		_shop_blip(p, here, reach, C_GUNSHOP, "G")
 	for stop in _city.stops:
 		if stop.occupied:
 			_blip(stop.global_position, here, reach, C_FARE)
@@ -144,25 +149,57 @@ func _draw_destination(here: Vector3) -> void:
 	if destination == null or not is_instance_valid(destination):
 		return
 	var at := world_to_minimap(destination.global_position)
-	var half := size * 0.5
-	var margin := blip_radius + 2.0
+	# A big pulsing diamond, so it cannot be read as a car or a fare.
+	var r := DESTINATION_RADIUS * (1.0 + 0.15 * sin(Time.get_ticks_msec() * 0.008))
+	var margin := r + 3.0
 	at.x = clampf(at.x, margin, size.x - margin)
 	at.y = clampf(at.y, margin, size.y - margin)
-	draw_circle(at, blip_radius * 1.3, C_DESTINATION)
-	draw_circle(at, blip_radius * 1.3, Color(0, 0, 0, 0.8), false, 1.5)
+	var diamond := PackedVector2Array([
+			at + Vector2(0, -r), at + Vector2(r, 0), at + Vector2(0, r), at + Vector2(-r, 0)])
+	draw_colored_polygon(diamond, C_DESTINATION)
+	diamond.append(diamond[0])
+	draw_polyline(diamond, OUTLINE, 4.0)
+	draw_polyline(diamond, Color(1, 1, 1, 0.95), 2.0)
+
+
+## Where shops go on the map. Shops are built in world coordinates under a node left at the
+## origin, so `global_position` is (0, 0, 0) for every one of them: the pad is where the shop
+## really is. Public so the test can check it.
+static func shop_points(shops: Array) -> PackedVector3Array:
+	var out := PackedVector3Array()
+	for shop in shops:
+		if shop != null and is_instance_valid(shop):
+			out.append(shop.pad_position)
+	return out
+
+
+## Shops are big squares with a letter and a dark outline: a fixed place, not something moving.
+func _shop_blip(pos: Vector3, here: Vector3, reach: float, colour: Color, letter: String) -> void:
+	if Vector2(pos.x - here.x, pos.z - here.z).length() > reach:
+		return
+	var r := SHOP_HALF
+	var at := world_to_minimap(pos)
+	var rect := Rect2(at - Vector2(r, r), Vector2(r, r) * 2.0)
+	draw_rect(rect, colour)
+	draw_rect(rect, OUTLINE, false, 2.0)
+	var font := ThemeDB.fallback_font
+	var fs := int(r * 1.5)
+	var w := font.get_string_size(letter, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+	draw_string(font, at + Vector2(-w * 0.5, fs * 0.36), letter, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, OUTLINE)
 
 
 func _blip(pos: Vector3, here: Vector3, reach: float, colour: Color, scale: float = 1.0) -> void:
 	if Vector2(pos.x - here.x, pos.z - here.z).length() > reach:
 		return
 	var at := world_to_minimap(pos)
+	draw_circle(at, blip_radius * scale + 1.5, OUTLINE)
 	draw_circle(at, blip_radius * scale, colour)
 
 
 ## Fixed arrow at the centre: the map rotates around it.
 func _draw_player() -> void:
 	var c := size * 0.5
-	var r := blip_radius * 2.0
+	var r := 9.0
 	draw_colored_polygon(PackedVector2Array([
 			c + Vector2(0, -r), c + Vector2(r * 0.7, r * 0.8), c, c + Vector2(-r * 0.7, r * 0.8)]),
 			C_PLAYER)

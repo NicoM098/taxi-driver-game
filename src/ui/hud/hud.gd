@@ -29,6 +29,8 @@ var _message_tween: Tween
 var _bark_label: Label
 var _bark_tween: Tween
 var _alert_label: Label
+var _prompt_label: Label
+var _prompt_source: Node = null
 var _alert_text: String = ""
 var _alert_left: float = 0.0
 var _bold: FontVariation
@@ -112,6 +114,13 @@ func _ready() -> void:
 	_place(_alert_label, 0, 0.53, 1, 0.53, 0, 0, 0, 46)
 	_alert_label.add_theme_color_override("font_color", COLORS[&"bad"])
 	_alert_label.visible = false
+	# "[E]  REPAIR  -$34" while parked on a shop pad: below the crosshair, above the drift meter.
+	_prompt_label = _label(30, HORIZONTAL_ALIGNMENT_CENTER)
+	_place(_prompt_label, 0, 0.62, 1, 0.62, 0, 0, 0, 40)
+	_prompt_label.add_theme_font_override("font", _bold)
+	_prompt_label.add_theme_constant_override("outline_size", 9)
+	_prompt_label.add_theme_color_override("font_color", Color(1.0, 0.95, 0.7))
+	_prompt_label.visible = false
 
 	_summary = ColorRect.new()
 	_summary.color = Color(0, 0, 0, 0.7)
@@ -128,6 +137,7 @@ func _ready() -> void:
 	EventBus.style_earned.connect(_on_style_earned)
 	EventBus.passenger_bark.connect(show_bark)
 	EventBus.ride_alert.connect(show_alert)
+	EventBus.interact_prompt.connect(show_prompt)
 	EventBus.shift_ended.connect(_on_shift_ended)
 	EventBus.shift_started.connect(func(_n: int) -> void: _summary.visible = false)
 
@@ -225,6 +235,18 @@ func show_bark(speaker: String, text: String) -> void:
 	_bark_tween = create_tween()
 	_bark_tween.tween_interval(3.2)
 	_bark_tween.tween_property(_bark_label, "modulate:a", 0.0, 0.6)
+
+
+## What pressing interact would do here; empty text clears it, but only if `source` owns it.
+func show_prompt(source: Node, text: String) -> void:
+	if text == "":
+		if source == _prompt_source:
+			_prompt_source = null
+			_prompt_label.visible = false
+		return
+	_prompt_source = source
+	_prompt_label.text = text
+	_prompt_label.visible = true
 
 
 ## Flashing prompt with a countdown; empty text clears it.

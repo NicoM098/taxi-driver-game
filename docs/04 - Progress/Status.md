@@ -1,12 +1,29 @@
 ---
 tags: [progress, status]
-updated: 2026-11-15
+updated: 2026-11-16
 ---
 # Status
 
 > **Read this first every session.** Claude updates it at the end of every session.
 
-## Where we left off (2026-11-16, session 19)
+## Where we left off (2026-11-16, session 20 — DLain47)
+- **[[Iteration 15 - Minimap]] closed** (user approved). On top of Nico's version: shop blips were
+  drawn at the world origin (bug, fixed), all markers made big and outlined; shops got a ring and a
+  beam on the pad and are used with **E** instead of waiting (D-084).
+- **Active:** [[Iteration 16 - Weapon Upgrades & Unlocks]] — built & auto-verified, **not played**.
+  Guns unlock by fares delivered (SMG 5, sawed-off 12, rifle 20) and cost ~2x; Mk I-IV upgrades at
+  the gun shop, Mk IV = a special per gun: deadeye, drum mag, dragon's breath, AP rounds (D-085).
+- **Heavy weapons (D-086):** mines, minigun, rocket launcher, laser — $1800-5000,
+  unlocked at 15-35 fares, Mk IV specials. Explosions never hurt your own taxi. Gun shop is now a
+  list + detail screen.
+- **Loadout of four (D-087):** own any number of guns, carry four (keys 1-4); the rest are stored
+  at the gun shop, swapped there with EQUIP / UNEQUIP.
+- **New tests:** `upgrades_autotest` (19th), `arsenal_autotest` (20th). All PASS; events (KI-031)
+  and enemy_city (KI-029) each failed once and passed 3/3 on re-runs.
+- **Pushed to `temp/playtest-merge`** (user's choice, also Iteration 16 unplayed), with a [[Changelog]] entry.
+- **First thing next session:** playtest Iteration 16 (unlock pace, prices, specials, heavy weapons).
+
+### Previous: 2026-11-16, session 19 (Nico)
 - **Active:** [[Iteration 15 - Minimap]] — built & auto-verified, **not seen in motion**. Square,
   rotating with the car, a radius around the player, flat. **Drawn from `MapData.flags()` baked to
   a one-pixel-per-cell texture, not from a second camera** (D-083), which is why it works on any

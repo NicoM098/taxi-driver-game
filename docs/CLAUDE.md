@@ -75,6 +75,8 @@ tags: [meta, claude]
 - **Arrow visual check**: `<console exe> --path <project> res://tests/arrow_shots.tscn -- --shot-dir=<scratchpad>` (5 screenshots at fixed angles).
 - **Weapon test** (must PASS after any combat change): `<console exe> --headless --path <project> --fixed-fps 60 res://tests/weapon_autotest.tscn`.
 - **Screenshot check** (visuals; opens a window briefly; add `--world=res://src/combat/shooting_range.tscn` / `--hold=aim,fire` for combat states): `<console exe> --path <project> -- --screenshot=<scratchpad>/shot.png --screenshot-frame=90 [--no-ps1]`, then view the PNG.
+- **Upgrades test** (must PASS after any weapon upgrade / unlock change): `res://tests/upgrades_autotest.tscn` (headless, `--fixed-fps 60`; real shots: Mk stats, AP rounds, deadeye, dragon's breath, unlock by fares).
+- **Arsenal test** (must PASS after any rocket / mine / blast / minigun / laser change): `res://tests/arsenal_autotest.tscn` (headless, `--fixed-fps 60`).
 - **Shop test** (must PASS after any gun shop / weapon economy / weapon-controller change): `res://tests/shop_autotest.tscn` (headless, `--fixed-fps 60`; `-- --shot-dir=<dir>` windowed: shop + hotbar screenshots).
 - **Street-life test** (must PASS after any pedestrian / traffic / StreetLife change): `res://tests/streetlife_autotest.tscn` (headless, `--fixed-fps 60`; `-- --shot-dir=<dir>` windowed: a street screenshot). Street life is OFF in every other test (`MapData.override`), like street encounters.
 - **Heat / passengers test** (must PASS after any heat, bounty, generated passenger, drop-off, civilian-crime, hostile-marker or death change): `res://tests/heat_passengers_autotest.tscn` (headless, `--fixed-fps 60`; parts A-H).
@@ -121,5 +123,5 @@ The project is a git repo since 2026-11-15 (before that there was none — that 
 - `02 - Development Plan/` — [[Development Plan]] + one note per phase
 - `03 - Architecture/` — [[Architecture]], [[Conventions]]
 - `04 - Progress/` — [[Status]], [[Session Log]], [[Decisions Log]], [[Known Issues]]
-- `05 - Iterations/` — user-scoped iterations. **Two parallel lines of work merged on 2026-11-15**: plain numbers are DLain47's (08-12), and `09V` / `10V` / `11V` plus the `DV-0xx` decisions are Nico's visual & audio line. Numbering is shared again from 13 on (D-079). Active: [[Iteration 13 - Merge Integration]]; 08-12 await playtests
+- `05 - Iterations/` — user-scoped iterations. **Two parallel lines of work merged on 2026-11-15**: plain numbers are DLain47's (08-12), and `09V` / `10V` / `11V` plus the `DV-0xx` decisions are Nico's visual & audio line. Numbering is shared again from 13 on (D-079). Active: [[Iteration 16 - Weapon Upgrades & Unlocks]]; 08-12 and 14 await playtests
 - `Templates/` — note templates

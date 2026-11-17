@@ -41,6 +41,7 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	_release_tap()
 	_t += delta
 	_step_t += delta
 	if _taxi == null:
@@ -122,6 +123,11 @@ func _physics_process(delta: float) -> void:
 				_next()
 		7:
 			var dmg := _taxi.get_node("TaxiDamage") as TaxiDamage
+			# Parking alone does nothing: the repair waits for interact (E).
+			if _step_t > 1.5 and _step_t - get_physics_process_delta_time() <= 1.5:
+				if dmg.taxi_health.hp >= dmg.taxi_health.max_hp - 0.5:
+					_errors.append("the shop repaired without pressing interact")
+				_tap_interact()
 			if dmg.taxi_health.hp >= dmg.taxi_health.max_hp - 0.5:
 				print("[RideTest] repaired at the shop after %.1f s, cash %d -> %d" % [_step_t, _cash_before, GameState.cash])
 				if GameState.cash >= _cash_before:
@@ -130,7 +136,7 @@ func _physics_process(delta: float) -> void:
 				dmg.taxi_health.apply_damage(999999.0)
 				_next()
 			elif _step_t > 5.0:
-				_fail("stopping on the repair pad did not repair the taxi")
+				_fail("pressing interact on the repair pad did not repair the taxi")
 		8:
 			if _step_t > 3.5:
 				var dmg := _taxi.get_node("TaxiDamage") as TaxiDamage
@@ -201,3 +207,19 @@ func _finish() -> void:
 		for e in _errors:
 			print("[RideTest] FAIL: ", e)
 		get_tree().quit(1)
+
+
+## Presses interact for one physics frame. This node is the parent of Main, so it runs before
+## the shops in the same frame and they see `is_action_just_pressed`.
+var _release_interact: bool = false
+
+
+func _tap_interact() -> void:
+	Input.action_press(&"interact")
+	_release_interact = true
+
+
+func _release_tap() -> void:
+	if _release_interact and not Input.is_action_just_pressed(&"interact"):
+		Input.action_release(&"interact")
+		_release_interact = false

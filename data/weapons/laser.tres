@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="WeaponData" format=3]
+
+[ext_resource type="Script" path="res://src/core/resources/weapon_data.gd" id="1_w"]
+
+[resource]
+script = ExtResource("1_w")
+id = &"laser"
+slot = 8
+blurb = "A continuous beam. No spread, no recoil, burns while you hold it."
+price = 5000
+ammo_price = 180
+display_name = "Laser"
+kind = &"hitscan"
+beam = true
+spin_up = 0.0
+blast_radius = 0.0
+projectile_speed = 0.0
+damage = 6.0
+pellets = 1
+weapon_range = 220.0
+impact_force = 0.5
+fire_rate = 25.0
+automatic = true
+mag_size = 100
+reserve_max = 200
+reload_time = 2.5
+spread_aimed = 0.0
+spread_hip = 0.0
+spread_per_speed = 0.0
+spread_per_turn = 0.0
+spread_per_shot = 0.0
+recoil_pitch = 0.0
+recoil_yaw = 0.0
+gun_size = Vector3(0.08, 0.1, 0.42)
+gun_color = Color(0.75, 0.78, 0.85, 1)
+unlock_rides = 35
+upgrade_prices = PackedInt32Array(1400, 2600, 4500)
+special = &"piercing"
+special_name = "Piercing beam"
+special_text = "The beam cuts through up to 3 cars in a line."
