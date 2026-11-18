@@ -1,6 +1,6 @@
 extends Node
 ## The heavy weapons (D-086), headless on the test course, with real shots:
-##  A. the catalogue: 8 guns, slots 1-8 unique, the new ones expensive and unlocked late
+##  A. the catalogue: 9 guns (The Devastator, D-107), slots 1-9 unique, the new ones expensive and unlocked late
 ##  B. minigun: nothing while the barrels spin up, then a stream; Mk IV fires at once
 ##  C. laser: continuous damage on a board while held, the beam is drawn, no spread
 ##  D. rocket: not instant, explodes and hurts every board around the impact; Mk IV fires two
@@ -45,7 +45,7 @@ func _run() -> void:
 	var slots := {}
 	for w in cat:
 		slots[w.slot] = true
-	_check(cat.size() == 8 and slots.size() == 8, "8 guns on 8 different slots (%d guns)" % cat.size())
+	_check(cat.size() == 9 and slots.size() == 9, "9 guns on 9 different slots (%d guns)" % cat.size())
 	var rifle := load("res://data/weapons/rifle.tres") as WeaponData
 	for id: String in ["mines", "minigun", "rocket", "laser"]:
 		var w := load("res://data/weapons/%s.tres" % id) as WeaponData

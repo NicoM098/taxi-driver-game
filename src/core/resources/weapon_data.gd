@@ -32,6 +32,8 @@ extends Resource
 @export_group("Handling")
 @export var fire_rate: float = 3.0        # shots per second
 @export var automatic: bool = false       # hold to fire
+## With `reserve_max` 0 the gun never reloads: the "magazine" is everything it carries (the
+## mines, D-099), refilled by ammo boxes.
 @export var mag_size: int = 6
 @export var reserve_max: int = 36
 @export var reload_time: float = 1.4
@@ -59,6 +61,9 @@ extends Resource
 @export var unlock_rides: int = 0
 
 @export_group("Upgrades")
+## False = no upgrade tracks, no special, no perks on it, never a slot-machine prize: it is
+## what it is (The Devastator, D-107).
+@export var upgradable: bool = true
 ## Price scale of the upgrade tracks (WeaponUpgrades.price_at, D-093): the first Damage level
 ## costs this, every level after it x1.35. Every gun uses the same 225 (D-095: 10 % under the
 ## WeaponUpgrades.REFERENCE_COST the enemy health curve assumes): a cheaper gun would outgrow the
@@ -70,4 +75,16 @@ extends Resource
 @export var special: StringName = &""
 @export var special_name: String = ""
 @export var special_text: String = ""
+
+
+## False for a gun that carries everything in one pool and never reloads (D-099).
+func reloads() -> bool:
+	return reserve_max > 0
+
+
+## "12 | 36", or just "8" for a gun that never reloads.
+static func ammo_text(w: WeaponData, a: Dictionary) -> String:
+	if w != null and not w.reloads():
+		return "%d" % int(a["mag"])
+	return "%d | %d" % [int(a["mag"]), int(a["reserve"])]
 

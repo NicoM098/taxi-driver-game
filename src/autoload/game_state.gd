@@ -24,6 +24,11 @@ var earned: int = 0
 ## Monstrous Energy cans carried. Lost with the run.
 var car_levels: Dictionary = {}
 var cans: int = 0
+## Second and third currencies (D-106). Spare parts drop from every enemy killed
+## (EnemyCarData.parts) and buy the cab's upgrades; slot tickets come from beating a boss in a
+## boss fight and pay for one spin of the slot machine (SlotMachine: a perk or +5 gun levels).
+var parts: int = 0
+var tickets: int = 0
 ## Set by the main menu: the next game runs the short tutorial (src/ui/tutorial/tutorial.gd),
 ## which clears it when it finishes. While it is on: only calm passengers, no street encounters.
 var tutorial_active: bool = false
@@ -39,6 +44,8 @@ func reset_run() -> void:
 	loadout = STARTING_WEAPONS.duplicate()
 	car_levels = {}
 	cans = 0
+	parts = 0
+	tickets = 0
 
 
 func add_cash(amount: int) -> void:
@@ -46,6 +53,16 @@ func add_cash(amount: int) -> void:
 	if amount > 0:
 		earned += amount
 	EventBus.cash_changed.emit(cash, amount)
+
+
+func add_parts(amount: int) -> void:
+	parts = maxi(parts + amount, 0)
+	EventBus.parts_changed.emit(parts, amount)
+
+
+func add_tickets(amount: int) -> void:
+	tickets = maxi(tickets + amount, 0)
+	EventBus.tickets_changed.emit(tickets, amount)
 
 
 func set_heat(level: int) -> void:

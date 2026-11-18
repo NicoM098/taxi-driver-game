@@ -16,17 +16,28 @@ extends RefCounted
 ## so the DPS keeps the curve without a rocket launcher becoming a machine gun.
 ## The gun's special (WeaponData.special) is a milestone: SPECIAL_AT upgrades bought, any tracks.
 ##
+## Mines have their own four (D-099, user: "different path upgrade, no reloads and only max
+## ammo"): they never reload (one pool, WeaponData.reloads), so instead of Mag and Ammo:
+##   capacity  mines carried, +25 % of the base per level  — 4 levels
+##   blast     blast radius +15 % per level                 — 3 levels
+##   damage    as above, endless
+##   rate      "Drop rate": how fast they roll out the back, endless
+##
 ## The other half (D-093): enemy health follows the same curve. `enemy_hp_mult()` is how much
 ## stronger a gun would be if SCALING_SHARE of every dollar earned this run had gone into its
 ## damage and fire rate, x ENEMY_HP_SCALE. A gun you pour your money into keeps (since D-095:
 ## slightly beats) its time-to-kill; spend elsewhere (other guns, the cab) and it falls behind.
 
 const TRACKS: Array[StringName] = [&"mag", &"reserve", &"damage", &"rate"]
-const TRACK_NAME := {&"mag": "Mag", &"reserve": "Ammo", &"damage": "Damage", &"rate": "Fire rate"}
+const MINE_TRACKS: Array[StringName] = [&"capacity", &"damage", &"blast", &"rate"]
+const TRACK_NAME := {&"mag": "Mag", &"reserve": "Ammo", &"damage": "Damage", &"rate": "Fire rate",
+		&"capacity": "Capacity", &"blast": "Blast"}
 ## Levels of the capped tracks. The others never end.
-const CAP := {&"mag": 3, &"reserve": 3}
+const CAP := {&"mag": 3, &"reserve": 3, &"capacity": 4, &"blast": 3}
 const MAG_STEP := 0.25
 const AMMO_STEP := 0.4
+const CAPACITY_STEP := 0.25
+const BLAST_STEP := 0.15
 ## Endless tracks: step of level n = BASE + RISE x floor((n - 1) / LEVELS_PER_TIER).
 const DAMAGE_STEP := 0.10
 const DAMAGE_RISE := 0.05
@@ -38,7 +49,7 @@ const RATE_CAP_MULT := 3.0
 const RATE_CAP := 30.0
 
 ## Prices: WeaponData.upgrade_cost x share x growth^(levels already bought on that track).
-const PRICE_SHARE := {&"mag": 0.6, &"reserve": 0.5, &"damage": 1.0, &"rate": 1.1}
+const PRICE_SHARE := {&"mag": 0.6, &"reserve": 0.5, &"damage": 1.0, &"rate": 1.1, &"capacity": 0.6, &"blast": 0.8}
 const PRICE_GROWTH := 1.35
 const CAPPED_GROWTH := 1.6
 
@@ -67,6 +78,20 @@ const ENEMY_HP_SCALE := 0.85
 
 
 # --- Levels -----------------------------------------------------------------------------
+
+## The four tracks gun `base` is upgraded on (mines: MINE_TRACKS, D-099).
+static func tracks_for(base: WeaponData) -> Array[StringName]:
+	if base != null and not base.upgradable:
+		return [] as Array[StringName]   # The Devastator (D-107)
+	return MINE_TRACKS if base != null and base.kind == &"mine" else TRACKS
+
+
+## Button name of a track on gun `base` ("Drop rate" for the mines' fire rate).
+static func track_name(base: WeaponData, track: StringName) -> String:
+	if track == &"rate" and base != null and base.kind == &"mine":
+		return "Drop rate"
+	return TRACK_NAME.get(track, String(track))
+
 
 ## Levels bought on `track` of gun `id` (0 = as bought).
 static func level(id: StringName, track: StringName) -> int:
@@ -106,6 +131,10 @@ static func step(track: StringName, n: int) -> float:
 			return MAG_STEP
 		&"reserve":
 			return AMMO_STEP
+		&"capacity":
+			return CAPACITY_STEP
+		&"blast":
+			return BLAST_STEP
 	return 0.0
 
 
@@ -125,22 +154,41 @@ static func rate_cap(base: WeaponData) -> float:
 ## The gun with the levels of gun `base.id` in GameState, as a new resource (base untouched).
 static func apply(base: WeaponData) -> WeaponData:
 	var w := base.duplicate() as WeaponData
+	if not base.upgradable:
+		return w   # untouched by levels and perks alike (D-107)
 	var rate_m := mult(&"rate", level(base.id, &"rate"))
 	w.fire_rate = minf(base.fire_rate * rate_m, rate_cap(base))
 	var overflow := base.fire_rate * rate_m / w.fire_rate   # fire rate past the cap -> damage
 	w.damage = base.damage * mult(&"damage", level(base.id, &"damage")) * overflow
 	w.mag_size = ceili(base.mag_size * (1.0 + MAG_STEP * level(base.id, &"mag")) - 0.001)
 	w.reserve_max = roundi(base.reserve_max * (1.0 + AMMO_STEP * level(base.id, &"reserve")))
+	if not base.reloads():   # the mines (D-099): one pool, bigger with Capacity
+		w.mag_size = capacity_at(base, level(base.id, &"capacity"))
+	w.blast_radius = base.blast_radius * (1.0 + BLAST_STEP * level(base.id, &"blast"))
 	if total(base.id) >= SPECIAL_AT:
 		match base.special:
 			&"drum":
 				w.mag_size = maxi(DRUM_MAG, w.mag_size)
 				w.reserve_max = roundi(w.reserve_max * DRUM_RESERVE_MULT)
 			&"big_blast":
-				w.blast_radius = base.blast_radius * BIG_BLAST_MULT
+				w.blast_radius *= BIG_BLAST_MULT
 			&"no_spinup":
 				w.spin_up = 0.0
+	# Perks (D-100) last, on top of every cap: Double Tap goes past the fire-rate ceiling.
+	w.fire_rate *= CarUpgrades.fire_rate_mult()
+	w.reload_time = base.reload_time * CarUpgrades.reload_mult()
+	var pockets := CarUpgrades.value(&"ammo_cap")   # Deep Pockets (D-107)
+	if pockets > 0.0:
+		if w.reloads():
+			w.reserve_max = roundi(w.reserve_max * (1.0 + pockets))
+		else:
+			w.mag_size = ceili(w.mag_size * (1.0 + pockets) - 0.001)
 	return w
+
+
+## Mines carried by a no-reload gun with `lv` Capacity levels.
+static func capacity_at(base: WeaponData, lv: int) -> int:
+	return ceili(base.mag_size * (1.0 + CAPACITY_STEP * lv) - 0.001)
 
 
 ## How much of the gun's damage comes from upgrades (1 = none). For effects that scale with
@@ -187,6 +235,10 @@ static func describe_next(base: WeaponData, track: StringName) -> String:
 		&"reserve":
 			return "+%d spare" % (roundi(base.reserve_max * (1.0 + AMMO_STEP * n))
 					- roundi(base.reserve_max * (1.0 + AMMO_STEP * lv)))
+		&"capacity":
+			return "+%d mines" % (capacity_at(base, n) - capacity_at(base, lv))
+		&"blast":
+			return "+%d%% radius" % roundi(BLAST_STEP * 100.0)
 		&"rate":
 			var now := base.fire_rate * mult(&"rate", lv)
 			if now >= rate_cap(base) - 0.001:

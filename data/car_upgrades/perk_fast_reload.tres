@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CarUpgradeData" format=3]
+
+[ext_resource type="Script" path="res://src/shop_menu/car_upgrade_data.gd" id="1_u"]
+
+[resource]
+script = ExtResource("1_u")
+id = &"perk_fast_reload"
+display_name = "Quick Hands"
+blurb = "Magazines taped together, pockets where your hands fall. Every gun reloads in half the time."
+slot = 21
+section = &"perks"
+stat = &"fast_reload"
+per_level = 0.5
+prices = PackedInt32Array(1)
+level_text = "-%d %% reload time, every gun"

@@ -2,7 +2,8 @@ extends Node
 ## Headless Iteration 18 test through Main: the shop menu (D-089).
 ##  A. The city has no gun shops / repair garages: their lots are plain buildings.
 ##  B. Tab (shop_menu) opens the menu and pauses; B again closes it.
-##  C. Car upgrades: armor, engine, glass, ram change the taxi; maxed and broke purchases fail.
+##  C. Car upgrades (paid in spare parts since D-106): armor, engine, glass, ram change the taxi;
+##     maxed and broke purchases fail; cash does not buy them.
 ##  D. Monstrous Energy: buy up to the cup-holder capacity, the rack raises it, F drinks one
 ##     (and Monstrous XL heals more).
 ##  E. Repair anywhere for the quoted price.
@@ -109,6 +110,10 @@ func _test_open_close() -> void:
 func _test_car_upgrades() -> void:
 	_menu.open()
 	GameState.cash = 20000
+	GameState.parts = 0
+	if _menu.activate(&"armor"):
+		_errors.append("C: bought armor with cash and no parts")
+	GameState.parts = 500
 	var force0 := _taxi.engine_force
 	var speed0 := _taxi.max_speed
 	var hp0 := _damage.taxi_health.max_hp
@@ -132,14 +137,18 @@ func _test_car_upgrades() -> void:
 	if _menu.activate(&"armor"):
 		_errors.append("C: armor bought past its last level")
 	_near("C: armor maxed", _damage.taxi_health.max_hp, hp0 * 1.75)
-	GameState.cash = 10
+	var parts_left := GameState.parts
+	if parts_left != 500 - 5 - 5 - 6 - 4 - 8 - 12:
+		_errors.append("C: parts spent wrong: %d left" % parts_left)
+	GameState.parts = 1
 	if _menu.activate(&"engine"):
-		_errors.append("C: bought an upgrade with $10")
+		_errors.append("C: bought an upgrade with 1 part")
 	_menu.close()
 
 
 func _test_cans() -> void:
 	GameState.cash = 5000
+	GameState.parts = 500
 	_menu.open()
 	_menu.activate(ShopMenu.CANS)
 	_menu.activate(ShopMenu.CANS)
@@ -173,6 +182,8 @@ func _test_cans() -> void:
 
 
 func _test_repair() -> void:
+	_damage.taxi_health.revive()    # one bar since D-098: the can tests left it low
+	_damage.driver_health.revive()
 	_damage.taxi_health.apply_damage(60.0)
 	_damage.driver_health.apply_damage(30.0)
 	var quote := CarUpgrades.repair_quote(_damage)
@@ -195,8 +206,34 @@ func _test_gun_cards() -> void:
 	await _shot("shop_cab.png")
 	_press_key(KEY_E)
 	await _frames(2)
-	if _menu.tab != &"energy":
+	if _menu.tab != &"perks":
 		_errors.append("F: E did not move to the next tab (%s)" % _menu.tab)
+	await _shot("shop_perks.png")
+	if not _shot_dir.is_empty():   # the slot machine: ready, rolling, the prize (D-107)
+		GameState.tickets = 2
+		var m := _menu.get_node("SlotMachine") as SlotMachineScreen
+		_menu.open_slots()
+		await _frames(20)
+		await _shot("slots_idle.png")
+		m.advance()
+		await _frames(70)
+		await _shot("slots_ready.png")
+		m.advance()
+		await _frames(80)
+		await _shot("slots_rolling.png")
+		while m.state != SlotMachineScreen.State.REVEAL:
+			await _frames(5)
+		await _frames(50)
+		await _shot("slots_won.png")
+		await _frames(10)
+		m.advance()
+		m.close()
+		await _frames(5)
+		await _shot("shop_slots_card.png")
+	_press_key(KEY_E)
+	await _frames(2)
+	if _menu.tab != &"energy":
+		_errors.append("F: E did not move on to the cans (%s)" % _menu.tab)
 	await _shot("shop_energy.png")
 	_press_key(KEY_E)
 	await _frames(2)
@@ -264,7 +301,7 @@ func _test_nitro() -> void:
 	if not still_empty or _taxi.nitro_empty:
 		_errors.append("H: the empty tank did not relight at nitro_relight")
 	var base := _taxi.nitro_max
-	GameState.cash = 5000
+	GameState.parts = 500
 	_menu.open()
 	_menu.activate(&"nitro")
 	_menu.close()

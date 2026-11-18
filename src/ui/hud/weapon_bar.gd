@@ -65,6 +65,13 @@ const SHAPES := {
 		[Vector2(56, 22), Vector2(64, 22), Vector2(64, 32), Vector2(56, 32)],
 		[Vector2(50, 4), Vector2(66, 4), Vector2(66, 10), Vector2(50, 10)],
 	],
+	&"devastator": [   # a fat drum-fed launcher (D-107)
+		[Vector2(2, 6), Vector2(84, 6), Vector2(84, 26), Vector2(2, 26)],
+		[Vector2(84, 3), Vector2(99, 3), Vector2(99, 29), Vector2(84, 29)],
+		[Vector2(30, 26), Vector2(54, 26), Vector2(54, 38), Vector2(30, 38)],
+		[Vector2(16, 26), Vector2(26, 26), Vector2(24, 37), Vector2(14, 37)],
+		[Vector2(40, 0), Vector2(62, 0), Vector2(62, 6), Vector2(40, 6)],
+	],
 	&"laser": [
 		[Vector2(24, 9), Vector2(78, 9), Vector2(78, 23), Vector2(24, 23)],
 		[Vector2(78, 13), Vector2(99, 14), Vector2(99, 18), Vector2(78, 19)],
@@ -124,7 +131,7 @@ func _draw() -> void:
 	var title := cur.display_name.to_upper()
 	_text(_bold, Vector2(MARGIN.x, title_y), title, YELLOW.lerp(Color.WHITE, _pop), name_size, 7)
 	var tw := _bold.get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, name_size).x
-	var ammo_text := "RELOADING" if wc.is_reloading else "%d | %d" % [a["mag"], a["reserve"]]
+	var ammo_text := "RELOADING" if wc.is_reloading else WeaponData.ammo_text(cur, a)
 	var ammo_col := YELLOW if wc.is_reloading else (RED if int(a["mag"]) == 0 else Color.WHITE)
 	_text(_bold, Vector2(MARGIN.x + tw + 16.0, title_y), ammo_text, ammo_col, 26, 6)
 
@@ -158,7 +165,7 @@ func _draw_card(wc: WeaponController, w: WeaponData, r: Rect2, owned: bool, sele
 	var fill_col := RED if int(a["mag"]) == 0 and not (selected and wc.is_reloading) else (YELLOW if selected else Color(0.8, 0.8, 0.8))
 	draw_rect(Rect2(bar.position, Vector2(bar.size.x * fill, bar.size.y)), fill_col)
 	var low := int(a["mag"]) == 0 and int(a["reserve"]) == 0
-	_text(_font, r.position + Vector2(8, r.size.y - 4), "EMPTY" if low else "%d | %d" % [a["mag"], a["reserve"]],
+	_text(_font, r.position + Vector2(8, r.size.y - 4), "EMPTY" if low else WeaponData.ammo_text(carried, a),
 		RED if low else Color(1, 1, 1, 0.85 if selected else 0.6), 13, 0)
 	if WeaponUpgrades.total(w.id) > 0:   # "+N" upgrades, yellow once the special is on (D-093)
 		_text(_font, r.position + Vector2(r.size.x - 40, 19), WeaponUpgrades.level_name(w.id),

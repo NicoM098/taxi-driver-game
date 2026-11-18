@@ -8,6 +8,12 @@ var stop: TaxiStop
 var instance: PassengerInstance   # generated identity (name, age) for the file
 
 var _marker: Node3D
+## Rolling Pickup perk (D-100): a ring on the road at the stop; driving through it picks the
+## fare up at any speed (RideManager), like the drop-off ring.
+const ROLLING_RADIUS := 6.0
+const ROLLING_COLOR := Color(1.0, 0.82, 0.1)
+var _rolling_ring: PickupRing
+var _perk_check: float = 0.0
 
 
 func setup(p_profile: PassengerProfile, p_stop: TaxiStop, beam_mat: Material) -> void:
@@ -33,6 +39,24 @@ func setup(p_profile: PassengerProfile, p_stop: TaxiStop, beam_mat: Material) ->
 		gem.rotation = Vector3(PI * 0.25, 0.0, PI * 0.25)
 
 
+## Where the rolling pickup ring sits: the stop's point on the street (or the passenger).
+func pickup_point() -> Vector3:
+	return stop.global_position if stop != null else global_position
+
+
+func _process(delta: float) -> void:
+	_perk_check -= delta
+	if _perk_check > 0.0:
+		return
+	_perk_check = 0.5
+	var on := CarUpgrades.has_perk(&"rolling_pickup") and _marker != null and _marker.visible
+	if on and _rolling_ring == null:
+		_rolling_ring = PickupRing.build(self, ROLLING_COLOR, ROLLING_RADIUS)
+		_rolling_ring.global_position = pickup_point()
+	if _rolling_ring != null:
+		_rolling_ring.visible = on
+
+
 ## Frees the stop so other passengers can use it.
 func release_stop() -> void:
 	if stop != null:
@@ -43,6 +67,8 @@ func release_stop() -> void:
 func walk_to(target: Vector3, duration: float) -> Tween:
 	if _marker != null:
 		_marker.visible = false
+	if _rolling_ring != null:
+		_rolling_ring.visible = false
 	var tween := create_tween()
 	tween.set_process_mode(Tween.TWEEN_PROCESS_PHYSICS)  # physics interpolation is on
 	tween.tween_property(self, "global_position", target, duration)

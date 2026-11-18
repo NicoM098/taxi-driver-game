@@ -30,6 +30,12 @@ of [[Changelog]]:
   health that grows with earnings, **ammo dropped by enemies instead of sold** (new floating ammo
   box + a glowing ground circle, also under the Monstrous Energy can, and the `pickup` sound on
   `EventBus.ammo_picked_up`), and a richer economy. Details at the top of [[Changelog]].
+- **Third push (same day, Iterations 23-24, D-098 to D-107):** **one health bar** (the driver
+  and the cab share it: `driver_health` IS `taxi_health`), mines without reloading, shooting
+  backwards out of the driver's window, gold boss markers, three currencies (cash / spare parts /
+  slot tickets), a **slot machine screen drawn in code** that is now the only source of perks, and
+  **The Devastator** (fires with the explosion sound). All the new visuals and sounds are
+  placeholders for him. Details at the top of [[Changelog]].
 - Once Nico has read this, delete this section (or ask DLain47 to).
 
 ## 2. Session protocol (ALWAYS follow)
@@ -93,6 +99,8 @@ of [[Changelog]]:
 - **Weapon test** (must PASS after any combat change): `<console exe> --headless --path <project> --fixed-fps 60 res://tests/weapon_autotest.tscn`.
 - **Screenshot check** (visuals; opens a window briefly; add `--world=res://src/combat/shooting_range.tscn` / `--hold=aim,fire` for combat states): `<console exe> --path <project> -- --screenshot=<scratchpad>/shot.png --screenshot-frame=90 [--no-ps1]`, then view the PNG.
 - **Ammo drop test** (must PASS after any ammo / pickup / enemy-death change): `res://tests/ammo_drop_autotest.tscn` (headless; `-- --shot-dir=<dir>` windowed for a screenshot; D-094).
+- **Dev-notes test** (must PASS after any health-bar / mine / perk / look-back / boss-marker / street-life spawn change, D-098 to D-103): `res://tests/dev_notes_autotest.tscn` (headless, `--fixed-fps 60`; through Main).
+- **Currencies test** (must PASS after any spare-parts / slot-ticket / slot-machine / cab-price change, D-106): `res://tests/currencies_autotest.tscn` (headless, `--fixed-fps 60`; prints the parts budget per stage).
 - **Upgrades test** (must PASS after any weapon upgrade / unlock / enemy-health-scaling change): `res://tests/upgrades_autotest.tscn` (headless, `--fixed-fps 60`; the four tracks, the 8-upgrade specials with real shots (AP rounds, deadeye, dragon's breath), unlock by fares, the endless curve and fire-rate cap, enemy health following an all-in gun, D-093).
 - **Arsenal test** (must PASS after any rocket / mine / blast / minigun / laser change): `res://tests/arsenal_autotest.tscn` (headless, `--fixed-fps 60`).
 - **Gang-rides test** (must PASS after any gang / ride-card / difficulty / auto-delivery change, D-088): `res://tests/gang_rides_autotest.tscn` (headless, `--fixed-fps 60`; `-- --shot-dir=<dir>` windowed: the ride card and a rival crew). The passenger-file tests (dossier, events, heat_passengers, hostiles) switch `GangRides.enabled` off themselves.
@@ -145,5 +153,5 @@ The project is a git repo since 2026-11-15 (before that there was none — that 
 - `02 - Development Plan/` — [[Development Plan]] + one note per phase
 - `03 - Architecture/` — [[Architecture]], [[Conventions]]
 - `04 - Progress/` — [[Status]], [[Session Log]], [[Decisions Log]], [[Known Issues]]
-- `05 - Iterations/` — user-scoped iterations. **Two parallel lines of work merged on 2026-11-15**: plain numbers are DLain47's (08-12), and `09V` / `10V` / `11V` plus the `DV-0xx` decisions are Nico's visual & audio line. Numbering is shared again from 13 on (D-079). Active (branch `feat/no-papers`): [[Iteration 17 - Gang Rides]] and [[Iteration 18 - Shop Menu & Car Upgrades]], [[Iteration 19 - Shop Polish & Nitro]], [[Iteration 20 - Escalation Stages]], [[Iteration 21 - Endless Weapon Upgrades]], [[Iteration 22 - Ammo Drops]] (switches `GangRides.enabled`, `ShopMenu.enabled` / `sells_cans` / `sells_repair`, `Escalation.enabled`, `WeaponUpgrades.scale_enemies`, `AmmoPickup.enabled`; D-088 to D-097); 16, 08-12 and 14 await playtests
+- `05 - Iterations/` — user-scoped iterations. **Two parallel lines of work merged on 2026-11-15**: plain numbers are DLain47's (08-12), and `09V` / `10V` / `11V` plus the `DV-0xx` decisions are Nico's visual & audio line. Numbering is shared again from 13 on (D-079). Active (branch `feat/no-papers`): [[Iteration 17 - Gang Rides]] and [[Iteration 18 - Shop Menu & Car Upgrades]], [[Iteration 19 - Shop Polish & Nitro]], [[Iteration 20 - Escalation Stages]], [[Iteration 21 - Endless Weapon Upgrades]], [[Iteration 22 - Ammo Drops]], [[Iteration 23 - Dev Notes]], [[Iteration 24 - Currencies & Slots]] (switches `GangRides.enabled`, `ShopMenu.enabled` / `sells_cans` / `sells_repair`, `Escalation.enabled`, `WeaponUpgrades.scale_enemies`, `AmmoPickup.enabled`, `TaxiDamage.single_bar`; D-088 to D-107); 16, 08-12 and 14 await playtests
 - `Templates/` — note templates

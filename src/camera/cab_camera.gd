@@ -19,6 +19,17 @@ extends Node3D
 @export var recenter_delay: float = 0.8
 @export var recenter_speed: float = 3.0
 @export var look_behind_yaw_deg: float = 160.0
+## Shooting backwards (D-101): while look_behind is held the mouse / right stick aim around the
+## rear window this far each way, and the guns fire wherever the head points.
+@export var rear_aim_yaw_deg: float = 65.0
+@export var rear_aim_pitch_up_deg: float = 35.0
+@export var rear_aim_pitch_down_deg: float = 30.0
+## Looking back (C / R3) leans the head out of the driver's window (D-105, user: "it should be
+## like you are coming out of the window"): head moved by this (taxi space, driver on the
+## left), facing back along the cab's flank.
+@export var lean_out_offset: Vector3 = Vector3(-0.98, 0.2, 0.15)
+@export var lean_out_yaw_deg: float = 166.0
+@export var lean_out_speed: float = 5.0
 
 @export_group("Motion")
 @export var lean_amount: float = 0.004         # m of head offset per m/s^2
@@ -75,6 +86,18 @@ var _time: float = 0.0
 var _noise: FastNoiseLite = FastNoiseLite.new()
 var _recoil: Vector2 = Vector2.ZERO  # pitch, yaw offset (rad), springs back
 var _force_behind: float = 0.0       # seconds of forced look-back (execution from the file)
+var _rear: Vector2 = Vector2.ZERO    # pitch, yaw aim offset while looking back (D-101)
+var _out_blend: float = 0.0          # 0 in the seat .. 1 leaning out of the window (D-105)
+
+
+## True while the head is (partly) out of the window (D-105): the dashboard arrow hides.
+func is_leaning_out() -> bool:
+	return _out_blend > 0.15
+
+
+## True while the player holds look_behind (the guns aim out the back, D-101).
+func is_looking_back() -> bool:
+	return _out_blend > 0.5 and Input.is_action_pressed(&"look_behind")
 
 
 func _ready() -> void:
@@ -129,20 +152,36 @@ func add_trauma(amount: float) -> void:
 func _update_look(delta: float) -> void:
 	var y_sign := -1.0 if invert_y else 1.0
 	var had_input := false
+	# Looking back (D-101): the same input aims around the rear window instead.
+	var back := Input.is_action_pressed(&"look_behind")
 
 	var mouse := InputDevice.consume_mouse_delta()
 	if mouse != Vector2.ZERO:
-		_yaw -= mouse.x * mouse_sensitivity
-		_pitch -= mouse.y * mouse_sensitivity * y_sign
+		var look := Vector2(-mouse.y * y_sign, -mouse.x) * mouse_sensitivity
+		if back:
+			_rear += look
+		else:
+			_yaw += look.y
+			_pitch += look.x
 		had_input = true
 		_using_stick = false
 
 	var stick := Input.get_vector(&"look_left", &"look_right", &"look_up", &"look_down")
 	if stick != Vector2.ZERO:
-		_yaw -= stick.x * stick_sensitivity * delta
-		_pitch -= stick.y * stick_sensitivity * delta * y_sign
+		var look := Vector2(-stick.y * y_sign, -stick.x) * stick_sensitivity * delta
+		if back:
+			_rear += look
+		else:
+			_yaw += look.y
+			_pitch += look.x
 		had_input = true
 		_using_stick = true
+
+	if back:
+		_rear.x = clampf(_rear.x, -deg_to_rad(rear_aim_pitch_down_deg), deg_to_rad(rear_aim_pitch_up_deg))
+		_rear.y = clampf(_rear.y, -deg_to_rad(rear_aim_yaw_deg), deg_to_rad(rear_aim_yaw_deg))
+	elif _out_blend <= 0.0:
+		_rear = Vector2.ZERO   # the next look back starts straight back
 
 	_yaw = clampf(_yaw, -deg_to_rad(max_yaw_deg), deg_to_rad(max_yaw_deg))
 	_pitch = clampf(_pitch, -deg_to_rad(max_pitch_down_deg), deg_to_rad(max_pitch_up_deg))
@@ -155,8 +194,10 @@ func _update_look(delta: float) -> void:
 		_pitch = lerpf(_pitch, 0.0, t)
 
 	_force_behind = maxf(_force_behind - delta, 0.0)
-	var behind_target := 1.0 if Input.is_action_pressed(&"look_behind") or _force_behind > 0.0 else 0.0
-	_behind_blend = move_toward(_behind_blend, behind_target, delta * 6.0)
+	# The player's look back leans out of the window; the forced glance after shooting the
+	# passenger still turns into the back seat.
+	_behind_blend = move_toward(_behind_blend, 1.0 if _force_behind > 0.0 else 0.0, delta * 6.0)
+	_out_blend = move_toward(_out_blend, 1.0 if back else 0.0, delta * lean_out_speed)
 
 
 func _update_motion(delta: float) -> void:
@@ -188,9 +229,11 @@ func _apply() -> void:
 		* shake_max_offset * shake
 	var shake_roll := _noise.get_noise_2d(t, 200.0) * deg_to_rad(shake_max_roll_deg) * shake
 
-	position = _rest_position + _lean + shake_offset + Vector3(0.0, _dip, 0.0)
-	var yaw := lerpf(_yaw, -deg_to_rad(look_behind_yaw_deg), _behind_blend) + _recoil.y
-	var pitch := lerpf(_pitch, 0.0, _behind_blend) + _recoil.x
+	var out := smoothstep(0.0, 1.0, _out_blend)
+	position = _rest_position + _lean + shake_offset + Vector3(0.0, _dip, 0.0) + lean_out_offset * out
+	var yaw := lerpf(_yaw, -deg_to_rad(look_behind_yaw_deg), _behind_blend)
+	yaw = lerpf(yaw, deg_to_rad(lean_out_yaw_deg) + _rear.y, out) + _recoil.y
+	var pitch := lerpf(lerpf(_pitch, 0.0, _behind_blend), _rear.x, out) + _recoil.x
 	rotation = Vector3(pitch, yaw, _roll + shake_roll)
 
 

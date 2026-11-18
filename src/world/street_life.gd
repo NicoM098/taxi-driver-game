@@ -4,6 +4,9 @@ extends Node3D
 ## and sidewalk slabs, and civilian TrafficCars cruising the streets. Both are spawned out of
 ## sight within a ring around the taxi and recycled when far away, so the cost stays flat
 ## whatever the map size. Gunfire and explosions make nearby pedestrians run.
+## Never in plain view (D-103, user: "pedestrians disappear and appear"): nothing spawns or is
+## recycled while it is inside the camera's view (up to its far plane), at any distance. A
+## pedestrian or car far behind you that is still on screen waits until you look away.
 ## Off in automated tests (MapData.override) unless `run_in_tests`.
 
 @export var max_pedestrians: int = 28
@@ -12,8 +15,8 @@ extends Node3D
 @export var ped_despawn: float = 170.0
 @export var traffic_spawn_range: Vector2 = Vector2(80.0, 200.0)
 @export var traffic_despawn: float = 240.0
-## Spawns closer than this must be behind the camera (no popping in plain view).
-@export var visible_range: float = 110.0
+## Hard limit: past this (beyond the camera's far plane) things go even if "on screen".
+@export var hard_despawn: float = 300.0
 @export var panic_radius: float = 50.0
 @export var run_in_tests: bool = false
 
@@ -165,27 +168,38 @@ func _vehicle_free(p: Vector3, radius: float) -> bool:
 
 # --- Shared ---------------------------------------------------------------------------
 
-## Within the ring around the taxi and not in plain view when close.
+## Within the ring around the taxi and not on screen (D-103).
 func _good_spawn(p: Vector3, ring: Vector2) -> bool:
 	var to := p - _taxi.global_position
 	to.y = 0.0
 	var d := to.length()
 	if d < ring.x or d > ring.y:
 		return false
-	if d < visible_range:
-		var cam := get_viewport().get_camera_3d()
-		var fwd := -(cam.global_basis.z if cam != null else _taxi.global_basis.z)
-		fwd.y = 0.0
-		if fwd.normalized().dot(to / d) > 0.2:
-			return false
-	return true
+	return not in_view(p)
+
+
+## Whether something standing at `p` would be on screen: any of three points across a body
+## (1.5 m wide, 1 m up) inside the camera's frustum, with a little margin at the edges.
+## Buildings in the way are not checked: on the safe side.
+func in_view(p: Vector3) -> bool:
+	var cam := get_viewport().get_camera_3d()
+	if cam == null:
+		return false
+	var up := Vector3(0, 1.0, 0)
+	var side := cam.global_basis.x * 1.5
+	return cam.is_position_in_frustum(p + up) or cam.is_position_in_frustum(p + up + side) \
+			or cam.is_position_in_frustum(p + up - side)
 
 
 func _recycle() -> void:
 	var here := _taxi.global_position
 	for i in range(pedestrians.size() - 1, -1, -1):
 		var p := pedestrians[i]
-		if not is_instance_valid(p) or p.done or p.global_position.distance_to(here) > ped_despawn:
+		var gone := not is_instance_valid(p) or p.done
+		if not gone:
+			var d := p.global_position.distance_to(here)
+			gone = d > hard_despawn or (d > ped_despawn and not in_view(p.global_position))
+		if gone:
 			if is_instance_valid(p):
 				p.queue_free()
 			pedestrians.remove_at(i)
@@ -195,6 +209,8 @@ func _recycle() -> void:
 			traffic.remove_at(i)
 			continue
 		var d := c.global_position.distance_to(here)
-		if d > traffic_despawn or c.global_position.y < -20.0 or (c.ai.gave_up and d > 40.0):
+		var far := d > hard_despawn or ((d > traffic_despawn or (c.ai.gave_up and d > 40.0))
+				and not in_view(c.global_position))
+		if far or c.global_position.y < -20.0:
 			c.queue_free()
 			traffic.remove_at(i)

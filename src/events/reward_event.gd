@@ -35,7 +35,10 @@ func start(ctx: RideContext, _state: Dictionary) -> bool:
 			if wc != null:
 				for w in wc.weapons:
 					var a: Dictionary = wc.ammo[w.id]
-					a["reserve"] = mini(int(a["reserve"]) + w.mag_size * ammo_mags, w.reserve_max)
+					if w.reloads():
+						a["reserve"] = mini(int(a["reserve"]) + w.mag_size * ammo_mags, w.reserve_max)
+					else:   # the mines (D-099)
+						a["mag"] = w.mag_size
 			what = "AMMO"
 		_:
 			kind = &"cash"

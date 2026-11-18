@@ -20,6 +20,7 @@ const BORDER := Color(0.0, 0.0, 0.0, 0.8)
 const C_PLAYER := Color(1.0, 0.85, 0.2)
 const C_ENEMY := Color(1.0, 0.3, 0.25)
 const C_POLICE := Color(0.4, 0.65, 1.0)
+const C_BOSS := Color(1.0, 0.7, 0.05)
 const C_FARE := Color(0.5, 1.0, 0.5)
 ## Green like the dashboard arrow and the beacon in the world, never the player's yellow.
 const C_DESTINATION := Color(0.3, 1.0, 0.45)
@@ -136,9 +137,29 @@ func _draw_blips() -> void:
 		for enemy in _director.enemies:
 			if enemy == null or not is_instance_valid(enemy) or enemy.is_destroyed:
 				continue
+			if enemy.is_boss():
+				continue   # drawn last, on top (D-102)
 			var police := enemy.data != null and String(enemy.data.resource_path).contains("police")
 			_blip(enemy.global_position, here, reach, C_POLICE if police else C_ENEMY, 1.2)
 	_draw_destination(here)
+	if _director != null:
+		for enemy in _director.enemies:
+			if is_instance_valid(enemy) and not enemy.is_destroyed and enemy.is_boss():
+				_draw_boss(enemy.global_position)
+
+
+## A boss (D-102): a big gold blip with a B, kept on the map's border when out of range.
+func _draw_boss(pos: Vector3) -> void:
+	var at := world_to_minimap(pos)
+	var r := 9.0 * (1.0 + 0.12 * sin(Time.get_ticks_msec() * 0.008))
+	var margin := r + 3.0
+	at.x = clampf(at.x, margin, size.x - margin)
+	at.y = clampf(at.y, margin, size.y - margin)
+	draw_circle(at, r + 2.5, OUTLINE)
+	draw_circle(at, r, C_BOSS)
+	var font := get_theme_default_font()
+	var tw := font.get_string_size("B", HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x
+	draw_string(font, at + Vector2(-tw * 0.5, 5), "B", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color.BLACK)
 
 
 ## The one blip worth keeping on screen when it is out of range: clamped to the border.

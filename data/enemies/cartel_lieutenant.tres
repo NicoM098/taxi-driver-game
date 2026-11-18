@@ -15,6 +15,7 @@ size = 1.25
 plow = true
 aggression = 0.85
 bounty = 600
+parts = 2
 heat_on_kill = 0
 damage = 6.0
 fire_rate = 10.0

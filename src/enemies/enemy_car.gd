@@ -21,6 +21,10 @@ var gunner: EnemyGunner
 ## Times the EnemyDirector may still put this car back on the player's tail after it was
 ## outrun (pursuers do not give up when the fare is delivered).
 var relocations_left: int = 0
+## A boss of the current boss fight (Escalation.mark_boss), even if its data is not a boss car
+## (the gang bosses of stage 2 are elites too). D-106.
+var boss_fight: bool = false
+var marker: HostileMarker
 var relocated_frame: int = -100000   # physics frame of the last relocation (teleports are deferred)
 
 var _body: MeshInstance3D
@@ -54,7 +58,10 @@ func _ready() -> void:
 	_body = build_body(self, _body_mat, data.siren, data.size, data.plow)
 	build_wheels(self, data.size)
 	_add_engine_audio()
-	add_child(HostileMarker.new())   # tells it apart from civilian traffic
+	marker = HostileMarker.new()   # tells it apart from civilian traffic
+	marker.boss = data.is_boss     # bosses: gold, a beam and a BOSS tag (D-102)
+	marker.boss_name = data.display_name
+	add_child(marker)
 
 	health = HealthComponent.new()
 	# Tougher the more the run has earned: an upgraded gun keeps its time-to-kill (D-093).
@@ -226,3 +233,15 @@ func _on_died() -> void:
 	CombatFx.explosion(get_parent(), global_position)
 	EventBus.explosion.emit(global_position, 1.0)
 	queue_free()
+
+
+## Whether it is shown and treated as a boss (gold marker, edge arrow, minimap).
+func is_boss() -> bool:
+	return boss_fight or (data != null and data.is_boss)
+
+
+## Makes it a boss of the boss fight (D-106): gold marker with its name.
+func mark_boss() -> void:
+	boss_fight = true
+	if marker != null:
+		marker.make_boss(data.display_name if data != null else "")

@@ -21,6 +21,53 @@ updated: 2026-11-17
 
 ---
 
+## 2026-11-17 · DLain47 · `feat/no-papers` · after `7084e03`
+**Still not on the shared branch** (§6), **not played yet**. Iterations 23-24, D-098 to D-107.
+
+**Iteration 23 — the dev notes (D-098 to D-105)**
+- **One health bar** (D-098): `TaxiDamage.single_bar` (default on) makes `driver_health` the SAME
+  `HealthComponent` as `taxi_health` (130 hp). Code that reads or hurts the driver still works;
+  the HUD shows one "HP" bar. Off = the two bars again.
+- **Mines** (D-099): no reloading (one stack of 8, `reserve_max` 0, `WeaponData.reloads()`), own
+  upgrade tracks Capacity / Damage / Blast / Drop rate (`WeaponUpgrades.tracks_for`).
+- **Shoot backwards** (D-101, D-105): holding look_behind (C / R3) now leans the head OUT of the
+  driver's window and aims back from there (`CabCamera`, `lean_out_*`); the gun comes up; the
+  dashboard arrow hides meanwhile. The forced glance after shooting a passenger is unchanged.
+- **Boss markers** (D-102): gold cone, a gold beam and a "BOSS / name" Label3D on bosses; gold
+  edge chevrons and a gold "B" on the minimap.
+- **Street life** (D-103): nothing spawns or despawns while on screen (`StreetLife.in_view`);
+  knocked-down pedestrians sink into the ground.
+- **Enemy relocation** (D-104): the director never moves an enemy car while it is on screen, at
+  most every 5 s per car, and prints `[Director] moved ...` every time.
+
+**Iteration 24 — currencies and the slot machine (D-106, D-107)**
+- **Three currencies:** cash buys guns only; **spare parts** (`GameState.parts`, 1 per kill, 2
+  per elite / boss, `EnemyCarData.parts`) buy every cab upgrade (`CarUpgradeData.currency`);
+  **slot tickets** (`GameState.tickets`, one per boss beaten in a boss fight) spin the slot machine.
+  New signals `EventBus.parts_changed` / `tickets_changed`.
+- **Slot machine** (`src/shop_menu/slot_machine{,_screen}.gd`): the shop's PERKS tab is now
+  SLOTS. Perks cannot be bought: one strong level each, won only at the machine. Seven: Double
+  Tap, Quick Hands, Rolling Pickup, Juggernaut, Road Vampire, Deep Pockets, Guardian Angel
+  (cheats death, 5 min recharge). Or +5 Damage / Fire rate on your best two guns.
+- **The Devastator** (`data/weapons/devastator.tres`): $9500, 4000-damage rockets, cannot be
+  upgraded (`WeaponData.upgradable = false`). Hotbar slot 9.
+
+**Touches Nico's side (visuals / audio / HUD)** — all placeholder, his to replace:
+- **The slot machine screen** is drawn entirely in code (cabinet, bulbs, reels, lever, ticket,
+  confetti), sounds borrowed from the bank (`ui_click`, `reload`, `impact_soft`, `cash`).
+- **The Devastator** fires with `explosion` pitched to 0.7 (`Audio._on_weapon_fired`); new hotbar
+  silhouette in `WeaponBar.SHAPES`.
+- **HUD:** one HP bar, "ANGEL READY / m:ss" under it, "N PARTS  N TICKETS" left of the cash;
+  shop header shows health over parts / tickets; four new perk icons in `ShopMenu._draw_symbol`.
+- **Markers:** boss beam + Label3D (`HostileMarker`), a yellow `PickupRing` at fares' stops with
+  Rolling Pickup.
+
+**Tests:** new `dev_notes_autotest`, `currencies_autotest` (the latter plays the machine through
+and prints the parts budget per stage); `shop_menu`, `shop`, `arsenal`, `escalation` updated.
+The suite passes.
+
+---
+
 ## 2026-11-17 · DLain47 · `feat/no-papers` · after `fe4fbf0`
 **Exports ship the map in use (D-097).**
 - New `data/default_map.txt` names the map a build starts on (now `TEST1`) and is packed into

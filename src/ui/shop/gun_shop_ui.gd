@@ -39,7 +39,7 @@ var _buy: Button
 var _equip_b: Button
 var _level: Label
 var _up_note: Label
-var _track_buttons: Dictionary = {}   # track -> Button (D-093)
+var _track_buttons: Dictionary = {}   # position 0-3 -> Button (D-093); its track depends on the gun (D-099)
 
 
 func _ready() -> void:
@@ -149,9 +149,9 @@ func toggle_equip(id: StringName) -> bool:
 func upgrade(id: StringName, track: StringName) -> bool:
 	var wc := _controller()
 	var w := _weapon(id)
-	if wc == null or w == null or not wc.owns(id) or not track in WeaponUpgrades.TRACKS:
+	if wc == null or w == null or not wc.owns(id) or not track in WeaponUpgrades.tracks_for(w):
 		return false
-	var track_name: String = WeaponUpgrades.TRACK_NAME[track]
+	var track_name := WeaponUpgrades.track_name(w, track)
 	var price := WeaponUpgrades.next_price(w, track)
 	if price < 0:
 		_say("%s %s is maxed." % [w.display_name, track_name], Color.WHITE)
@@ -231,7 +231,12 @@ func _refresh_detail(wc: WeaponController, rides: int) -> void:
 	if owned:
 		var carried := wc.get_weapon(w.id)
 		var a := wc.get_ammo(carried)
-		_ammo_label.text = "Ammo  %d | %d   (max %d | %d)" % [a["mag"], a["reserve"], carried.mag_size, carried.reserve_max]
+		if carried.reloads():
+			_ammo_label.text = "Ammo  %d | %d   (max %d | %d)" % [a["mag"], a["reserve"], carried.mag_size, carried.reserve_max]
+		else:
+			_ammo_label.text = "Carries  %d / %d" % [a["mag"], carried.mag_size]
+	elif not w.reloads():
+		_ammo_label.text = "Carries %d · never reloads" % w.mag_size
 	else:
 		_ammo_label.text = "Mag %d · carries %d" % [w.mag_size, w.reserve_max]
 
@@ -257,11 +262,13 @@ func _refresh_detail(wc: WeaponController, rides: int) -> void:
 	_level.modulate = Color.WHITE if owned else Color(1, 1, 1, 0.4)
 	_up_note.text = ("%s: %s" % [w.special_name, w.special_text]) + (
 			"  (active)" if left == 0 else "  — after %d more upgrades." % left)
-	for t: StringName in WeaponUpgrades.TRACKS:
-		var b: Button = _track_buttons[t]
+	var tracks := WeaponUpgrades.tracks_for(w)
+	for i in tracks.size():
+		var t := tracks[i]
+		var b: Button = _track_buttons[i]
 		var price := WeaponUpgrades.next_price(w, t)
 		b.text = "%s  %d
-%s" % [(WeaponUpgrades.TRACK_NAME[t] as String).to_upper(), WeaponUpgrades.level(w.id, t),
+%s" % [WeaponUpgrades.track_name(w, t).to_upper(), WeaponUpgrades.level(w.id, t),
 				"MAXED" if price < 0 else "%s  $%d" % [WeaponUpgrades.describe_next(w, t), price]]
 		b.disabled = not owned or price < 0
 		b.modulate = Color.WHITE if b.disabled or GameState.cash >= price else Color(1, 1, 1, 0.55)
@@ -399,13 +406,14 @@ func _build_detail() -> Control:
 	var tracks := HBoxContainer.new()
 	tracks.add_theme_constant_override("separation", 6)
 	col.add_child(tracks)
-	for t: StringName in WeaponUpgrades.TRACKS:
-		var b := _button("", func() -> void: upgrade(_selected, t))
+	for i in WeaponUpgrades.TRACKS.size():
+		var b := _button("", func() -> void:
+			upgrade(_selected, WeaponUpgrades.tracks_for(_weapon(_selected))[i]))
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		b.custom_minimum_size.y = 48
 		b.add_theme_font_size_override("font_size", 13)
 		tracks.add_child(b)
-		_track_buttons[t] = b
+		_track_buttons[i] = b
 	return card
 
 

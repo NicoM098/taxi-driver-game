@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CarUpgradeData" format=3]
+
+[ext_resource type="Script" path="res://src/shop_menu/car_upgrade_data.gd" id="1_u"]
+
+[resource]
+script = ExtResource("1_u")
+id = &"perk_guardian_angel"
+display_name = "Guardian Angel"
+blurb = "Somebody up there drives a cab too. The next time the cab would go up in flames you walk away with half your health; then the angel needs 5 minutes to come back."
+slot = 26
+section = &"perks"
+stat = &"guardian_angel"
+per_level = 1.0
+prices = PackedInt32Array(1)
+level_text = "Cheat death once every 5 minutes"

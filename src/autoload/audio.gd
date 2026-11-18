@@ -312,6 +312,10 @@ func _on_weapon_fired(weapon: Resource) -> void:
 	elif id == "rocket":
 		sound = &"shot_shotgun"
 		pitch *= 0.55
+	elif id == "devastator":   # D-107: the biggest, lowest boom in the bank
+		sound = &"explosion"
+		pitch *= 0.7
+		volume = 2.0
 	elif id == "mines":
 		sound = &"ui_click"
 		volume = -4.0

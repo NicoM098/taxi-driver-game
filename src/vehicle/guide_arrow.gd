@@ -38,7 +38,9 @@ func _process(_delta: float) -> void:
 		return
 	var manager := get_tree().get_first_node_in_group(&"ride_manager") as RideManager
 	var target: Dictionary = manager.get_guide_target() if manager != null else {}
-	if target.is_empty() or view == null:
+	# Hidden while the driver leans out of the window to look back (D-105).
+	var cab := view.get_parent() as CabCamera if view != null else null
+	if target.is_empty() or view == null or (cab != null and cab.is_leaning_out()):
 		visible = false
 		return
 	visible = true

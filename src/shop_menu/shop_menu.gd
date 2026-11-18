@@ -8,6 +8,10 @@ extends Control
 ##                    and a row of four upgrade tracks (mag, ammo, damage, fire rate; the last
 ##                    two endless, D-093)
 ##   THE CAB          taxi upgrades (data/car_upgrades/, section &"car")
+##   SLOTS            the slot machine (D-106): a slot ticket (won from bosses) = one spin =
+##                    a random perk (Double Tap, Quick Hands, Rolling Pickup; no longer sold)
+##                    or +5 Damage / Fire rate levels on your 1st or 2nd most upgraded gun
+## THE CAB is paid in spare parts (from every enemy killed), guns in cash (D-106).
 ##   MONSTROUS ENERGY cans to carry (drink with F / Y, CanHolder) and the can upgrades
 ##   REPAIR           always in the header: fixes the cab and the driver for the quoted price
 ## Q / E or LB / RB switch tabs. Pauses the world. Main/UI node, process ALWAYS.
@@ -35,12 +39,15 @@ const CARD_H := 112.0
 const ICON_W := 124.0
 const BUTTONS_W := 160.0
 
-const TABS: Array[StringName] = [&"guns", &"cab", &"energy"]
-const TAB_TITLE := {&"guns": "GUNS", &"cab": "THE CAB", &"energy": "MONSTROUS ENERGY"}
-const TAB_ACCENT := {&"guns": GREEN, &"cab": YELLOW, &"energy": CYAN}
+const VIOLET := Color(0.78, 0.55, 1.0)
+const TABS: Array[StringName] = [&"guns", &"cab", &"perks", &"energy"]
+const TAB_TITLE := {&"guns": "GUNS", &"cab": "THE CAB", &"perks": "SLOTS", &"energy": "MONSTROUS ENERGY"}
+const TAB_ACCENT := {&"guns": GREEN, &"cab": YELLOW, &"perks": VIOLET, &"energy": CYAN}
 ## Card ids that are not CarUpgradeData / WeaponData ids.
 const REPAIR := &"_repair"
 const CANS := &"_cans"
+const SLOTS := &"_slots"
+const ORANGE := Color(1.0, 0.6, 0.2)
 
 var is_open: bool = false
 var tab: StringName = &"guns"
@@ -60,9 +67,15 @@ var _cards: Dictionary = {}          # card id -> {card, style, icon, title, sta
 var _icon_state: Dictionary = {}     # card id -> {col, badge, locked}
 var _guns_ui: GunShopUI
 var _last_cash: int = -1
+var _wallet: Label
+var _slot_rng := RandomNumberGenerator.new()
+var _machine: SlotMachineScreen
+var _reels: Array[String] = ["7", "7", "7"]
+var _prize: Dictionary = {}
 
 
 func _ready() -> void:
+	_slot_rng.randomize()
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	add_to_group(&"shop_menu")
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -77,6 +90,10 @@ func _ready() -> void:
 	_build()
 	_root.visible = false
 	add_child(CanHolder.new())
+	_machine = SlotMachineScreen.new()   # the slot machine, over the shop (D-107)
+	_machine.name = "SlotMachine"
+	add_child(_machine)
+	_machine.finished.connect(_on_slots_finished)
 
 
 ## _input, not _unhandled_input: Tab is also the GUI's "focus next", which would eat it.
@@ -157,7 +174,7 @@ func show_tab(id: StringName) -> void:
 
 ## The tabs this build of the menu shows (no MONSTROUS ENERGY tab while cans are not sold).
 static func active_tabs() -> Array[StringName]:
-	var out: Array[StringName] = [&"guns", &"cab"]
+	var out: Array[StringName] = [&"guns", &"cab", &"perks"]
 	if sells_cans:
 		out.append(&"energy")
 	return out
@@ -167,6 +184,8 @@ static func active_tabs() -> Array[StringName]:
 static func tab_of(u: CarUpgradeData) -> StringName:
 	if u.section == &"car":
 		return &"cab"
+	if u.section == &"perks":
+		return &"perks"
 	if sells_cans:
 		return &"energy"
 	return &"cab" if u.stat == &"can_size" else &""
@@ -182,6 +201,9 @@ func activate(id: StringName) -> bool:
 		_say("Not sold here.", RED)
 		return false
 	match id:
+		SLOTS:
+			open_slots()
+			return true
 		REPAIR:
 			return _result(id, CarUpgrades.repair(get_tree()), "Cab and driver patched up.")
 		CANS:
@@ -240,6 +262,7 @@ func _say(text: String, colour: Color) -> void:
 
 func _refresh() -> void:
 	_cash.text = "$%d" % GameState.cash
+	_wallet.text = "%d PARTS  ·  %d TICKET%s" % [GameState.parts, GameState.tickets, "" if GameState.tickets == 1 else "S"]
 	if _last_cash >= 0 and GameState.cash != _last_cash:
 		_cash.modulate = Color(1.6, 0.6, 0.5) if GameState.cash < _last_cash else Color(0.6, 1.6, 0.7)
 		create_tween().tween_property(_cash, "modulate", Color.WHITE, 0.4)
@@ -251,18 +274,22 @@ func _refresh() -> void:
 			var rides := WeaponUpgrades.rides_done(get_tree())
 			for w in WeaponController.catalogue():
 				_refresh_gun(w, wc, rides)
-		&"cab", &"energy":
+		&"cab", &"perks", &"energy":
 			for u in CarUpgrades.catalogue():
 				if _cards.has(u.id):
 					_refresh_upgrade(u)
 			if _cards.has(CANS):
 				_refresh_cans()
+			if _cards.has(SLOTS):
+				_refresh_slots()
 
 
 func _refresh_repair() -> void:
 	var damage := _damage()
 	var fee := CarUpgrades.repair_quote(damage)
-	if damage != null:
+	if damage != null and not damage.has_driver_bar():   # one bar (D-098)
+		_health.text = "HEALTH  %d / %d" % [roundi(damage.taxi_health.hp), roundi(damage.taxi_health.max_hp)]
+	elif damage != null:
 		_health.text = "CAB  %d / %d\nDRIVER  %d / %d" % [roundi(damage.taxi_health.hp), roundi(damage.taxi_health.max_hp),
 				roundi(damage.driver_health.hp), roundi(damage.driver_health.max_hp)]
 	_repair.visible = sells_repair
@@ -291,7 +318,7 @@ func _refresh_gun(w: WeaponData, wc: WeaponController, rides: int) -> void:
 		state = "LOCKED  ·  %d / %d FARES" % [rides, w.unlock_rides]
 	if owned:
 		var a := wc.get_ammo(wc.get_weapon(w.id))
-		state += "  ·  AMMO %d | %d" % [a["mag"], a["reserve"]]
+		state += "  ·  AMMO %s" % WeaponData.ammo_text(w, a)
 	_set_card(c, w.display_name.to_upper(), state, accent)
 	# Pips: the way to the special (WeaponUpgrades.SPECIAL_AT upgrades, any tracks).
 	var total := WeaponUpgrades.total(w.id)
@@ -300,6 +327,9 @@ func _refresh_gun(w: WeaponData, wc: WeaponController, rides: int) -> void:
 			(("%s  %s" % [WeaponUpgrades.level_name(w.id), w.special_name.to_upper()]) if left == 0
 			else "%s  %d to %s" % [WeaponUpgrades.level_name(w.id), left, w.special_name]).strip_edges())
 	(c["note"] as Label).text = w.special_text if owned else w.blurb
+	if not w.upgradable:   # The Devastator (D-107)
+		_set_pips(c, 0, 0, RED, "CANNOT BE UPGRADED")
+		(c["note"] as Label).text = w.blurb
 
 	var main: Button = c["main"]
 	if not owned:
@@ -317,11 +347,11 @@ func _refresh_gun(w: WeaponData, wc: WeaponController, rides: int) -> void:
 	else:
 		alt.text = "CAB FULL (%d)" % WeaponController.LOADOUT_SIZE if owned and wc.loadout_full() else "EQUIP"
 		alt.disabled = not owned or wc.loadout_full()
-	for t: StringName in WeaponUpgrades.TRACKS:
+	for t: StringName in WeaponUpgrades.tracks_for(w):
 		var b: Button = c["tracks"][t]
 		var price := WeaponUpgrades.next_price(w, t)
 		var lv := WeaponUpgrades.level(w.id, t)
-		var head := "%s  %d" % [(WeaponUpgrades.TRACK_NAME[t] as String).to_upper(),  lv]
+		var head := "%s  %d" % [WeaponUpgrades.track_name(w, t).to_upper(),  lv]
 		if WeaponUpgrades.CAP.has(t):
 			head += "/%d" % int(WeaponUpgrades.CAP[t])
 		b.text = "%s\n%s" % [head, "MAXED" if price < 0 else "%s  $%d" % [WeaponUpgrades.describe_next(w, t), price]]
@@ -338,14 +368,64 @@ func _refresh_upgrade(u: CarUpgradeData) -> void:
 	var top := CarUpgrades.max_level(u)
 	var price := CarUpgrades.next_price(u)
 	var accent: Color = TAB_ACCENT[c["tab"]]
-	var now := CarUpgrades.effect_text(u, lv) if lv > 0 else "not fitted"
+	var perk := CarUpgrades.is_perk(u)
+	var now := CarUpgrades.effect_text(u, lv) if lv > 0 else ("not won yet" if perk else "not fitted")
 	_set_card(c, u.display_name.to_upper(), "NOW: %s" % now.to_upper(), accent if lv > 0 else GREY)
 	_set_pips(c, lv, top, accent, "LV %d / %d" % [lv, top])
 	(c["note"] as Label).text = ("Next: %s.  " % CarUpgrades.effect_text(u, lv + 1) if price >= 0 else "") + u.blurb
 	var main: Button = c["main"]
-	main.text = "UPGRADE  $%d" % price if price >= 0 else "MAXED"
+	if perk:   # won at the slot machine only (D-106)
+		main.text = "MAXED" if price < 0 else "WIN AT SLOTS"
+		main.disabled = true
+		_paint(main, accent.darkened(0.5), false)
+		return
+	var accent_buy := ORANGE if u.currency == &"parts" else accent
+	main.text = ("UPGRADE  %s" % CarUpgrades.price_text(u, price)) if price >= 0 else "MAXED"
 	main.disabled = price < 0
-	_paint(main, accent if GameState.cash >= price else accent.darkened(0.5), price >= 0)
+	_paint(main, accent_buy if CarUpgrades.wallet(u) >= price else accent_buy.darkened(0.5), price >= 0)
+
+
+## The slot machine card (D-106): opens the machine itself (SlotMachineScreen, D-107).
+func _refresh_slots() -> void:
+	var c: Dictionary = _cards[SLOTS]
+	var t := GameState.tickets
+	_set_card(c, "LUCKY CAB SLOT MACHINE", "TICKETS  %d  ·  ONE SPIN EACH  ·  BEAT A BOSS FOR MORE" % t, VIOLET if t > 0 else GREY)
+	_set_pips(c, mini(t, 6), 6, VIOLET, "%d TICKET%s" % [t, "" if t == 1 else "S"])
+	var note: Label = c["note"]
+	if not _prize.is_empty():
+		note.text = "LAST WIN: %s" % _prize["text"]
+	else:
+		note.text = "The only place to get perks. Every spin wins: a perk, or +5 Damage / Fire rate on your best two guns."
+	var main: Button = c["main"]
+	main.text = "PLAY THE SLOTS"
+	main.disabled = false
+	_paint(main, VIOLET if t > 0 else VIOLET.darkened(0.5), true)
+	(c["icon"] as Control).queue_redraw()
+
+
+## Opens the slot machine (the SLOTS card's button).
+func open_slots() -> void:
+	_machine.open()
+
+
+## One spin without the machine on screen (tests). True if it paid out.
+func spin() -> bool:
+	var prize := SlotMachine.spin(get_tree(), _slot_rng)
+	if prize.has("error"):
+		_say(prize["error"], RED)
+		return false
+	_on_slots_finished(prize)
+	return true
+
+
+func _on_slots_finished(prize: Dictionary) -> void:
+	if prize.is_empty() or prize.has("error"):
+		return
+	_prize = prize
+	var s: String = prize.get("symbol", "7")
+	_reels = [s, s, s]
+	_say("WON: %s" % prize.get("text", ""), VIOLET)
+	_refresh()
 
 
 func _refresh_cans() -> void:
@@ -466,6 +546,8 @@ func _build() -> void:
 					grid.add_child(_card(w.id, t, true))
 			&"energy":
 				grid.add_child(_card(CANS, t, true))
+			&"perks":
+				grid.add_child(_card(SLOTS, t, false))
 		if t != &"guns":
 			for u in CarUpgrades.catalogue():
 				if tab_of(u) == t:
@@ -515,12 +597,23 @@ func _build_header() -> Control:
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(spacer)
+	# Health over the spare parts / slot tickets (D-106), one narrow column.
+	var status := VBoxContainer.new()
+	status.alignment = BoxContainer.ALIGNMENT_CENTER
+	status.add_theme_constant_override("separation", 0)
+	head.add_child(status)
 	_health = Label.new()
 	_health.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_health.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_health.add_theme_font_size_override("font_size", 13)
 	_health.add_theme_color_override("font_color", Color(1, 1, 1, 0.7))
-	head.add_child(_health)
+	status.add_child(_health)
+	_wallet = Label.new()
+	_wallet.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_wallet.add_theme_font_override("font", _bold)
+	_wallet.add_theme_font_size_override("font_size", 13)
+	_wallet.add_theme_color_override("font_color", ORANGE)
+	status.add_child(_wallet)
 	_repair = _button("REPAIR", func() -> void: activate(REPAIR))
 	_repair.custom_minimum_size = Vector2(170, 44)
 	_repair.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -661,7 +754,7 @@ func _card(id: StringName, page: StringName, extra: bool) -> Control:
 		var track_row := HBoxContainer.new()
 		track_row.add_theme_constant_override("separation", 5)
 		stack.add_child(track_row)
-		for t: StringName in WeaponUpgrades.TRACKS:
+		for t: StringName in WeaponUpgrades.tracks_for(WeaponController._base(id)):
 			var b := _button("", func() -> void: gun_action(id, t))
 			b.custom_minimum_size.y = 40
 			b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -767,6 +860,9 @@ func _draw_icon(ci: Control, id: StringName, page: StringName) -> void:
 		if st.get("locked", false):
 			_draw_text(ci, "LOCKED", Vector2(r.size.x * 0.5, r.size.y - 8), 11, Color(1, 1, 1, 0.55))
 		return
+	if id == SLOTS:
+		_draw_reels(ci, inner)
+		return
 	var accent: Color = TAB_ACCENT[page]
 	var u := CarUpgrades.get_upgrade(id)
 	var kind := &"can" if u == null else u.stat
@@ -775,6 +871,20 @@ func _draw_icon(ci: Control, id: StringName, page: StringName) -> void:
 			accent if lit else accent.lerp(Color(0.5, 0.5, 0.55), 0.6))
 	if id == CANS:
 		_draw_text(ci, "x%d" % int(_icon_state.get(CANS, {}).get("count", 0)), Vector2(r.size.x - 18, r.size.y - 8), 15, Color.WHITE)
+
+
+## The slot machine's three reels (D-106).
+func _draw_reels(ci: CanvasItem, r: Rect2) -> void:
+	var w := (r.size.x - 8.0) / 3.0
+	var h := minf(r.size.y, 54.0)
+	var y := r.position.y + (r.size.y - h) * 0.5
+	var won := not _prize.is_empty()
+	for i in 3:
+		var cell := Rect2(r.position.x + i * (w + 4.0), y, w, h)
+		ci.draw_style_box(_box(Color(0.95, 0.93, 0.88), 5, VIOLET if won else Color(0, 0, 0, 0.5), 2), cell)
+		var s: String = _reels[i]
+		var size := 20 if s.length() <= 2 else (12 if s.length() == 3 else 10)
+		_draw_text(ci, s, cell.get_center() + Vector2(0, size * 0.35), size, VIOLET.darkened(0.35) if s != "7" else RED)
 
 
 ## Simple vector symbols for the cab / energy cards, centred on `c`, ~100 units across x `s`.
@@ -821,6 +931,42 @@ func _draw_symbol(ci: CanvasItem, kind: StringName, c: Vector2, s: float, col: C
 		&"can_size":
 			_draw_can(ci, c, s * 1.1, col)
 			_draw_text(ci, "XL", c + Vector2(30, 40) * s, 16, Color.WHITE)
+		&"double_tap":   # two rounds side by side (D-100)
+			for x in [-16.0, 16.0]:
+				ci.draw_rect(Rect2(c + Vector2(x - 9, -14) * s, Vector2(18, 48) * s), col)
+				ci.draw_colored_polygon(pts.call([Vector2(x - 9, -14), Vector2(x + 9, -14), Vector2(x, -40)]), col.lightened(0.35))
+				ci.draw_rect(Rect2(c + Vector2(x - 11, 28) * s, Vector2(22, 8) * s), dark.lightened(0.2))
+		&"fast_reload":  # a magazine and a circular arrow
+			ci.draw_rect(Rect2(c + Vector2(-30, -30) * s, Vector2(24, 62) * s), col)
+			ci.draw_rect(Rect2(c + Vector2(-26, -26) * s, Vector2(16, 10) * s), dark)
+			ci.draw_arc(c + Vector2(18, 0) * s, 22.0 * s, -PI * 0.9, PI * 0.6, 16, col.lightened(0.3), 6.0 * s, true)
+			ci.draw_colored_polygon(pts.call([Vector2(4, 22), Vector2(22, 30), Vector2(6, 38)]), col.lightened(0.3))
+		&"max_hp":  # Juggernaut: a big cross (D-107)
+			ci.draw_rect(Rect2(c + Vector2(-12, -38) * s, Vector2(24, 76) * s), col)
+			ci.draw_rect(Rect2(c + Vector2(-38, -12) * s, Vector2(76, 24) * s), col)
+		&"lifesteal":  # Road Vampire: two fangs and a drop
+			ci.draw_colored_polygon(pts.call([Vector2(-30, -30), Vector2(-10, -30), Vector2(-20, 6)]), col.lightened(0.3))
+			ci.draw_colored_polygon(pts.call([Vector2(10, -30), Vector2(30, -30), Vector2(20, 6)]), col.lightened(0.3))
+			ci.draw_circle(c + Vector2(0, 26) * s, 12.0 * s, col)
+			ci.draw_colored_polygon(pts.call([Vector2(-10, 20), Vector2(10, 20), Vector2(0, 2)]), col)
+		&"ammo_cap":  # Deep Pockets: a crate of rounds
+			ci.draw_rect(Rect2(c + Vector2(-38, -6) * s, Vector2(76, 40) * s), col.darkened(0.2))
+			for i in 4:
+				var x := -27.0 + i * 18.0
+				ci.draw_rect(Rect2(c + Vector2(x - 5, -30) * s, Vector2(10, 26) * s), col.lightened(0.3))
+				ci.draw_colored_polygon(pts.call([Vector2(x - 5, -30), Vector2(x + 5, -30), Vector2(x, -40)]), col.lightened(0.5))
+		&"guardian_angel":  # a halo over wings
+			ci.draw_arc(c + Vector2(0, -28) * s, 16.0 * s, 0.0, TAU, 20, col.lightened(0.4), 4.0 * s, true)
+			for side in [-1.0, 1.0]:
+				ci.draw_colored_polygon(pts.call([Vector2(4 * side, 0), Vector2(42 * side, -16), Vector2(36 * side, 8),
+						Vector2(26 * side, 26), Vector2(4 * side, 18)]), col)
+		&"rolling_pickup":  # a fare in a ring, with speed lines
+			ci.draw_arc(c, 40.0 * s, 0.0, TAU, 28, col, 4.0 * s, true)
+			ci.draw_circle(c + Vector2(0, -16) * s, 9.0 * s, col.lightened(0.3))
+			ci.draw_rect(Rect2(c + Vector2(-9, -5) * s, Vector2(18, 30) * s), col.lightened(0.3))
+			for i in 3:
+				var y := -12.0 + i * 12.0
+				ci.draw_line(c + Vector2(-34, y) * s, c + Vector2(-16, y) * s, Color(col, 0.8), 3.0 * s, true)
 		_:
 			_draw_can(ci, c, s, col)
 

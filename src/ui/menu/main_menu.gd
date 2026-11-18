@@ -16,7 +16,7 @@ const CONTROLS := [
 	["Steer", "A / D", "Left stick"],
 	["Handbrake (drift)", "Space", "B"],
 	["Boost (nitro tank)", "Shift", "A"],
-	["Look around / look behind", "Mouse / C", "Right stick / R3"],
+	["Look around / look back (aim + shoot out the back)", "Mouse / hold C", "Right stick / hold R3"],
 	["Raise gun / fire", "RMB / LMB", "LB / RB"],
 	["Reload / switch weapon", "R / 1-4, wheel", "X / d-pad"],
 	["Shop menu / drink Monstrous Energy", "Tab / F", "Back / Y"],

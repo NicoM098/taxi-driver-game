@@ -6,7 +6,30 @@ updated: 2026-11-17
 
 > **Read this first every session.** Claude updates it at the end of every session.
 
-## Where we left off (2026-11-17, session 23 — DLain47)
+## Where we left off (2026-11-17, session 24 — DLain47)
+- **Branch `feat/no-papers`, committed and pushed** (after `7084e03`, Changelog entry + §0 note for Nico): [[Iteration 23 - Dev Notes]] (D-098 to D-105), the
+  six items of the user's `Dev Notes.md`, built & auto-verified, **not played**:
+  - **One health bar** (130 hp; driver and cab share it).
+  - **Mines:** no reloading (a stack of 8), tracks Capacity / Damage / Blast / Drop rate.
+  - **PERKS tab:** Double Tap (fire rate), Quick Hands (reload), Rolling Pickup (board through a ring at speed).
+  - **Shoot backwards:** hold C / R3 and aim out the rear window.
+  - **Boss markers:** gold beam + BOSS tag, gold edge arrow at any range, gold "B" on the minimap.
+  - **Pedestrians / traffic** never spawn or vanish on screen.
+  - **Boss "teleporting" (user report) → D-104:** enemies are only moved off screen, 5 s apart, logged as `[Director] moved ...`. Not reproduced headless: check in play.
+- **Then [[Iteration 24 - Currencies & Slots]] (D-106), in the same push:** cab upgrades cost
+  **spare parts** (1 per kill, 2 per elite / boss; the stage kill targets buy 2 / 5 / 8 cab levels by
+  the bosses, killing twice the target +2-3); every boss in a boss fight pays a **slot ticket**; the
+  PERKS tab is now the **slot machine** (a random perk level, or +5 Damage / Fire rate on the 1st /
+  2nd most upgraded gun). Cash buys guns only.
+- **D-107 on top:** perks are one strong level each and slots-only (7: Double Tap, Quick Hands,
+  Rolling Pickup, Juggernaut, Road Vampire, Deep Pockets, **Guardian Angel**); the slot machine is
+  a full animated machine (ticket → lever → reels → prize card); **The Devastator** ($9500, 26
+  fares, 4000-damage rockets, cannot be upgraded).
+- D-097 (exports start on `TEST1`) was pushed at the start of the session (`7084e03`).
+- **First thing next session:** the user plays it (6 test points in the Iteration 23 note), then
+  merge into `temp/playtest-merge` only once played (§6).
+
+### Previous: 2026-11-17, session 23 — DLain47
 - **Branch `feat/no-papers`**, **committed and pushed** (`36bd670`, with a Changelog entry and a §0 note for Nico): [[Iteration 21 - Endless
   Weapon Upgrades]] (D-093), built & auto-verified, **not played**.
   - Guns upgrade on **four tracks** from their shop card: Mag and Ammo (3 levels each), Damage and

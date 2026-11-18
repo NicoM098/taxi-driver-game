@@ -11,5 +11,6 @@ slot = 2
 section = &"car"
 stat = &"engine"
 per_level = 0.12
-prices = PackedInt32Array(360, 810, 1620)
+currency = &"parts"
+prices = PackedInt32Array(5, 8, 12)
 level_text = "+%d %% engine power"

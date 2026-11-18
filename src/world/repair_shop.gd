@@ -72,7 +72,7 @@ func quote(damage: TaxiDamage) -> int:
 	var fee := wreck_fee if damage.is_wrecked else 0
 	if not damage.is_wrecked:
 		fee += ceili((damage.taxi_health.max_hp - damage.taxi_health.hp) * cost_per_taxi_hp
-			+ (damage.driver_health.max_hp - damage.driver_health.hp) * cost_per_driver_hp)
+			+ ((damage.driver_health.max_hp - damage.driver_health.hp) if damage.has_driver_bar() else 0.0) * cost_per_driver_hp)
 	return fee
 
 

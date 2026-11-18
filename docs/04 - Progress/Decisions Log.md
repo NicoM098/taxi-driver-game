@@ -1000,3 +1000,86 @@ or sickening.
 **Context:** user: "i want the next exported versions of the game to come with the map that im using". The map (`TEST1`, `data/maps/test1.json`) was already packed, but the game picked it only through `user://active_map.txt`, which exists on DLain47's machine alone: a fresh install fell back to the generated starter city.
 **Decision:** `MapData.SHIPPED_ACTIVE` = `res://data/default_map.txt` (exported via `include_filter`). Load order: `--map=` > `user://active_map.txt` > the shipped file > `city` > built-in. PLAY in the map editor while running from the Godot editor writes both files, so the next export always ships the map last played; an exported build only writes the user file. `editor_switch_autotest` restores the shipped file after playing its throw-away map. Verified: export with the user file moved away loads `TEST1`.
 **Status:** accepted.
+
+## D-098 — One health bar (2026-11-17)
+**Context:** user's dev notes: "sacar la vida propia y de auto, tener solo una sola barra de vida" (remove your own health and the car's, keep a single health bar). See [[Iteration 23 - Dev Notes]].
+**Decision (Claude's calls, the user can overrule):**
+- `TaxiDamage.single_bar` (static, default on): `driver_health` **is** `taxi_health` (same `HealthComponent`), so every system that hurt or healed the driver (passenger attacks, angry kicks, events, cans, rewards, tests) now works on the one bar with no further changes. Off = the two bars again.
+- The bar is `SINGLE_BAR_HP_MULT` 1.3x the old taxi health (130, Armor scales it): the hits of both old bars now drain one pool, so a bit more than either alone.
+- Cabin shots take `driver_damage_mult` (0.45, Bulletproof Glass cuts it) off the bar, no extra body share; body shots and crashes as before.
+- A Monstrous Energy can heals its driver amount (50, XL 67.5) and not its cab amount on top. Repair quotes count the bar once. HUD: one green "HP" bar; shop header "HEALTH x / y". Glass text: "damage through the windows".
+**Status:** accepted (auto-verified: `dev_notes_autotest` A + the suite). Not played.
+
+## D-099 — Mines: their own upgrade path, no reloading (2026-11-17)
+**Context:** dev notes: "Mines: Different path upgrade. No reloads and only max ammo, make it make sense."
+**Decision (Claude's calls, the user can overrule):**
+- A gun with `reserve_max` 0 never reloads (`WeaponData.reloads()`): its magazine is everything it carries. Mines: one pool of 8 (was 3 + 6 spare).
+- `WeaponUpgrades.tracks_for(gun)`: mines get **Capacity** (+25 % = +2 mines a level, 4 levels, 8 -> 16), **Damage** (endless), **Blast** (+15 % radius a level, 3 levels) and **Drop rate** (the fire-rate track, endless). No Mag / Ammo. Heavy charge (+60 % blast) still comes after 8 upgrades and multiplies the Blast levels.
+- Ammo boxes for the mines put 30 % of the capacity (at least 1) straight into the pool; a Capacity level adds its new room filled, like an Ammo level; passenger ammo gifts fill the pool. The hotbar / shop show just the count ("7").
+**Status:** accepted (auto-verified). Not played.
+
+## D-100 — Perks shop (2026-11-17)
+**Context:** dev notes: "besides the car upgrade and the armory i want a perks shop, where you can buy perks, like double tap, faster reload speed, picking up passengers without stopping (just like when you drop them that you have the circle around them)".
+**Decision (Claude's calls, the user can overrule):**
+- Perks are `CarUpgradeData` with `section = &"perks"` (data-driven, `data/car_upgrades/perk_*.tres`), shown on a new **PERKS** tab (violet) between THE CAB and the cans. Lost with the run like everything else.
+- **Double Tap** (2 levels, $1200 / $3000): +25 % fire rate per level on every gun, applied after the fire-rate cap (so it goes past it).
+- **Quick Hands** (3 levels, $600 / $1400 / $2800): -20 % reload time per level on every gun (floor x0.3).
+- **Rolling Pickup** (1 level, $1500): a yellow ring (radius 6 m) on the road at every waiting fare's stop; driving through it at any speed boards them at once (no walk to the door). Without it pickup is unchanged (stop next to them).
+- Gun perks go through `WeaponUpgrades.apply`; buying any shop upgrade calls `WeaponController.refresh_arsenal()` (re-applies every owned gun, keeps ammo, no switch animation). `effect_text` shows a level text without `%d` as is.
+**Status:** accepted (auto-verified). Prices are a first guess against the D-096 economy. Not played.
+
+## D-101 — Shooting backwards (2026-11-17)
+**Context:** dev notes: "agregar mecanica para poder disparar para atras?" (add a mechanic to shoot backwards?).
+**Decision (Claude's calls, the user can overrule):** the existing look-behind key (C / R3) became an aimed rear view. While held, the mouse / right stick aim around the rear window (65° each way, 35° up, 30° down) instead of moving the forward look, and the gun comes up by itself; every gun fires where the head points (hitscan, rockets; mines drop behind as always). Let go and the head swings forward; the next look back starts straight out the back. No new key. Controls panel: "Look around / look back (aim + shoot out the back)".
+**Status:** accepted (auto-verified: head turns > 135°, gun up). How it feels to aim backwards while driving needs the user.
+
+## D-102 — Clearer boss markers (2026-11-17)
+**Context:** dev notes: "añadir marker para los bosses que sean mas claros" (clearer markers for the bosses).
+**Decision (Claude's calls, the user can overrule):** `HostileMarker.boss` (from `EnemyCarData.is_boss`): a gold cone 1.7x the size, a 60 m gold beam into the sky (hidden within 18 m so it does not fill the windscreen) and a "BOSS / <name>" Label3D on top of everything at a fixed screen size. Edge chevrons: bosses are gold, 1.7x, pulsing, "BOSS 85m", at any distance. Minimap: a gold "B" blip, kept on the border when out of range.
+**Status:** accepted (screenshots near and at 50 m). Not played.
+
+## D-103 — Pedestrians no longer pop in and out of view (2026-11-17)
+**Context:** dev notes: "pedestrians dissapear and appear".
+**Cause:** StreetLife only refused spawns within 110 m and roughly ahead, and recycled anything past 170 m whatever the camera saw; the day fog ends at 220 m and the camera draws to 250 m, so people (and traffic) appeared 110-140 m ahead in plain view, and vanished at 170 m while still on screen (a long street ahead, or looking back). Knocked-down pedestrians also vanished on the spot after 7 s.
+**Decision:** `StreetLife.in_view(p)`: three points across a body, 1 m up, against the camera frustum (far plane included). Nothing spawns while in view, at any distance; pedestrians past 170 m and cars past 240 m are only recycled once out of view (or past 300 m, beyond the far plane). Bodies sink into the ground for 2 s before they go. Buildings in between are not checked (on the safe side: fewer spawns, never a visible pop).
+**Status:** accepted (auto-verified: in_view cases + streetlife test). Watch for: fewer pedestrians in long straight streets ahead.
+
+## D-104 — Enemies are never moved where the player can see (2026-11-17)
+**Context:** user: the boss (the Precinct Captain at least) "is teleporting all the time, way too much". Not reproduced headless on TEST1 (boss parked / chased / full stage-1 fight with a scripted driver: no moves), so the fix covers the two places that move a car: the outrun recall (`_cleanup`, 210 m+, unlimited for bosses) and the corner rescue (`rescue_stuck`, D-092: refused only when within 60 m AND in line of sight, so anything farther was moved in plain view). Neither looked at the screen, and the spot it went to was only checked for line of sight from the cab.
+**Decision:**
+- `EnemyDirector.on_screen(p)`: the cab camera's frustum, a car's width either side, up to the far plane.
+- A car on screen is never moved: the rescue waits, the outrun recall waits (the car keeps driving) until it is off screen. Only a car that fell out of the world is moved regardless.
+- The same car is moved at most once every 5 s (`RELOCATE_COOLDOWN` 300 frames, was 2 s for rescues).
+- Where it goes: on-screen streets score −4 (line-of-sight streets keep their −2).
+- Every move prints `[Director] moved <car> (stuck / outrun / fell): X m -> Y m, off screen`, so the next report can say which one it was.
+**Status:** accepted (auto-verified: enemy, enemy_city, enemy_corners, escalation, events, hostiles, gang_rides). Needs the user's eye: if the boss still jumps, the console line names the reason.
+
+## D-105 — Looking back leans out of the driver's window (2026-11-17)
+**Context:** user, on D-101: "when i press c to look behind i only see the seats, it should be like you are coming out of the window".
+**Decision:** holding look_behind (C / R3) moves the head out of the driver's window (`CabCamera.lean_out_offset` (-0.98, 0.2, 0.15), taxi space, driver on the left) and turns it 166° (`lean_out_yaw_deg`) to face back along the cab's flank, slightly away from it; the rear aim (D-101) works around that. The forced glance after executing a passenger still turns into the back seat (the old -160°). The dashboard guide arrow hides while leaning out (`CabCamera.is_leaning_out()`), it hung in the middle of the rear view.
+**Status:** accepted (screenshot: the street behind, the cab's side at the left edge, the gun in hand; dev_notes D, dossier, events PASS). Not played.
+
+## D-106 — Three currencies: cash, spare parts, slot tickets; the slot machine replaces the perk shop (2026-11-17)
+**Context:** user: "we need to implement different currencies ... when you defeat a boss you win a slot ticket, the slot ticket gives you access to the slot machine that can give you a random perk (we will replace the perk shop). It can also give you +5 levels in the damage or rate of fire of your 1st and 2nd most upgraded weapon ... the enemies that we kill drop another currency with which we will upgrade the car so it doesn't feel like a waste of potential damage ... nut or spare parts, make the mathematic so if you kill the exact number of enemies before the boss arrives, you can afford the amount of upgrades required to still not be super tanky, but if you take the time to kill more of the enemies before the boss you could squeeze 2 or 3 levels extra". See [[Iteration 24 - Currencies & Slots]].
+**Decision (Claude's calls, the user can overrule):**
+- **Cash** buys guns and gun upgrades only. **Spare parts** (`GameState.parts`) buy every cab upgrade (`CarUpgradeData.currency = &"parts"`). **Slot tickets** (`GameState.tickets`) spin the slot machine.
+- Parts are paid into the wallet on the kill (no pickup to chase), `EnemyCarData.parts`: 1 per car, 2 for elites (gang bosses, cartel lieutenant) and bosses. One part a kill means a stage's kill target is also its parts budget.
+- Cab prices (levels 1/2/3): armor and engine 5/8/12, glass 6/9/13, ram, nitro and Monstrous XL 4/6/9 (18 levels, 133 parts in all). Buying the cheapest level each time (counting kills only; elites, bosses and escorts pay on top):
+
+  | At the boss of | Kills (targets 10 / 15 / 20) | Cab levels | Killing the stage's target twice |
+  |---|---|---|---|
+  | Stage 1 | 10 | 2 | 4 (+2) |
+  | Stage 2 | 25 | 5 | 8 (+3) |
+  | Stage 3 | 45 | 8 of 18 | 11 (+3) |
+- **Tickets:** every boss beaten in a boss fight (`Escalation._spawn_boss`): 1 at stage 1, 3 at stage 2 (the three gang bosses), 2 at stage 3. Those stage-2 gang bosses now also wear the gold boss marker in their fight (`EnemyCar.mark_boss`, `is_boss()`), which they did not before (D-102 only knew `EnemyCarData.is_boss`).
+- **Slot machine** (`SlotMachine`, SLOTS tab, was PERKS): one ticket = one spin, every spin wins. Half the odds: a level of a random perk not yet maxed (Double Tap, Quick Hands, Rolling Pickup: 6 levels in all, no longer sold). Other half: +5 Damage or +5 Fire rate (mines: Drop rate) on the most or second most upgraded gun (ties: the dearer gun), free. Once the perks are maxed, every spin is a gun prize. Reels roll 1.4 s and land on the prize (it is paid at once).
+- HUD: "N PARTS   N TICKETS" left of the cash; shop header: health over parts and tickets.
+**Status:** accepted (auto-verified: `currencies_autotest` + the suite; screenshots of THE CAB and SLOTS). Not played. Note: the earnings-based enemy health (D-093) follows cash only; parts and slot prizes are on top of it, so the player gets stronger than before.
+
+## D-107 — A slot machine you play, strong one-shot perks, Guardian Angel, The Devastator (2026-11-17)
+**Context:** user, on D-106: "you misunderstood my slot machine request, you get a ticket on boss defeat, so you will have approximately 6 to 7 tickets, so they need to be fairly strong, so you CAN'T buy the other perks, the only way to get them is through the slot machines, and i want a full animation slot machine where you insert the ticket and pull down the lever and have an animation come up with what you got". Then: "also want a guardian angel as a perk, that recharges every 5 minutes. and lets have a devastation weapon that is insanely op but cant be upgraded".
+**Decision (Claude's calls, the user can overrule):**
+- **Every perk is one strong level, never won twice**, only from the slots: Double Tap +50 % fire rate, Quick Hands −50 % reload, Rolling Pickup, and new **Juggernaut** (+50 % max health, adds to Armor), **Road Vampire** (each kill heals 10 % of the bar), **Deep Pockets** (+50 % ammo carried, every gun refilled when won), **Guardian Angel** (a hit that would wreck the cab leaves it at 50 % instead, then 5 minutes to recharge; "ANGEL READY / m:ss" under the HP bar). 7 perks for ~6 tickets a run: odds stay half perk / half gun prize, so a run sees 3-4 perks and 2-3 gun prizes (+5 Damage ≈ x1.75 damage).
+- **`SlotMachineScreen`**: a full-screen machine over the shop (SLOTS card → PLAY THE SLOTS): lit "LUCKY CAB" cabinet with chasing bulbs; the ticket bobs in the tray, E / Space / A / click slides it into the slot; "PULL THE LEVER!" with a pulsing knob; the lever goes down (the ticket is spent and the prize decided there), three drum reels roll with motion streaks and stop one after the other with a bounce on the prize symbol, ticking; then rays, confetti and the prize card (NEW PERK / GUN UPGRADE, name, effect), COLLECT. Esc leaves (not mid-spin; a ticket inserted but not pulled is not spent). Placeholder sounds from the bank (click, reload, impact, cash).
+- **The Devastator** (`data/weapons/devastator.tres`): a rocket launcher of 4000 damage, 13 m blast, 110 m/s, 3 shells a magazine, 6 spare; $9500, unlocked at 26 fares. `WeaponData.upgradable = false`: no tracks, no special, no perks applied to it, never a slot prize. It does not grow while enemy health does (D-093), so it is a monster mid-run and only very strong late. Fires with the explosion sample, pitched down.
+**Status:** accepted (auto-verified: `currencies_autotest` F-H, the suite; screenshots of the machine idle / ready / rolling / won and the SLOTS tab). Not played.

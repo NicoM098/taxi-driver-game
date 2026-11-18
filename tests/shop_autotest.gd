@@ -54,8 +54,8 @@ func _physics_process(delta: float) -> void:
 				print("[ShopTest] start: owned %s, catalogue %d weapons, %d gun shops" % [owned, WeaponController.catalogue().size(), _city.gun_shops.size()])
 				if owned != [&"revolver"]:
 					_errors.append("a run should start with the revolver only")
-				if WeaponController.catalogue().size() != 8:
-					_errors.append("expected 8 weapons in data/weapons")
+				if WeaponController.catalogue().size() != 9:
+					_errors.append("expected 9 weapons in data/weapons (with The Devastator, D-107)")
 				if _city.gun_shops.is_empty():
 					_fail("the built-in city has no gun shop")
 					return

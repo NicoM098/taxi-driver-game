@@ -11,5 +11,6 @@ slot = 4
 section = &"car"
 stat = &"ram"
 per_level = 0.25
-prices = PackedInt32Array(270, 630, 1260)
+currency = &"parts"
+prices = PackedInt32Array(4, 6, 9)
 level_text = "-%d %% crash damage"

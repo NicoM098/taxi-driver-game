@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CarUpgradeData" format=3]
+
+[ext_resource type="Script" path="res://src/shop_menu/car_upgrade_data.gd" id="1_u"]
+
+[resource]
+script = ExtResource("1_u")
+id = &"perk_juggernaut"
+display_name = "Juggernaut"
+blurb = "Steel in the doors, steel in your nerves. Half again as much health, on top of the armor."
+slot = 23
+section = &"perks"
+stat = &"max_hp"
+per_level = 0.5
+prices = PackedInt32Array(1)
+level_text = "+%d %% max health"

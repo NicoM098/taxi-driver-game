@@ -61,9 +61,26 @@ static func value(stat: StringName) -> float:
 
 ## "+25 % taxi health" for `levels` levels of `u`.
 static func effect_text(u: CarUpgradeData, levels: int) -> String:
+	if not u.level_text.contains("%"):
+		return u.level_text
 	var amount := u.per_level * levels
 	var shown := roundi(amount) if u.stat == &"can_holder" else roundi(amount * 100.0)
 	return u.level_text % shown
+
+
+## Whether a perk (D-100) with this stat has been bought.
+static func has_perk(stat: StringName) -> bool:
+	return value(stat) > 0.0
+
+
+## Perks on the guns (D-100): fire rate x this (Double Tap)...
+static func fire_rate_mult() -> float:
+	return 1.0 + value(&"double_tap")
+
+
+## ...and reload time x this (Quick Hands).
+static func reload_mult() -> float:
+	return maxf(1.0 - value(&"fast_reload"), 0.3)
 
 
 static func can_capacity() -> int:
@@ -74,24 +91,62 @@ static func can_mult() -> float:
 	return 1.0 + value(&"can_size")
 
 
+## What the player holds of an upgrade's currency (D-106): dollars or spare parts.
+static func wallet(u: CarUpgradeData) -> int:
+	return GameState.parts if u.currency == &"parts" else GameState.cash
+
+
+## "$315" or "5 PARTS".
+static func price_text(u: CarUpgradeData, price: int) -> String:
+	if u.currency == &"parts":
+		return "%d PART%s" % [price, "" if price == 1 else "S"]
+	return "$%d" % price
+
+
+## Perks (D-106) are won at the slot machine, never bought.
+static func is_perk(u: CarUpgradeData) -> bool:
+	return u != null and u.section == &"perks"
+
+
 ## Buys the next level of `id` and applies it to the taxi. Returns an error text ("" = done).
 static func buy_level(tree: SceneTree, id: StringName) -> String:
 	var u := get_upgrade(id)
 	if u == null:
 		return "Unknown upgrade."
+	if is_perk(u):
+		return "Perks are won at the slot machine: beat a boss for a ticket."
 	var price := next_price(u)
 	if price < 0:
 		return "%s is maxed out." % u.display_name
-	if GameState.cash < price:
-		return "Not enough cash: you need $%d more." % (price - GameState.cash)
-	GameState.add_cash(-price)
+	var have := wallet(u)
+	if have < price:
+		if u.currency == &"parts":
+			return "Not enough spare parts: you need %d more. Wreck more enemies." % (price - have)
+		return "Not enough cash: you need $%d more." % (price - have)
+	if u.currency == &"parts":
+		GameState.add_parts(-price)
+	else:
+		GameState.add_cash(-price)
 	GameState.car_levels[id] = level(id) + 1
 	apply(tree)
 	return ""
 
 
+## A level given for free (the slot machine's perks, D-106). False if maxed.
+static func grant_level(tree: SceneTree, id: StringName) -> bool:
+	var u := get_upgrade(id)
+	if u == null or level(id) >= max_level(u):
+		return false
+	GameState.car_levels[id] = level(id) + 1
+	apply(tree)
+	return true
+
+
 ## Puts every bought level on the player's taxi (idempotent).
 static func apply(tree: SceneTree) -> void:
+	var wc := tree.get_first_node_in_group(&"weapon_controller") as WeaponController
+	if wc != null:
+		wc.refresh_arsenal()   # gun perks (D-100)
 	var taxi := tree.get_first_node_in_group(&"player_vehicle") as Taxi
 	if taxi == null:
 		return
@@ -116,7 +171,8 @@ static func apply(tree: SceneTree) -> void:
 	_base(damage, &"taxi_max_hp", damage.taxi_health.max_hp)
 	_base(damage, &"driver_damage_mult", damage.driver_damage_mult)
 	_base(damage, &"crash_damage_scale", damage.crash_damage_scale)
-	var new_max := float(damage.get_meta(&"base_taxi_max_hp")) * (1.0 + value(&"armor"))
+	# Armor (parts) and the Juggernaut perk (slots, D-107) add up.
+	var new_max := float(damage.get_meta(&"base_taxi_max_hp")) * (1.0 + value(&"armor") + value(&"max_hp"))
 	var gained := new_max - damage.taxi_health.max_hp
 	damage.taxi_health.max_hp = new_max
 	if gained > 0.0 and not damage.is_wrecked:
@@ -169,8 +225,9 @@ static func drink_can(tree: SceneTree) -> String:
 static func repair_quote(damage: TaxiDamage) -> int:
 	if damage == null:
 		return 0
+	var driver := (damage.driver_health.max_hp - damage.driver_health.hp) if damage.has_driver_bar() else 0.0
 	return ceili((damage.taxi_health.max_hp - damage.taxi_health.hp) * REPAIR_PER_TAXI_HP
-			+ (damage.driver_health.max_hp - damage.driver_health.hp) * REPAIR_PER_DRIVER_HP)
+			+ driver * REPAIR_PER_DRIVER_HP)
 
 
 ## Repairs the cab and the driver for money (anywhere, D-089). Returns an error text ("" = done).

@@ -68,19 +68,48 @@ func set_roster(police: EnemyCarData, gang: EnemyCarData, cap: int) -> void:
 
 
 ## Last resort for a car the AI could not get out of a corner (D-092): if the player cannot
-## see it (or it is far down the street, 60 m+), it is put back on the street behind the
-## player. True if it was moved.
+## see it, it is put back on the street behind the player. True if it was moved.
+## Never while it is on screen, at any distance (D-104, user: the boss "is teleporting all the
+## time"; before, anything 60 m+ away was moved even in plain view).
 func rescue_stuck(car: EnemyCar) -> bool:
 	if _taxi == null or not is_instance_valid(car):
 		return false
-	if car.global_position.distance_to(_taxi.global_position) < 60.0 and _is_visible_from_taxi(car.global_position):
+	if on_screen(car.global_position) or (car.global_position.distance_to(_taxi.global_position) < 60.0
+			and _is_visible_from_taxi(car.global_position)):
 		return false
-	if Engine.get_physics_frames() - car.relocated_frame < 120:
+	if Engine.get_physics_frames() - car.relocated_frame < RELOCATE_COOLDOWN:
 		return false
+	_relocate(car, "stuck")
+	return true
+
+
+## Frames between two moves of the same car.
+const RELOCATE_COOLDOWN := 300
+
+
+## Puts `car` back on the street behind the player (out of sight and off screen when there is
+## such a street), and says so in the log.
+func _relocate(car: EnemyCar, why: String) -> void:
+	var from := car.global_position
 	car.relocated_frame = Engine.get_physics_frames()
 	_used_spawns.clear()
-	car.teleport(_spawn_transform(0))
-	return true
+	var to := _spawn_transform(0)
+	car.teleport(to)
+	print("[Director] moved %s (%s): %.0f m from the taxi -> %.0f m, %s" % [car.data.display_name if car.data != null else "car",
+			why, from.distance_to(_taxi.global_position), to.origin.distance_to(_taxi.global_position),
+			"ON SCREEN" if on_screen(to.origin) else "off screen"])
+
+
+## Whether a car at `p` would be on the player's screen (the cab camera's frustum, a car's
+## width either side, up to the far plane). Walls in between are not checked: on the safe side.
+func on_screen(p: Vector3) -> bool:
+	var cam := _taxi.get_node_or_null("HeadPivot/Camera3D") as Camera3D if _taxi != null else null
+	if cam == null:
+		return false
+	var up := Vector3(0, 1.2, 0)
+	var side := cam.global_basis.x * 2.5
+	return cam.is_position_in_frustum(p + up) or cam.is_position_in_frustum(p + up + side) \
+			or cam.is_position_in_frustum(p + up - side)
 
 
 ## A boss (D-091): spawned behind, out of sight, past the car cap, and never given up on.
@@ -369,6 +398,8 @@ func _spawn_transform(index: int) -> Transform3D:
 			var score := -(p - taxi_pos).normalized().dot(taxi_fwd) + _rng.randf() * 0.8
 			if _is_visible_from_taxi(p):
 				score -= 2.0
+			if on_screen(p):
+				score -= 4.0   # D-104: never pop up where the player is looking, at any range
 			if score > best_score:
 				best_score = score
 				pos = p
@@ -405,11 +436,12 @@ func _cleanup() -> void:
 		if Engine.get_physics_frames() - car.relocated_frame < 120:
 			continue   # its teleport is still being applied
 		if (fell or (hunting and dist > lose_distance)) and car.relocations_left > 0 and not car.is_destroyed:
-			# Outrun: it knows the city too. Back on the tail, out of sight.
-			car.relocations_left -= 1
-			car.relocated_frame = Engine.get_physics_frames()
-			_used_spawns.clear()
-			car.teleport(_spawn_transform(0))
+			# Outrun: it knows the city too. Back on the tail, out of sight. While the player
+			# can still see it (a long street), it waits and keeps driving (D-104).
+			if fell or (not on_screen(car.global_position)
+					and Engine.get_physics_frames() - car.relocated_frame >= RELOCATE_COOLDOWN):
+				car.relocations_left -= 1
+				_relocate(car, "fell" if fell else "outrun")
 		elif dist > despawn_distance or fell:
 			enemies.erase(car)
 			car.queue_free()
@@ -427,7 +459,11 @@ func _on_enemy_destroyed(enemy: Node, bounty: int) -> void:
 		var shift := get_tree().get_first_node_in_group(&"shift_manager") as ShiftManager
 		if shift != null:
 			shift.register_bonus_cash(bounty)
-	EventBus.hud_message.emit("%s DOWN%s" % [car.data.display_name.to_upper(), "  +$%d" % bounty if bounty > 0 else ""], &"good")
+	var parts := car.data.parts
+	if parts > 0:   # spare parts for the cab (D-106)
+		GameState.add_parts(parts)
+	EventBus.hud_message.emit("%s DOWN%s%s" % [car.data.display_name.to_upper(), "  +$%d" % bounty if bounty > 0 else "",
+			"  +%d PART%s" % [parts, "" if parts == 1 else "S"] if parts > 0 else ""], &"good")
 	enemies.erase(car)  # the car frees itself (explodes instantly)
 
 

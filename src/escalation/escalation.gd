@@ -162,7 +162,12 @@ func _spawn_boss(entry: Dictionary) -> void:
 	var car := _director.spawn_boss(entry["data"])
 	entry["car"] = car
 	if car != null:
-		car.destroyed.connect(func(_c: EnemyCar) -> void: entry["down"] = true)
+		car.mark_boss()   # gold marker even for the gang bosses of stage 2 (D-106)
+		car.destroyed.connect(func(_c: EnemyCar) -> void:
+			entry["down"] = true
+			# Every boss beaten in a boss fight pays a slot ticket (D-106).
+			GameState.add_tickets(1)
+			EventBus.hud_message.emit("+1 SLOT TICKET  —  spin it in the shop [Tab]", &"good"))
 
 
 func _update_bosses() -> void:

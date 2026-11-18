@@ -177,7 +177,7 @@ func index_of_slot(slot: int) -> int:
 func upgrade(id: StringName, track: StringName) -> bool:
 	var old := _find(id)
 	var lv := WeaponUpgrades.level(id, track)
-	if old == null or not track in WeaponUpgrades.TRACKS or WeaponUpgrades.is_capped(track, lv):
+	if old == null or not track in WeaponUpgrades.tracks_for(_base(id)) or WeaponUpgrades.is_capped(track, lv):
 		return false
 	var levels: Dictionary = GameState.weapon_levels.get(id, {})
 	levels[track] = lv + 1
@@ -185,7 +185,10 @@ func upgrade(id: StringName, track: StringName) -> bool:
 	var w := WeaponUpgrades.apply(_base(id))
 	_arsenal[id] = w
 	var a: Dictionary = ammo[id]
-	a["mag"] = mini(int(a["mag"]), w.mag_size)
+	if w.reloads():
+		a["mag"] = mini(int(a["mag"]), w.mag_size)
+	else:   # the mines (D-099): a Capacity level is new room, like an Ammo level
+		a["mag"] = mini(int(a["mag"]) + maxi(w.mag_size - old.mag_size, 0), w.mag_size)
 	a["reserve"] = mini(int(a["reserve"]) + maxi(w.reserve_max - old.reserve_max, 0), w.reserve_max)
 	var i := weapons.find(old)
 	if i >= 0:
@@ -193,6 +196,24 @@ func upgrade(id: StringName, track: StringName) -> bool:
 		if i == current_index:
 			_equip(i)
 	return true
+
+
+## Every owned gun full (the Deep Pockets slot prize, D-107).
+func refill_all() -> void:
+	for id: StringName in _arsenal.keys():
+		var w: WeaponData = _arsenal[id]
+		ammo[id] = {"mag": w.mag_size, "reserve": w.reserve_max}
+
+
+## Re-applies every owned gun's upgrades and the gun perks (D-100), keeping the ammo.
+func refresh_arsenal() -> void:
+	for id: StringName in _arsenal.keys():
+		var old: WeaponData = _arsenal[id]
+		var w := WeaponUpgrades.apply(_base(id))
+		_arsenal[id] = w
+		var i := weapons.find(old)
+		if i >= 0:
+			weapons[i] = w   # same gun in hand: no switch animation
 
 
 func select(index: int) -> void:
@@ -255,7 +276,9 @@ func _physics_process(delta: float) -> void:
 		_buffer -= delta
 	_linger = hip_linger if fire_held else _linger - delta
 
-	var want_raise := (aim_held or _linger > 0.0) and _switch_left <= 0.0 and not is_reloading
+	# Looking back (C / R3) brings the gun up too: shooting out the rear window (D-101).
+	var looking_back := _cab != null and _cab.is_looking_back()
+	var want_raise := (aim_held or _linger > 0.0 or looking_back) and _switch_left <= 0.0 and not is_reloading
 	raise_amount = move_toward(raise_amount, 1.0 if want_raise else 0.0, raise_speed * delta)
 	is_aiming = aim_held and raise_amount > 0.9
 

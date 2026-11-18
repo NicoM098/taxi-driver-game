@@ -6,10 +6,11 @@
 script = ExtResource("1_u")
 id = &"glass"
 display_name = "Bulletproof Glass"
-blurb = "Thick laminated windows. Bullets through the cabin hurt the driver less."
+blurb = "Thick laminated windows. Bullets through the windows hurt less."
 slot = 3
 section = &"car"
 stat = &"glass"
 per_level = 0.2
-prices = PackedInt32Array(405, 900, 1800)
-level_text = "-%d %% damage to the driver"
+currency = &"parts"
+prices = PackedInt32Array(6, 9, 13)
+level_text = "-%d %% damage through the windows"

@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="WeaponData" format=3]
+
+[ext_resource type="Script" path="res://src/core/resources/weapon_data.gd" id="1_w"]
+
+[resource]
+script = ExtResource("1_w")
+id = &"devastator"
+slot = 9
+blurb = "Whatever it is, it was never meant for the street. One shell levels a block. Cannot be upgraded: it is already too much."
+price = 9500
+display_name = "The Devastator"
+kind = &"rocket"
+beam = false
+spin_up = 0.0
+blast_radius = 13.0
+projectile_speed = 110.0
+damage = 4000.0
+pellets = 1
+weapon_range = 400.0
+impact_force = 0.0
+fire_rate = 1.0
+automatic = false
+mag_size = 3
+reserve_max = 6
+reload_time = 2.2
+spread_aimed = 0.1
+spread_hip = 0.6
+spread_per_speed = 0.01
+spread_per_turn = 0.4
+spread_per_shot = 0.0
+recoil_pitch = 11.0
+recoil_yaw = 2.0
+gun_size = Vector3(0.16, 0.14, 0.62)
+gun_color = Color(0.12, 0.1, 0.12, 1)
+unlock_rides = 26
+upgradable = false
+upgrade_cost = 225
+special = &""
+special_name = ""
+special_text = ""

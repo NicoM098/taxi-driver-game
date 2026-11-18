@@ -80,6 +80,13 @@ func _physics_process(delta: float) -> void:
 	_state_time += delta
 	match state:
 		State.IDLE:
+			if _shift.is_active and not is_wrecked() and CarUpgrades.has_perk(&"rolling_pickup"):
+				# Rolling Pickup perk (D-100): through the ring at any speed, straight in.
+				var p := _rolling_passenger()
+				if p != null:
+					_begin_boarding(p)
+					_open_file()
+					return
 			if _shift.is_active and not is_wrecked() and _taxi.linear_velocity.length() < pickup_max_speed:
 				var p := _spawner.get_passenger_near(_taxi.global_position, pickup_radius)
 				if p != null:
@@ -106,6 +113,14 @@ func _physics_process(delta: float) -> void:
 		State.EXITING:
 			if _state_time >= exit_time:
 				_set_state(State.IDLE)
+
+
+## A waiting passenger whose rolling-pickup ring the taxi is in, or null.
+func _rolling_passenger() -> WaitingPassenger:
+	for p in _spawner.waiting:
+		if is_instance_valid(p) and _flat_distance(_taxi.global_position, p.pickup_point()) < WaitingPassenger.ROLLING_RADIUS:
+			return p
+	return null
 
 
 ## Nobody gets into (or stays in) a burning cab.

@@ -51,6 +51,11 @@ signal passenger_kicked_out(passenger: RefCounted)
 signal cash_changed(new_amount: int, delta: int)
 @warning_ignore("unused_signal")
 signal heat_changed(level: int)
+## Spare parts / slot tickets (D-106), like cash_changed.
+@warning_ignore("unused_signal")
+signal parts_changed(new_amount: int, delta: int)
+@warning_ignore("unused_signal")
+signal tickets_changed(new_amount: int, delta: int)
 
 # Combat / damage (Phases 05-06)
 @warning_ignore("unused_signal")

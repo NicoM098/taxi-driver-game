@@ -24,6 +24,9 @@ extends Resource
 
 @export_group("Rewards")
 @export var bounty: int = 40
+## Spare parts it drops when destroyed (D-106): they buy the cab's upgrades. 1 for a common
+## car, so the stage's kill target is also its parts budget; more for elites and bosses.
+@export var parts: int = 1
 @export var heat_on_kill: int = 1
 
 @export_group("Gunman")

@@ -86,6 +86,8 @@ static func fill(wc: WeaponController, w: WeaponData) -> float:
 
 ## Rounds one box gives gun `w` (as carried, upgrades applied).
 static func amount_for(w: WeaponData) -> int:
+	if not w.reloads():   # the mines: a share of what they carry (D-099)
+		return maxi(ceili(w.mag_size * RESERVE_SHARE), 1)
 	return maxi(ceili(w.reserve_max * RESERVE_SHARE), w.mag_size)
 
 
@@ -182,11 +184,12 @@ func collect(wc: WeaponController) -> bool:
 	if w == null or not wc.ammo.has(weapon_id):
 		return false
 	var a: Dictionary = wc.ammo[weapon_id]
-	var room := w.reserve_max - int(a["reserve"])
+	var pool := "reserve" if w.reloads() else "mag"   # mines never reload: straight in (D-099)
+	var room := (w.reserve_max if w.reloads() else w.mag_size) - int(a[pool])
 	if room <= 0:
 		return false
 	var got := mini(amount_for(w), room)
-	a["reserve"] = int(a["reserve"]) + got
+	a[pool] = int(a[pool]) + got
 	_taken = true
 	EventBus.ammo_picked_up.emit(weapon_id, got)
 	EventBus.hud_message.emit("+%d  %s AMMO" % [got, w.display_name.to_upper()], &"good")

@@ -7,8 +7,22 @@ extends Node3D
 ##   run is over (user, 2026-11-15; main.gd shows game over). Repair shops fix damage before that.
 ##   In worlds without a repair shop (shooting range) a wreck repairs itself after
 ##   `auto_repair_time` instead.
+## - One health bar (D-098, user: "remove your own health and the car's, have a single health
+##   bar"): while `single_bar` is on, `driver_health` IS `taxi_health` (the same component), so
+##   every hit, heal and repair lands on one bar of SINGLE_BAR_HP_MULT x the old taxi health.
+##   Off gives the two bars back.
 
 signal wrecked(reason: StringName)
+
+static var single_bar: bool = true
+## Guardian Angel perk (slots, D-107): a would-be death leaves you at half health instead,
+## then the angel recharges for this long.
+const ANGEL_RECHARGE := 300.0
+const ANGEL_HEALTH := 0.5
+## Seconds until the angel is back (0 = ready, if you have the perk).
+var angel_cooldown: float = 0.0
+## The one bar takes what both used to share: a bit more than the old taxi bar alone.
+const SINGLE_BAR_HP_MULT := 1.3
 
 @export var taxi: Taxi
 @export var crash_damage_threshold: float = 8.0  # velocity change (m/s per tick) before crashes hurt
@@ -45,14 +59,23 @@ func _ready() -> void:
 	_rng.randomize()
 	if taxi == null:
 		taxi = get_parent() as Taxi
-	taxi_health = _make_health("TaxiHealth", PlayerStats.get_stat(&"taxi_max_hp"))
-	driver_health = _make_health("DriverHealth", driver_max_hp)
+	taxi_health = _make_health("TaxiHealth", PlayerStats.get_stat(&"taxi_max_hp")
+			* (SINGLE_BAR_HP_MULT if single_bar else 1.0))
+	if single_bar:
+		driver_health = taxi_health
+	else:
+		driver_health = _make_health("DriverHealth", driver_max_hp)
+		driver_health.died.connect(_wreck.bind(&"driver_killed"))
 	passenger_health = _make_health("PassengerHealth", passenger_max_hp)
 	taxi_health.died.connect(_wreck.bind(&"taxi_destroyed"))
-	driver_health.died.connect(_wreck.bind(&"driver_killed"))
 	passenger_health.died.connect(func() -> void:
 		passenger_aboard = false
 		EventBus.passenger_killed.emit())
+	# Road Vampire perk (slots, D-107): every kill heals a share of the bar.
+	EventBus.enemy_destroyed.connect(func(_e: Node, _b: int) -> void:
+		var steal := CarUpgrades.value(&"lifesteal")
+		if steal > 0.0 and not is_wrecked:
+			taxi_health.heal(taxi_health.max_hp * steal))
 	taxi_health.damaged.connect(func(amount: float, hp_left: float) -> void:
 		EventBus.taxi_damaged.emit(amount, hp_left))
 
@@ -81,6 +104,7 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	_since_landing += delta
+	angel_cooldown = maxf(angel_cooldown - delta, 0.0)
 	if _heal_driver_left > 0.0 or _heal_body_left > 0.0:
 		var d := minf(_heal_driver_left, _heal_rate * delta)
 		var b := minf(_heal_body_left, _heal_rate * delta * 0.6)
@@ -95,6 +119,11 @@ func _process(delta: float) -> void:
 		_repair_timer -= delta
 		if _repair_timer < 0.0:
 			repair()
+
+
+## False while the driver and the taxi share one bar (D-098).
+func has_driver_bar() -> bool:
+	return driver_health != taxi_health
 
 
 func repair() -> void:
@@ -119,6 +148,8 @@ func repair() -> void:
 func drink(driver_amount: float, body_amount: float, duration: float) -> void:
 	if is_wrecked:
 		return
+	if not has_driver_bar():
+		body_amount = 0.0   # one bar (D-098): the driver's share is the heal, not both on top
 	_heal_driver_left += driver_amount
 	_heal_body_left += body_amount
 	_heal_rate = maxf(driver_amount, body_amount / 0.6) / maxf(duration, 0.05)
@@ -145,14 +176,30 @@ func _on_cabin_hit(damage: float, source: Vector3) -> void:
 	if is_wrecked:
 		return
 	driver_health.apply_damage(damage * driver_damage_mult)
-	taxi_health.apply_damage(damage * cabin_body_mult)
+	if has_driver_bar():
+		taxi_health.apply_damage(damage * cabin_body_mult)
 	if passenger_aboard and _rng.randf() < passenger_hit_chance:
 		passenger_health.apply_damage(damage)
 	EventBus.player_hit.emit(damage, source)
 
 
+## Whether the Guardian Angel would save the cab right now.
+func angel_ready() -> bool:
+	return CarUpgrades.has_perk(&"guardian_angel") and angel_cooldown <= 0.0
+
+
 func _wreck(reason: StringName) -> void:
 	if is_wrecked:
+		return
+	if angel_ready():
+		angel_cooldown = ANGEL_RECHARGE
+		taxi_health.revive()
+		taxi_health.hp = taxi_health.max_hp * ANGEL_HEALTH
+		if driver_health != taxi_health:
+			driver_health.revive()
+		_since_landing = 0.0
+		EventBus.hud_message.emit("GUARDIAN ANGEL!  You cheated death  (back in 5:00)", &"good")
+		EventBus.energy_drink_consumed.emit()   # the heal sting
 		return
 	is_wrecked = true
 	wrecked.emit(reason)

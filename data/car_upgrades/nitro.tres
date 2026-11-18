@@ -11,5 +11,6 @@ slot = 5
 section = &"car"
 stat = &"nitro"
 per_level = 0.35
-prices = PackedInt32Array(270, 630, 1260)
+currency = &"parts"
+prices = PackedInt32Array(4, 6, 9)
 level_text = "+%d %% nitro tank and refill"

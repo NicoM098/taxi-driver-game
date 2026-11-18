@@ -14,6 +14,7 @@ const COLORS := {
 
 var _timer_label: Label
 var _cash_label: Label
+var _wallet_label: Label   # spare parts + slot tickets, left of the cash (D-106)
 var _ride_label: Label
 var _speed_label: Label
 var _hint_label: Label
@@ -60,6 +61,9 @@ func _ready() -> void:
 	_place(_ride_label, 0, 0.185, 1, 0.185, 0, 0, 0, 28)
 	_cash_label = _label(32, HORIZONTAL_ALIGNMENT_RIGHT)
 	_place(_cash_label, 1, 0, 1, 0, -320, 10, -18, 50)
+	_wallet_label = _label(17, HORIZONTAL_ALIGNMENT_RIGHT)
+	_place(_wallet_label, 1, 0, 1, 0, -560, 18, -150, 46)
+	_wallet_label.add_theme_color_override("font_color", Color(1.0, 0.62, 0.25))
 	# Minimap above the speed, in the one corner the HUD was not already using (D-083).
 	_minimap = Minimap.new()
 	_minimap.name = "Minimap"
@@ -161,6 +165,8 @@ func _process(delta: float) -> void:
 	var shift := get_tree().get_first_node_in_group(&"shift_manager") as ShiftManager
 
 	_cash_label.text = "$%d" % GameState.cash
+	_wallet_label.text = "%d PARTS%s" % [GameState.parts,
+			"   %d TICKET%s" % [GameState.tickets, "" if GameState.tickets == 1 else "S"] if GameState.tickets > 0 else ""]
 	_speed_label.text = "%d km/h" % roundi(taxi.get_speed_kmh()) if taxi != null else ""
 
 	_ride_label.text = ""

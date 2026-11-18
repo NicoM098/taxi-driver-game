@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CarUpgradeData" format=3]
+
+[ext_resource type="Script" path="res://src/shop_menu/car_upgrade_data.gd" id="1_u"]
+
+[resource]
+script = ExtResource("1_u")
+id = &"perk_vampire"
+display_name = "Road Vampire"
+blurb = "Every wreck you leave behind patches you up: each kill heals a tenth of your health."
+slot = 24
+section = &"perks"
+stat = &"lifesteal"
+per_level = 0.1
+prices = PackedInt32Array(1)
+level_text = "Each kill heals %d %% of your health"

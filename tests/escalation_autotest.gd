@@ -242,6 +242,10 @@ func _shot_boss(boss: EnemyCar, file: String) -> void:
 	boss.ai.set_physics_process(false)
 	await _wait(0.6)
 	await _shot(file)
+	# From further off: the boss marker's gold beam and BOSS tag (D-102).
+	boss.teleport(Transform3D(boss.global_basis, _taxi.global_position + fwd.normalized() * 50.0 + Vector3(0, 0.6, 0)))
+	await _wait(0.6)
+	await _shot(file.replace(".png", "_far.png"))
 	boss.ai.set_physics_process(true)
 
 

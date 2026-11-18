@@ -5,7 +5,8 @@ extends Node3D
 ##  WALK   along the loop at its own pace, slight bob.
 ##  DODGE  a fast car heading at it -> jumps aside, then drifts back to the curb line.
 ##  FLEE   gunfire nearby -> runs (StreetLife calls panic()).
-##  DOWN   hit by the taxi -> thrown, lies there, then fades away (StreetLife frees it).
+##  DOWN   hit by the taxi -> thrown, lies there, then sinks into the ground (StreetLife frees
+##         it), instead of vanishing in plain view (D-103).
 
 enum State { WALK, DODGE, FLEE, DOWN }
 
@@ -125,7 +126,9 @@ func _tumble(delta: float) -> void:
 			_grounded = true
 			rotation = Vector3(PI * 0.5, rotation.y, 0.0)   # lying flat
 	elif _state_t > 7.0:
-		done = true
+		position.y -= 0.5 * delta   # sink out of sight before StreetLife frees it
+		if _state_t > 9.0:
+			done = true
 
 
 func _set_state(s: State) -> void:

@@ -1,5 +1,6 @@
 extends Control
-## Top-left status: taxi body HP, driver HP, passenger HP (when aboard) and heat stars.
+## Top-left status: health (one bar, or taxi body + driver with TaxiDamage.single_bar off),
+## passenger HP (when aboard) and heat stars.
 
 const BAR_W := 180.0
 const BAR_H := 12.0
@@ -20,8 +21,17 @@ func _draw() -> void:
 		return
 	var font := get_theme_default_font()
 	var y := ORIGIN.y
-	y = _bar(font, y, "TAXI", dmg.taxi_health, Color(1.0, 0.8, 0.1))
-	y = _bar(font, y, "YOU", dmg.driver_health, Color(0.4, 1.0, 0.45))
+	if dmg.has_driver_bar():
+		y = _bar(font, y, "TAXI", dmg.taxi_health, Color(1.0, 0.8, 0.1))
+		y = _bar(font, y, "YOU", dmg.driver_health, Color(0.4, 1.0, 0.45))
+	else:   # one bar (D-098)
+		y = _bar(font, y, "HP", dmg.taxi_health, Color(0.4, 1.0, 0.45))
+	if CarUpgrades.has_perk(&"guardian_angel"):   # D-107
+		var ready := dmg.angel_cooldown <= 0.0
+		var left := ceili(dmg.angel_cooldown)
+		_text(font, Vector2(ORIGIN.x, y + 10.0), "ANGEL READY" if ready else "ANGEL  %d:%02d" % [left / 60, left % 60],
+				Color(0.85, 0.95, 1.0) if ready else Color(1, 1, 1, 0.45), 14)
+		y += 20.0
 	if dmg.passenger_aboard:
 		y = _bar(font, y, "FARE", dmg.passenger_health, Color(0.5, 0.75, 1.0))
 	if GameState.heat > 0:
